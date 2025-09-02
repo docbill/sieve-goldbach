@@ -5,19 +5,28 @@ authors:
   - family-names: "Riemers"
     given-names: "Bill C."
 license: "GPL-3.0-or-later"
-version: "1.0.0"
+version: "0.1.1"
 date-released: 2025-09-02
 repository-code: "https://github.com/docbill/sieve-goldbach"
+
+# Related identifiers (paper DOI; Software Heritage SWHIDs)
 identifiers:
   - type: doi
     value: "10.5281/zenodo.16735169"
-    description: "Related paper describing the results validated by this software."
+    description: "Related paper describing results validated by this software."
+  - type: swh
+    value: "swh:1:rev:114bbaa7380b436b20661119798139a2fa6db0ab;origin=https://github.com/docbill/sieve-goldbach;visit=swh:1:snp:b41e87b95ed609237a88090693189ee0433d6e44"
+    description: "Software Heritage persistent ID (revision for v0.1.0)"
+  - type: swh
+    value: "swh:1:dir:74b69f1e739bbef1dd234621d565ea67e680bd6b;origin=https://github.com/docbill/sieve-goldbach;visit=swh:1:snp:b41e87b95ed609237a88090693189ee0433d6e44;anchor=swh:1:rev:114bbaa7380b436b20661119798139a2fa6db0ab"
+    description: "Software Heritage persistent ID (directory tree for v0.1.0)"
+
 preferred-citation:
   type: article
+  title: "Sieve-Theoretic Reformulation of Goldbach's Conjecture"
   authors:
     - family-names: "Riemers"
       given-names: "Bill C."
-  title: "Sieve-Theoretic Reformulation of Goldbach’s Conjecture"
   year: 2025
   doi: "10.5281/zenodo.16735169"
 
