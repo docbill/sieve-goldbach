@@ -155,7 +155,7 @@
         y expr=abs(\thisrow{#3}),
         restrict expr to domain={\thisrow{#3}}{0:inf}, % <— gate on the original y
       ] {\datatable};
-    \addlegendentry{$\Lambda \ge 0$}
+    \addlegendentry{\(\Lambda \ge 0\)}
 
     % ------- Lambda < 0 (plot as |Lambda|) -------
     \addplot+[only marks, mark=*, mark size=1.2pt]
@@ -164,7 +164,7 @@
         y expr=abs(\thisrow{#3}),
         restrict expr to domain={\thisrow{#3}}{-inf:0}, % <— gate on the original y
       ] {\datatable};
-    \addlegendentry{$\Lambda < 0$}
+    \addlegendentry{\(\Lambda < 0\)}
 
   \end{axis}
   \end{tikzpicture}%
@@ -597,13 +597,12 @@ While nearly a century old, HL–A remains the best parameter-free baseline to c
 
 For stability we measure and analyze Goldbach pairs \( (n-m, n+m) \) with \( m \in [-M,M] \setminus{0} \), where \( M=\lfloor \frac{n}{2} \rfloor \). This symmetric range was chosen for numerical stability and predictability, but the framework applies equally to other ranges.
 
-The programs used to generate primes and sieve the data were written in C and run on an Intel i5 processor in a ten-year-old laptop normally used as a Plex server. Most analysis completed in under a day; as of this draft, processing continues for higher ranges. The source code is available on request, but should be considered a reference implementation written for this project.
+The programs used to generate primes and sieve the data were written in C and run on an Intel i5 processor in a ten-year-old laptop normally used as a Plex server. Most analysis completed in under a day; as of this draft, processing continues for higher ranges. The source code is released under GPL-3.0-or-later, and the manuscript under CC-BY-4.0. See repository and Zenodo DOI for details.
 
 The measured variables \( \Nmeas_0, \Nmeas_1, \Cmeas_{\min}, \Cmeas_{\max}, \Cmeas_{\tavg} \) are defined in Definition~\ref{semiprime-survivors}. Appendix Table~\ref{tab:raw-stats} provides raw (unnormalized) data for verification. One may notice reported minima of zero pairs for \( n=7,11,43 \). These do not contradict Goldbach’s conjecture; they arise because certain pairs such as \( (7,7) \), \( (3,19) \), and \( (7,79) \) are excluded by our chosen window.
 
 Predicted values can be computed in under ten minutes, but counting all Goldbach pairs up to \( n=10^8 \) required several weeks. Figure~\ref{fig:Cminmaxavg} shows scatter plots of measured values versus HL–A prediction lines.
 
-% In your document, before the figure (adjust path as needed)
 \pgfplotstableread[col sep=comma, trim cells]{pairrangejoin-100M.csv}\pairdata
 
 \begin{figure}[h]
@@ -612,8 +611,8 @@ Predicted values can be computed in under ten minutes, but counting all Goldbach
 \begin{axis}[
   width=\textwidth, height=0.62\textwidth,
   xmode=log,
-  xlabel={$n$ (log scale)},
-  ylabel={$C$ values},
+  xlabel={\(n\) (log scale)},
+  ylabel={\(C\) values},
   grid=both, tick align=outside,
   legend style={at={(0.5,1.05)}, anchor=south, legend columns=-1},
   unbounded coords=discard, filter discard warning=false,
@@ -1088,8 +1087,8 @@ a numerical comparison between sieve data and this analytic bound.
 \begin{axis}[
   width=\textwidth, height=0.6\textwidth,
   xmode=log, % log x-axis
-  xlabel={$n_0$ (log scale)},
-  ylabel={$C$ values},
+  xlabel={\(n_0\) (log scale)},
+  ylabel={\(C\) values},
   grid=both,
   tick align=outside,
   legend style={at={(0.5,1.05)}, anchor=south, legend columns=-1},
@@ -1101,38 +1100,38 @@ a numerical comparison between sieve data and this analytic bound.
 \addplot+[
   only marks, mark=*, mark size=1.2pt
 ] table[x={n_0}, y={Cmin}] {\cpsdata};
-\addlegendentry{$C_{\min}(n_0)$}
+\addlegendentry{\(\Cmeas_{\min}(n_0)\)}
 
 % Cminus: solid line (add 'smooth' to spline)
 \addplot+[
   no markers, thick
 ] table[x={n_0}, y={Cminus}] {\cpsdata};
-\addlegendentry{$C_{-}(n_0)$}
+\addlegendentry{\(\Cminus(n_0)\)}
 
 % CminusAsym: dashed line (add 'smooth' to spline)
 \addplot+[
   no markers, thick, dashed, smooth
 ] table[x={n_0}, y={CminusAsym}] {\cpsdata};
-\addlegendentry{$C_{-}^{\mathrm{asym}}(n_0)$}
+\addlegendentry{\(\CminusAsymp(n_0)\)}
 
 \end{axis}
 \end{tikzpicture}
-\caption{Comparison of the observed minima \( C_{\min}(N_0) \) (points) with the analytic lower bound \( \CminusProduct(N_0) \) (solid line)
+\caption{Comparison of the observed minima \( \Cmeas_{\min}(n_0) \) (points) with the analytic lower bound \( \CminusProduct(N_0) \) (solid line)
 and corresponding asymptotic proxy \( \tfrac{K^2\;\log{n}}{\log{\frac{3n}{2}}} \) (dashed line), where \( K \approx 1.482616 \).
 For \( N_0 \ge \xMertens \), the minimal observed margin analytical margin is
 \(\displaystyle 
-\eta_{\tana} = \min_{N_0 \ge \xMertens} \bigl( C_{\min}(N_0) - \CminusProduct(N_0) ) = \xDeltaGlobal,
+\eta_{\tana} = \min_{N_0 \ge \xMertens} \bigl( \Cmeas_{\min}(N_0) - \CminusProduct(N_0) ) = \xDeltaGlobal,
 \)
 and for \( N_0 \ge n_{5\%} = 4.11 \cdot 10^{4} \), the minimal observed margin is
 \(\displaystyle 
-\eta = \min_{N_0 \ge n_{5\%}} \bigl( C_{\min}(N_0) - \CminusProduct(N_0) ) = \xEtaStat,
+\eta = \min_{N_0 \ge n_{5\%}} \bigl( \Cmeas_{\min}(N_0) - \CminusProduct(N_0) ) = \xEtaStat,
 \)
 confirming that \( \Cmeas_{\min}(N_0) \ge \tfrac{\CminusProduct(N_0) M(N_0)}{\log^2{N_0}} \) throughout the verified range.}
 \label{fig:lower-analytic-bound-comparison}
 \end{figure}
 
 
-Let \(N_\ast\) denote the smallest \(N_0\) such that \(C_{\min}(n) \ge \CminusProduct(n)\) for all subsequent \(n\) in our record.
+Let \(N_\ast\) denote the smallest \(N_0\) such that \(\Cmeas_{\min}(n) \ge \CminusProduct(n)\) for all subsequent \(n\) in our record.
 From Figure~\ref{fig:lower-analytic-bound-comparison}, the last recorded minimum below \(\CminusProduct\) occurs at \(N_0 = \xPreMertens \).
 We therefore take the next recorded minimum as a conservative permanence threshold, \(N_\ast = \xMertens\), with local margin
 \(\zeta = \Cmeas_{\min}(N_\ast) - \CminusProduct(N_\ast) = \xDeltaMertens \).
@@ -1144,7 +1143,7 @@ Why the bound is not tight for small \(n\).
 Each isolated factor (e.g.\ \(1-\tfrac{2}{7-1}\)) is an exact maximum possible removal for that prime \emph{if} it acted first.
 In the sieve, earlier primes thin the set; later primes then act on an irregular remainder and their effects overlap statistically.
 Thus the full product overestimates combined removal at small \(n\), and in low-statistics regimes the sieve can (and often does)
-remove \(100\%\) of candidates—hence \(C_{\min}\) may fall below the asymptotic floor until \(n\) is large enough
+remove \(100\%\) of candidates—hence \(\Cmeas_{\min}\) may fall below the asymptotic floor until \(n\) is large enough
 (around \(10^4\)) for the probabilistic model to be valid.
 \end{remark}
 
@@ -1189,7 +1188,7 @@ Equivalently,
 \end{equation}
 
 \noindent\emph{Notes.}
-(i) Because we only record minima, this is conservative: any unrecorded intermediate values lie \emph{above} \(C_{\min}\).
+(i) Because we only record minima, this is conservative: any unrecorded intermediate values lie \emph{above} \(\Cmeas_{\min}\).
 (ii) The numerical value \(\eta=\xEtaStat\) is computed directly from the table used in Fig.~\ref{fig:lower-analytic-bound-comparison}; we also report the first \(N_0\) attaining \(\eta\) in the caption.
 
 From the statistical validity criterion
