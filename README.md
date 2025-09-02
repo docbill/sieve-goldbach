@@ -223,14 +223,20 @@ If you use this code or data, please cite the accompanying manuscript:
 
 ## Archival Identifiers
 
-This project has been permanently archived in [Software Heritage](https://archive.softwareheritage.org/):
+This project is preserved in Software Heritage.
 
-- **Directory (release v0.1.0):**  
-  `swh:1:dir:74b69f1e739bbef1dd234621d565ea67e680bd6b;origin=https://github.com/docbill/sieve-goldbach;visit=swh:1:snp:b41e87b95ed609237a88090693189ee0433d6e44;anchor=swh:1:rev:114bbaa7380b436b20661119798139a2fa6db0ab`
+- **Tree (v0.1.0)**  
+  [`swh:1:dir:74b69f1e7...`](https://archive.softwareheritage.org/swh:1:dir:74b69f1e739bbef1dd234621d565ea67e680bd6b/)  
 
-- **Revision (commit for v0.1.0):**  
-  `swh:1:rev:114bbaa7380b436b20661119798139a2fa6db0ab;origin=https://github.com/docbill/sieve-goldbach;visit=swh:1:snp:b41e87b95ed609237a88090693189ee0433d6e44`
+- **Revision (v0.1.0 commit)**  
+  [`swh:1:rev:114bbaa7...`](https://archive.softwareheritage.org/swh:1:rev:114bbaa7380b436b20661119798139a2fa6db0ab/)  
 
-For future versions, see the Software Heritage origin page:
-https://archive.softwareheritage.org/browse/origin/https://github.com/docbill/sieve-goldbach/
+- **Tree (v0.1.1)**  
+  [ `swh:1:dir:0ab6250e1...` ](https://archive.softwareheritage.org/swh:1:dir:0ab6250e1b3593f5bbc5ad745d16a36841f90d93/)
+
+- **Revision (v0.1.1 commit)**  
+  [ `swh:1:rev:22b8e5ff8...`](https://archive.softwareheritage.org/swh:1:rev:22b8e5ff8858370462631bf4ddd08037de702f3a/)
+
+[![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/docbill/sieve-goldbach/)](https://archive.softwareheritage.org/browse/origin/https://github.com/docbill/sieve-goldbach/)
+
 
