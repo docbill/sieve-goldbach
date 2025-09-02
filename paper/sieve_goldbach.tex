@@ -597,7 +597,7 @@ While nearly a century old, HL–A remains the best parameter-free baseline to c
 
 For stability we measure and analyze Goldbach pairs \( (n-m, n+m) \) with \( m \in [-M,M] \setminus{0} \), where \( M=\lfloor \frac{n}{2} \rfloor \). This symmetric range was chosen for numerical stability and predictability, but the framework applies equally to other ranges.
 
-The programs used to generate primes and sieve the data were written in C and run on an Intel i5 processor in a ten-year-old laptop normally used as a Plex server. Most analysis completed in under a day; as of this draft, processing continues for higher ranges. The source code is released under GPL-3.0-or-later, and the manuscript under CC-BY-4.0. See repository and Zenodo DOI for details.
+The programs used to generate primes and sieve the data were written in C and AWK, and executed on an Intel i5 processor in a ten-year-old laptop normally used as a Plex server.  Full analysis requires several weeks, but partial results are available in minutes.  The source code is released under GPL-3.0-or-later, and the manuscript under CC-BY-4.0.  All source code and certified datasets are permanently archived on Zenodo~\cite{Riemers2025SieveGoldbach}.
 
 The measured variables \( \Nmeas_0, \Nmeas_1, \Cmeas_{\min}, \Cmeas_{\max}, \Cmeas_{\tavg} \) are defined in Definition~\ref{semiprime-survivors}. Appendix Table~\ref{tab:raw-stats} provides raw (unnormalized) data for verification. One may notice reported minima of zero pairs for \( n=7,11,43 \). These do not contradict Goldbach’s conjecture; they arise because certain pairs such as \( (7,7) \), \( (3,19) \), and \( (7,79) \) are excluded by our chosen window.
 
@@ -1896,6 +1896,11 @@ Primorials consistently correspond to maxima. Many unnormalized binned maxima ha
 7 & 96281998 & 2.6356 & 2.1463 & 0.4893 & 2.1507 & 0.4849 \\
 \bottomrule
 \end{longtable}
+
+\section*{Reproducibility}
+
+All source code, certification tools, and datasets used in this work are permanently archived on Zenodo.~\cite{Riemers2025SieveGoldbach}  
+The repository includes build scripts, certification outputs, and checksums to ensure bitwise reproducibility of all results.
 
 \clearpage
 
