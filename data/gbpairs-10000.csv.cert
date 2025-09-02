@@ -1,0 +1,9 @@
+format=goldbach_pairs_csv
+range=4..19998
+rows=9998
+last2N=19998
+fnv1a64=0x75d1d335c9d712ef
+sha256=6bb809a812c461afe25d079c5c5dba3c233216687b94c3389839f2d35532abbf
+bitmap=output/primes-200M.bitmap
+header=2N,N-M,N+M,2M
+note=Certified range is 3×n* (up to 19998). This exceeds the maximum value used in the paper, to provide margin for future revisions while keeping the file compact enough for inclusion.

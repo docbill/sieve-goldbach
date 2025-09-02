@@ -1,0 +1,7 @@
+output/
+*.o
+*.log
+*.aux
+*.bbl
+*.blg
+*.toc

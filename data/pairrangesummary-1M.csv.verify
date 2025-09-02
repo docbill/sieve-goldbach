@@ -1,0 +1,3 @@
+OK: validated pairrangesummary file
+rows=51  checked=51 (endpoint-rescaled at 6dp)
+ac02513968c1d6420970074f0e743ac39c00b23b6a07331964c37649fd3db0f5  output/pairrangesummary-1M.csv

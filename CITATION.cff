@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the related paper."
+title: "Sieve-Goldbach"
+authors:
+  - family-names: "Riemers"
+    given-names: "Bill C."
+license: "GPL-3.0-or-later"
+version: "1.0.0"
+date-released: 2025-09-02
+repository-code: "https://github.com/docbill/sieve-goldbach"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.16735169"
+    description: "Related paper describing the results validated by this software."
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Riemers"
+      given-names: "Bill C."
+  title: "Sieve-Theoretic Reformulation of Goldbach’s Conjecture"
+  year: 2025
+  doi: "10.5281/zenodo.16735169"
+
