@@ -5,8 +5,8 @@ authors:
   - family-names: "Riemers"
     given-names: "Bill C."
 license: "GPL-3.0-or-later"
-version: "0.1.1"
-date-released: 2025-09-02
+version: "0.1.2"
+date-released: 2025-09-08
 repository-code: "https://github.com/docbill/sieve-goldbach"
 
 # Related identifiers (paper DOI; Software Heritage SWHIDs)
@@ -15,7 +15,7 @@ identifiers:
     value: "10.5281/zenodo.16735169"
     description: "Related paper describing results validated by this software."
   - type: doi
-    value: "10.5281/zenodo.17041858"
+    value: "10.5281/zenodo.17080650"
     description: "Repository v0.1.1 Sieve-Goldbach"
 
 preferred-citation:
