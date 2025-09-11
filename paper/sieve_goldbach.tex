@@ -938,9 +938,7 @@ Dec. &
 7 & 3.860e-03 & 2.135e-03 & 3.185e-04 & 6.205e-04 & 1.045e-03 & 1.295e-03 & 1.054e-03 & 0.0\% \\
 \end{longtable}
 
-\paragraph{Maxima and primorial structure.}
-The Hardy–Littlewood singular series for \(2n\) depends only on the set of odd prime divisors of \(n\).
-Proposition~\ref{prop:primorial-plateau} predicts that on each scale \([P_y,\,p_{y+1}P_y)\) the windowed count is maximized when the odd part of \(n\) is divisible by the odd primorial \(P_y=\prod_{3\le p\le p_y}p\).
+Blockwise maxima align with the singular series.  Proposition~\ref{prop:primorial-plateau} predicts that on each scale \([P_y,\,p_{y+1}P_y)\) the windowed count is maximized when the odd part of \(n\) is divisible by the odd primorial \(P_y=\prod_{3\le p\le p_y}p\).
 In our per–block maxima (Table~\ref{tab:normalized-status}), this is reflected by winners at 
 \(15{,}015\), \(30{,}030\), \(45{,}045\), \(60{,}060\) (odd part \(=P_{13}\)), 
 and later \(255{,}255\), \(510{,}510\) (odd part \(=P_{17}\)), 
@@ -949,44 +947,50 @@ Because the singular series ignores exponents and the prime \(2\), many nearby m
 
 \needspace{10\baselineskip}
 
-\subsection{Primorial plateaus under the HL–A baseline}\label{sec:primorial-prop}
+\subsection{Primorial plateaus and HL–A}\label{sec:primorial-prop}
 
-% Half-primorial notation (optional, if not already defined)
 \begin{equation}\label{eq:half-primorial}
-P_y\ :=\ \prod_{3\le p\le p_y} p\ =\ \frac{p_y^\#}{2}\qquad\text{(``half a primorial'')}.
+P_y \;:=\; \prod_{3\le p\le p_y} p \;=\; \frac{p_y^\#}{2}\qquad\text{(``half a primorial'')}.
 \end{equation}
 
-\begin{proposition}[Record and local (plateau) maxima for the singular series]
-\label{prop:primorial-plateau}
-Let \(P_y=\prod_{3\le p\le p_y}p\) be the half-primorial up to the odd prime \(p_y\), and let \(p_{y+1}\) be the next odd prime. Then:
+\begin{lemma}[Singular–series plateaus (unconditional)]\label{lem:SS-plateau}
+For even $N=2n$,
+\begin{equation}\label{eq:sing-series-2n}
+\mathfrak S(2n)\;=\;2C_2 \prod_{\substack{p\mid n\\ p\ge 3}}\frac{p-1}{p-2}.
+\end{equation}
+Fix $X>0$ and consider $n\le X$. Then $\mathfrak S(2n)$ is maximized when $n$ is divisible by $P_y$ for the largest $p_y$ with $P_y\le X$; equivalently, within $[P_y,\,p_{y+1}P_y)$ the maximizers are precisely the multiples of $P_y$, and all such $n$ have the same value of $\mathfrak S(2n)$.
+\end{lemma}
+
+\begin{proof}
+Write $f(p):=(p-1)/(p-2)=1+\frac{1}{p-2}$. Then
+\(\mathfrak S(2n)=2C_2\prod_{p\mid n,\,p\ge 3} f(p)\).
+If $q>p\ge 3$ then $f(q)<f(p)$, so among sets of distinct odd primes the product is maximized by the initial segment $\{3,5,\dots,p_y\}$. The smallest integer carrying exactly this set is $P_y$, yielding the record at $n=P_y$. On $[P_y,p_{y+1}P_y)$ no new distinct odd prime beyond $p_y$ can divide $n$, so the maximizers are exactly the multiples of $P_y$ (exponents do not affect $\mathfrak S$), and all such $n$ share the same $\mathfrak S(2n)$. 
+\end{proof}
+
+\begin{proposition}[Record and plateau maxima \emph{under HL–A}]\label{prop:primorial-plateau}
+Assume the Hardy–Littlewood Conjecture~A in the form
+\begin{equation}\label{eq:HLA-main-term}
+\mathbb E\,R_2(2n)\ \sim\ \frac{\mathfrak S(2n)\,2n}{\log^2(2n)}\qquad(n\to\infty),
+\end{equation}
+uniformly on fixed-size blocks. Then, within each interval $[P_y,\,p_{y+1}P_y)$, the \emph{normalized} expected count
+\begin{equation}\label{eq:normalized-expectation}
+\frac{\log^2(2n)}{2n}\,\mathbb E\,R_2(2n)
+\end{equation}
+attains its maximum precisely at those $n$ with $P_y\mid n$ (i.e., multiples of $p_y^\#/2$). In particular,
 \begin{equation}\label{eq:record-max}
-\max_{\,2n\le 2P_y}\ \mathfrak S(2n)\ \text{ is attained at }\, n=P_y,
+\max_{\,2n\le 2P_y}\ \frac{\log^2(2n)}{2n}\,\mathbb E\,R_2(2n)
+\ \text{ is attained at }\, n=P_y,
 \end{equation}
-so \(P_y\) is a \emph{record} maximizer of \(\mathfrak S\) as \(y\) increases.
-
-Moreover, on the whole \emph{plateau interval}
-\begin{equation}\label{eq:plateau-interval}
-P_y\ \le\ n\ <\ p_{y+1}\,P_y,
-\end{equation}
-the maximum of \(\mathfrak S(2n)\) is attained precisely at those \(n\) for which all odd primes \(\{3,5,\dots,p_y\}\) divide \(n\); equivalently, \(P_y\mid n\) (up to a power of \(2\)). All such \(n\) have the same value of \(\mathfrak S(2n)\).
+so $P_y$ are record maximizers as $y$ increases.
 \end{proposition}
 
 \begin{proof}
-Write
-\begin{equation}\label{eq:f-def}
-f(p)\ :=\ \frac{p-1}{p-2}\ =\ 1+\frac{1}{p-2},
-\end{equation}
-so that \(\mathfrak S(2n)=2C_2\prod_{p\mid n,\,p\ge 3} f(p)\).
-If \(q>p\ge 3\) then
-\begin{equation}\label{eq:f-monotone}
-f(q)\ <\ f(p),
-\end{equation}
-i.e. the multiplicative gain from including a prime strictly decreases with the prime’s size.
-
-For a given size budget, the largest possible value of \(\prod f(p)\) (over sets of \emph{distinct} odd primes) is achieved by taking the \emph{initial segment} \(\{3,5,\dots,p_y\}\); replacing any of these by a larger prime strictly decreases the product by \eqref{eq:f-monotone}. The smallest integer carrying exactly this set is \(P_y\), so among \(2n\le 2P_y\) the maximizer is \(n=P_y\), proving \eqref{eq:record-max}.
-
-On the interval \eqref{eq:plateau-interval}, no \(n\) can introduce a new \emph{distinct} odd prime beyond \(p_y\) (that would force \(n\ge p_{y+1}P_y\)). Thus every \(n\) in the interval has the same \emph{set} of odd prime divisors as some divisor of \(P_y\); \(\mathfrak S\) is maximized precisely when that set equals \(\{3,5,\dots,p_y\}\), i.e. when \(P_y\mid n\) up to a power of \(2\). Exponents do not affect \(\mathfrak S\), so any multiple \(k\cdot P_y\) with \(k\) composed only of primes from \(\{3,5,\dots,p_y\}\) has the same \(\mathfrak S\) as \(P_y\). This gives the plateau and completes the proof.
+By \eqref{eq:HLA-main-term}, the normalized expectation \eqref{eq:normalized-expectation} is asymptotic to $\mathfrak S(2n)$, while $2n/\log^2(2n)$ varies slowly across a fixed block. Therefore the maximizers of \eqref{eq:normalized-expectation} coincide with the maximizers of $\mathfrak S(2n)$, which are exactly the multiples of $P_y$ by Lemma~\ref{lem:SS-plateau}. The record statement \eqref{eq:record-max} follows likewise.
 \end{proof}
+
+\begin{remark}[Empirical alignment]
+Table~\ref{tab:normalized-status} shows that blockwise maxima of the observed normalized counts occur at (or extremely near) multiples of $P_y$, matching the HL–A prediction up to sampling noise.
+\end{remark}
 
 \begin{remark}[HL–A heuristic for normalized maxima]
 Under the Hardy–Littlewood baseline, the expected ordered Goldbach count satisfies
@@ -1375,10 +1379,12 @@ The constant \( \nprodstar \) exists such that, for all \(n \ge \nprodstar\),
 Let \(\nprodstar\) denote the product–form threshold that appears in Theorem~\ref{thm:main};
 in our macros we set \(\nprodstar=\xMertens\).
 Define the (slightly larger) asymptotic–surrogate threshold \(\nasymstar\) by
-\[
-\nasymstar \ :=\ \min\Big\{n\ge \nprodstar:\ \CminusAsymp(n)\le \CminusProduct(n)\ \text{and}\ 
-\Cmeas_{\min}(n')\ \ge\ \CminusAsymp(n')\ \ \forall\, n'\ge n\Big\}.
-\]
+\begin{definition}[Asymptotic–surrogate dominance threshold (blockwise)]\label{def:nasym-block}
+\begin{equation}
+\nasymstar \ :=\ \min\Big\{\,N_0\in\mathcal B:\ 
+\Cmeas_{\min}(N_0')\ \ge\ \CminusAsymp(N_0')\ \ \text{for all } N_0'\in\mathcal B,\ N_0'\ge N_0\Big\}.
+\end{equation}
+\end{definition}
 In our dataset, \(\nasymstar=\xNasymStar\).
 \end{remark}
 
@@ -1386,7 +1392,7 @@ In our dataset, \(\nasymstar=\xNasymStar\).
 Specializing to \(\alpha_0=\tfrac12\) above, Lemma~\ref{lem:alpha-rescale} gives the same certified lower bound for every \(\alpha\in(0,\tfrac12]\) with the natural right–edge cutoff \(\sqrt{n+\alpha n}\). 
 By monotonicity in the window, Corollary~\ref{cor:alpha-superset} further implies \(\mathcal{G}(n;\alpha n)\ge \mathcal{G}(n;\tfrac12 n)\) for all \(\alpha\in[\tfrac12,1)\).
 
-\begin{conclusion}\label{sec:conclusion}
+\subsection{Conclusion}\label{sec:conclusion}
 We establish an explicit, certified sieve–theoretic lower bound for (windowed) Goldbach counts by applying an Eratosthenes–type sieve directly to the quadratic form \(Q(n,m)=(n-m)(n+m)\). The bound is given as a product of conservative per–prime Euler factors and holds uniformly for large \(n\) while the sieve cutoff \(z\) remains below the prime–forcing threshold \(n^{\frac{1}{2}}\), so the classical parity obstruction does not arise.
 
 Exhaustive computation up to \(2n=2\nprodstar\) confirms that every even integer in this range is representable. Beyond that range, the certified lower bound remains strictly below the observed decade–wise minima by a uniform positive margin. Moreover, after normalization by the Hardy–Littlewood main term, the windowed counts agree with the heuristic to within \(<1\%\) throughout \(n\le 10^{8}\), indicating rapid convergence and a stable singular–series normalization.
@@ -1394,7 +1400,6 @@ Exhaustive computation up to \(2n=2\nprodstar\) confirms that every even integer
 Taken together, these ingredients give a precise reduction: to push the sieve to the prime–forcing cutoff it suffices to assume a short–interval Bombieri–Vinogradov–type equidistribution for primes (as stated in the conditional corollary). Under that hypothesis one obtains a positive lower bound for all sufficiently large even integers; combined with our verification up to \(2\nprodstar\), this settles all cases.
 
 Unconditionally, the paper contributes (i) a rigorous lower bound with explicit constants, free of tail and binning artefacts; (ii) a reproducible computation to the stated limit; and (iii) a clear reduction of the remaining analytic task to a standard short–interval distribution problem, strictly weaker than assuming the full Hardy–Littlewood asymptotic. The available data strongly support the predicted main term, and the remaining hypothesis is sharply circumscribed.
-\end{conclusion}
 
 \subsection{Conditional corollary (short-interval equidistribution)}\label{sec:SI-BV}
 \begin{corollary}[Unconditional reduction; conditional consequence under short–interval equidistribution]
