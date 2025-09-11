@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
         long double ln3  = l32 + logN;
 	long double logNlogN = logN*logN;
         long double Cminus = logNlogN*prodSeries1*prodSeries2;
-        long double CminusAsym = RIEMKK*logN/ln3;
+        long double CminusAsym = KPRODKPROD*logN/ln3;
         uint64_t delta = (n>>1);
         uint64_t n_min = n-delta-1;
         uint64_t pairCount = countRangedPairs(n,n_min,&current,prime_array,prime_array_end);
