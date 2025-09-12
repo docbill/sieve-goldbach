@@ -410,3 +410,43 @@ help:
 	@echo "  make validate-skip-summary-ml  # generate SGB all sizes, summary small only"
 	@echo "  make clobber             # remove output artifacts; keep data/"
 
+
+# ---- Config ----------------------------------------------------
+PAPER_PROJECT := sieve-goldbach
+DATE    := $(shell date +%Y%m%d)
+PAPER_SRC_DIR := $(PAPER_PROJECT)-src
+PAPER_ZIP     := $(PAPER_PROJECT)-src-$(DATE).zip
+PAPER_SHA256     := $(PAPER_PROJECT)-src-$(DATE).sha256
+
+# List every file your TeX build needs (add .sty/.cls/.bst if any)
+PAPER_FILES := \
+  LICENSES/CC-BY-4.0.txt \
+  paper/sieve_goldbach.tex \
+  paper/sieve_goldbach.bib \
+  paper/README.txt \
+  paper/Makefile \
+  paper/cpslowerbound-100M.csv \
+  paper/lambdaavg-100M.csv \
+  paper/lambdamax-100M.csv \
+  paper/lambdamin-100M.csv \
+  paper/pairrangejoin-100M.csv
+
+.PHONY: zip-src clean-src
+
+# ---- Build the date-stamped source archive ---------------------
+zip-src:
+	@rm -rf "$(OUT)/$(PAPER_SRC_DIR)"
+	@mkdir -p "$(OUT)/$(PAPER_SRC_DIR)"
+	@cp -f $(PAPER_FILES) "$(OUT)/$(PAPER_SRC_DIR)/."
+	@cd "$(OUT)/$(PAPER_SRC_DIR)" && ( \
+	  echo "SHA256 manifest for $(PAPER_PROJECT) ($(DATE))" > CHECKSUMS.txt; \
+	  for f in $(notdir $(PAPER_FILES)); do sha256 "$$f" >> CHECKSUMS.txt; done )
+	@(cd "$(OUT)" && zip -r -X "$(PAPER_ZIP)" "$(PAPER_SRC_DIR)" >/dev/null)
+	@rm -rf "$(OUT)/$(PAPER_SRC_DIR)"
+	@echo Created "$(OUT)/$(PAPER_ZIP)"
+	@(cd "$(OUT)" && shasum -a 256 "$(PAPER_ZIP)"|tee "$(PAPER_SHA256)")
+
+# ---- Cleanup temp folder ---------------------------------------
+clean-src:
+	@rm -rf "$(OUT)/$(PAPER_ZIP)" "$(OUT)/$(PAPER_SHA256)"
+
