@@ -199,7 +199,7 @@
 \maketitle
 
 \begin{abstract}
-A windowed sieve framework for Goldbach is presented based on the quadratic form
+A windowed sieve framework for Goldbach \cite{GoldbachSurvey,Ribenboim1991} is presented based on the quadratic form
 \begin{equation}
 Q(n,m)\;=\;(n-m)(n+m),
 \end{equation}
@@ -1408,7 +1408,7 @@ For \(x\ge 3\), \(q\in\mathbb{N}\), \((a,q)=1\), and \(H>0\), write
 \begin{equation}\label{eq:pi-AP}
 \pi(x; q,a)\ :=\ \#\{\,p\le x:\ p\ \text{prime},\ p\equiv a\!\!\pmod q\,\}.
 \end{equation}
-Assume the short–interval Bombieri–Vinogradov hypothesis: there exist \(\theta>\tfrac{1}{2}\) and \(\varepsilon>0\) such that, for every \(A>0\),
+Assume the following short–interval Bombieri–Vinogradov hypothesis (cf.\ Elliott–Halberstam \cite{ElliottHalberstam1968}; see also Iwaniec–Kowalski \cite[Chs.~17–18]{IwaniecKowalski2004} and Harman \cite[Chs.~17,~28]{Harman2007}): there exist \(\theta>\tfrac{1}{2}\) and \(\varepsilon>0\) such that, for every \(A>0\),
 \begin{equation}\label{eq:SIBV}
 \sum_{q\le x^{\theta}}
 \ \max_{\substack{(a,q)=1}}\ \max_{x'\le x}\ \max_{H\ge x^{\frac{1}{2}+\varepsilon}}
@@ -1633,6 +1633,46 @@ Conjecture~\ref{conj:uniform-C} motivates the windowed sieve setup only; no theo
 
 \section{Certified Enclosures for Euler Products}\label{app:enclosures}
 
+\subsection{Mertens Product Enclosure}\label{app:mertens}
+
+\begin{lemma}[Explicit Mertens enclosure\cite{RosserSchoenfeld1962, Dusart2010}]\label{lem:explicit-mertens}
+There exists \( x_0 \) (e.g.\ \( x_0=\xMertens \)) such that for all \( x\ge x_0 \),
+\begin{equation}
+e^{-\gamma}\frac{1}{\log x}\!\left(1-\frac{1}{20\log^3 x}-\frac{316}{\log^4 x}\right)
+\le M(x) \le
+e^{-\gamma}\frac{1}{\log x}\!\left(1+\frac{1}{20\log^3 x}+\frac{3}{16\log^4 x}
++\frac{1.02}{(x-1)\log x}\right),
+\end{equation}
+hence
+\begin{equation}
+\bigl|\,\log x\cdot M(x)-e^{-\gamma}\,\bigr|\ \le\ e^{-\gamma}\,E_M(x),
+\end{equation}
+with
+\begin{equation}
+E_M(x) := \frac{1}{20\log^3 x}+\max\!\left\{\frac{316}{\log^4 x},\ \frac{3}{16\log^4 x}+\frac{1.02}{(x-1)\log x}\right\}.
+\end{equation}
+\end{lemma}
+
+\subsection{\(C_2\) Tail Bound}\label{app:C2-tail}
+\begin{lemma}[Certified Tail for \( C_2 \)]\label{lem:C2-tail}
+For all \( x\ge 3 \),
+\begin{equation}
+0\ \le\ 1-\frac{C_2(x)}{C_2}\ \le\ T(x),
+\qquad
+T(x) := \frac{1}{x-1}+\frac{1}{3(x-1)^3},
+\end{equation}
+so \( |C_2(x)-C_2|\le T(x) \).
+\end{lemma}
+
+Combining the lemmas,
+\begin{equation}
+\bigl|\,\log x\cdot P(x) - C_-^{(1)}\,\bigr|
+\le e^{-\gamma}C_2\,E_M(x) + e^{-\gamma}\,T(x) = \varepsilon_P(x),
+\end{equation}
+which is explicit and strictly decreasing for \( x\ge x_0 \).
+
+\needspace{10\baselineskip}
+
 \subsection{Shifted Product Enclosure}\label{app:shifted-product}
 
 \begin{lemma}[Certified Enclosure for the Shifted Product]\label{lem:shifted-enclosure}
@@ -1700,46 +1740,6 @@ The monotonicity of \(E_M,T\) makes \(\varepsilon_P\) strictly decreasing as wel
 
 \needspace{10\baselineskip}
 
-\subsection{Mertens Product Enclosure}\label{app:mertens}
-
-\begin{lemma}[Explicit Mertens enclosure\cite{RosserSchoenfeld1962, Dusart2010}]\label{lem:explicit-mertens}
-There exists \( x_0 \) (e.g.\ \( x_0=\xMertens \)) such that for all \( x\ge x_0 \),
-\begin{equation}
-e^{-\gamma}\frac{1}{\log x}\!\left(1-\frac{1}{20\log^3 x}-\frac{316}{\log^4 x}\right)
-\le M(x) \le
-e^{-\gamma}\frac{1}{\log x}\!\left(1+\frac{1}{20\log^3 x}+\frac{3}{16\log^4 x}
-+\frac{1.02}{(x-1)\log x}\right),
-\end{equation}
-hence
-\begin{equation}
-\bigl|\,\log x\cdot M(x)-e^{-\gamma}\,\bigr|\ \le\ e^{-\gamma}\,E_M(x),
-\end{equation}
-with
-\begin{equation}
-E_M(x) := \frac{1}{20\log^3 x}+\max\!\left\{\frac{316}{\log^4 x},\ \frac{3}{16\log^4 x}+\frac{1.02}{(x-1)\log x}\right\}.
-\end{equation}
-\end{lemma}
-
-\subsection{\(C_2\) Tail Bound}\label{app:C2-tail}
-\begin{lemma}[Certified Tail for \( C_2 \)]\label{lem:C2-tail}
-For all \( x\ge 3 \),
-\begin{equation}
-0\ \le\ 1-\frac{C_2(x)}{C_2}\ \le\ T(x),
-\qquad
-T(x) := \frac{1}{x-1}+\frac{1}{3(x-1)^3},
-\end{equation}
-so \( |C_2(x)-C_2|\le T(x) \).
-\end{lemma}
-
-Combining the lemmas,
-\begin{equation}
-\bigl|\,\log x\cdot P(x) - C_-^{(1)}\,\bigr|
-\le e^{-\gamma}C_2\,E_M(x) + e^{-\gamma}\,T(x) = \varepsilon_P(x),
-\end{equation}
-which is explicit and strictly decreasing for \( x\ge x_0 \).
-
-\needspace{10\baselineskip}
-
 \subsection{Application to the Lower Bound Product}
 Let
 \begin{equation}
@@ -1761,6 +1761,7 @@ and hence
 \ :=\ \varepsilon(n),
 \end{equation}
 with \( \varepsilon(n) \) explicit and strictly decreasing in \( n \).
+\needspace{10\baselineskip}
 
 \section{Window rescaling}\label{app:window-rescale}
 
