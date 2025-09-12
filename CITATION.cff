@@ -15,8 +15,8 @@ identifiers:
     value: "10.5281/zenodo.16735169"
     description: "Related paper describing results validated by this software."
   - type: doi
-    value: "10.5281/zenodo.17088954"
-    description: "Repository v0.1.3 Sieve-Goldbach"
+    value: "10.5281/zenodo.17108535"
+    description: "Repository v0.1.4 Sieve-Goldbach"
 
 preferred-citation:
   type: article
