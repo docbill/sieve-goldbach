@@ -60,7 +60,7 @@ uint64_t countRangedPairs(
     const uint64_t twoN = n << 1;
 
     // Align hi to first prime > n (linear adjust around *current)
-    uint64_t *hi = seek_first_prime_gt_linear(n, *current, lowest, highest);
+    uint64_t *hi = *current = seek_first_prime_gt_linear(n, *current, lowest, highest);
     if (hi >= highest) { // out of primes to the right
         *current = highest;
         return ~0ULL;
