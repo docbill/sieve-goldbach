@@ -255,6 +255,12 @@ This project is preserved in Software Heritage.
 - **Revision (v0.1.4 commit)**  
   [ `swh:1:rev:e6bdcb08ae...` ](https://archive.softwareheritage.org/swh:1:rev:e6bdcb08ae64fe5c1e488951d68575100c9f6e5d)
 
+- **Tree (v0.1.5)**  
+  [ `swh:1:dir:1be084fd56...` ](https://archive.softwareheritage.org/swh:1:dir:1be084fd561c2b621a7c1ccef5b34a5786e49afa)
+
+- **Revision (v0.1.5 commit)**  
+  [ `swh:1:rev:f707b77f37...` ](https://archive.softwareheritage.org/swh:1:rev:f707b77f37ae6c331f11bbefb74a5fc405964da2)
+
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/docbill/sieve-goldbach/)](https://archive.softwareheritage.org/browse/origin/https://github.com/docbill/sieve-goldbach/)
 
 

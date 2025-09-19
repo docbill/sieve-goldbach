@@ -994,7 +994,7 @@ Table~\ref{tab:normalized-status} shows that blockwise maxima of the observed no
 
 \begin{remark}[HL-A Heuristic for Normalized Maxima]
 Under the Hardy-Littlewood baseline, the expected ordered Goldbach count satisfies
-\begin{equation}\label{eq:HLA-main-term}
+\begin{equation}\label{eq:HLA-main-term-2}
 \mathbb E\,R_2(2n)\ \asymp\ \frac{\mathfrak S(2n)\,2n}{\log^2(2n)}.
 \end{equation}
 Across a fixed scale the factor \(2n/\log^2(2n)\) varies slowly, while \(\mathfrak S(2n)\) follows Proposition~\ref{prop:primorial-plateau}. Hence HL-A predicts that \emph{blockwise maxima} of normalized counts occur at \(n\) that are multiples of \(P_y=p_y^\#/2\) within each interval \([P_y,\,p_{y+1}P_y)\) (the “primorial plateaus”). Empirics in Table~\ref{tab:normalized-status} match this pattern.
@@ -1086,7 +1086,7 @@ Then a subset of Goldbach pairs satisfies \(1 \le |m| \le M(n)\), hence
 
 \begin{remark}
 Since \(\mathcal{G}(n) \ge \mathcal{G}(n;M(n))\) by construction, the bound
-\eqref{eq:analytic-lower-bound-global} establishes a valid global
+\eqref{eq:analytic-lower-bound-global-2} establishes a valid global
 analytic lower bound for the ordered Goldbach count.
 \end{remark}
 
@@ -1371,7 +1371,7 @@ Thus, given the definition of \( \CminusProduct(n) \) in Equation~\ref{eq:cminus
   \text{with } M(n)=\bigl\lfloor \tfrac{n}{2} \bigr\rfloor
   \ \text{ and }\
   \nprodstar=\xMertens .
-  \label{eq:analytic-lower-bound-global}
+  \label{eq:analytic-lower-bound-global-2}
 \end{equation}
 \end{proof}
 
@@ -1446,7 +1446,7 @@ and show on \(\mathfrak m\) the integral is \(o\!\big(N/\log^2 N\big)\) under \e
 
 \medskip\noindent\emph{Major Arcs.}
 Standard evaluation (see, e.g.,~\cite[Thm.~13.12]{MontgomeryVaughan2007}) gives
-\begin{equation}\label{eq:major-arc-again}
+\begin{equation}\label{eq:major-arc}
 \int_{\mathfrak M} S(\alpha)^2 e(-N\alpha)\,d\alpha
 =\frac{\mathfrak S(N)\,N}{\log^2 N}\ +\ O\!\Big(\frac{N}{\log^3 N}\Big),
 \end{equation}
@@ -1460,7 +1460,7 @@ Applying Vaughan’s identity to \(\Lambda\) in \(S(\alpha)\) and splitting at a
 (See the dispersion/large-sieve treatment in \cite[Chs.~17-18]{IwaniecKowalski2004} or \cite[Chs.~17,\,28]{Harman2007}; the short-interval input replaces the classical BV step.)
 
 \medskip
-Combining \eqref{eq:R2-int-again}, \eqref{eq:major-arc-again}, and \eqref{eq:major-arc-again},
+Combining \eqref{eq:R2-int-again}, \eqref{eq:major-arc}, and \eqref{eq:major-arc-again},
 \begin{equation}
 R_2(N)\ \ge\ \frac{(2C_2)\,N}{\log^2 N}\ -\ \Kminor\,\frac{N}{(\log N)^A}
 \end{equation}
@@ -1470,11 +1470,11 @@ for some \(\Kminor=\Kminor(A,\varepsilon)\). Choosing \(A\ge 3\) and \(N_0\) so 
 \begin{remark}[Weaker Sufficient Inputs for the Reduction]
 \label{rem:weaker-inputs}
 The corollary is proved with a minor--arc bound of the form
-\begin{equation}\label{eq:major-arc-again}
+\begin{equation}\label{eq:major-arc-again-copy}
 \int_{\mathfrak m} S(\alpha)^2 e(-N\alpha)\,d\alpha\ \ll_{A,\varepsilon}\ \frac{N}{(\log N)^A}
 \quad\text{for some }A>2,
 \end{equation}
-with \(S(\alpha)\) as in \eqref{eq:S-alpha}. The full hypothesis \eqref{eq:SIBV} is a convenient sufficient condition for \eqref{eq:major-arc-again}, but it is not necessary. Any of the following implies \eqref{eq:major-arc-again} and hence the corollary:
+with \(S(\alpha)\) as in \eqref{eq:S-alpha}. The full hypothesis \eqref{eq:SIBV} is a convenient sufficient condition for \eqref{eq:major-arc-again-copy}, but it is not necessary. Any of the following implies \eqref{eq:major-arc-again-copy} and hence the corollary:
 
 \begin{enumerate}
 \item[\textnormal{(i)}] \emph{Short-Interval BDH/\(L^2\)-type Estimate.}
@@ -1485,7 +1485,7 @@ There exist \(\delta,\varepsilon>0\) such that, for every \(A>0\),
 \int_{N}^{2N}\bigl|\pi(x+H;q,a)-\tfrac{H}{\varphi(q)\log x}\bigr|^2\,dx
 \ \ll_{A,\varepsilon}\ \frac{N^2}{(\log N)^A}.
 \end{equation}
-Via Vaughan’s identity, Cauchy-Schwarz and the large sieve, this delivers \eqref{eq:major-arc-again}.
+Via Vaughan’s identity, Cauchy-Schwarz and the large sieve, this delivers \eqref{eq:major-arc-again-copy}.
 
 
 \item[\textnormal{(ii)}] \emph{Almost-Everywhere Short-Interval Equidistribution.}
@@ -1494,7 +1494,7 @@ For some \(\delta,\varepsilon>0\) and every \(A>0\), all but \(O\!\big(N/(\log N
 \max_{q\le N^{\frac{1}{2}+\delta}}\ \max_{(a,q)=1}\ \max_{H\ge N^{\frac{1}{2}+\varepsilon}}
 \bigl|\pi(x+H;q,a)-\tfrac{H}{\varphi(q)\log x}\bigr|\ \ll\ \frac{H}{(\log N)^{A}}.
 \]
-This yields \eqref{eq:major-arc-again} after integrating over \(x\) and summing dyadically.
+This yields \eqref{eq:major-arc-again-copy} after integrating over \(x\) and summing dyadically.
 
 \item[\textnormal{(iii)}] \emph{Any stronger hypothesis implying (i) or (ii)} (e.g. a GEH/EH-type statement in short intervals, or BV in short intervals for a rich class of moduli together with a standard dispersion argument).
 \end{enumerate}
@@ -1524,7 +1524,7 @@ that are logically independent of it.
 
 \begin{remark}[How the Reduction is Used]
 \label{rem:reduction-use}
-Assume the minor-arc input \eqref{eq:major-arc-again} with some \(A>2\) (e.g. under SI--BV\(_\theta\)).
+Assume the minor-arc input \eqref{eq:major-arc-again-copy} with some \(A>2\) (e.g. under SI--BV\(_\theta\)).
 
 (i) \emph{Positivity.} Since \(\mathfrak S(N)\ge \Szero=2C_2\) and
 \[
@@ -1558,7 +1558,7 @@ If, instead of \eqref{eq:prod-tail}, work with the asymptotic surrogate
 \begin{definition}[Exponential Sum and Major/Minor Arcs]
 \label{def:S-and-arcs}
 Set \(e(t):=e^{2\pi i t}\) and
-\begin{equation}\label{eq:S-alpha}
+\begin{equation}\label{eq:S-alpha-copy}
 S(\alpha):=\sum_{n\le N}\Lambda(n)\,e(n\alpha),\qquad \alpha\in[0,1].
 \end{equation}
 Fix \(Q:=N^{1/2-\delta}\) with \(0<\delta<\theta-\tfrac12\). For each reduced fraction \(a/q\) with \(1\le q\le Q\) and \((a,q)=1\), define the major arc
@@ -2073,7 +2073,7 @@ Primorials consistently correspond to maxima. Many unnormalized binned maxima ha
   S[table-format=7,round-precision=0] % <n_geom>
   S[table-format=1.5,round-precision=5] % Cpred_\tavg
 }
-\caption[]{Normalized by \( \frac{log^2 n}{M} \) Per-Decade HL-A Predictions for Goldbach Pair Counts for \( |m| \in [ 1, \lfloor \frac{n}{2} \rfloor ] \)}\label{tab:normalized-status} \\
+\caption[]{Normalized by \( \frac{log^2 n}{M} \) Per-Decade HL-A Predictions for Goldbach Pair Counts for \( |m| \in [ 1, \lfloor \frac{n}{2} \rfloor ] \)}\label{tab:normalized-status-predictions} \\
 \toprule
 \multicolumn{1}{c}{\textbf{Dec.}} &
 \multicolumn{1}{c}{\textbf{\(\Npred_0\)}} &
