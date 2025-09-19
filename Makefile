@@ -18,8 +18,11 @@
 
 # Makefile — idempotent build/generate/certify/verify (DRY version)
 
-SHELL := /bin/sh
+SHELL := /bin/bash
+.SHELLFLAGS := -eu -o pipefail -c
+.ONESHELL:
 .DELETE_ON_ERROR:
+
 MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 
@@ -170,10 +173,10 @@ $(foreach SZ,$(SIZES),$(eval $(call SIZE_TEMPLATE,$(SZ))))
 
 # --- Rebind only after all per-size vars are defined ---
 ifeq ($(SKIP_SUMMARY_ML),1)
-  SUMMARY_MEDIUM := $(DATA)/$(SUMMARY_FILE_MEDIUM)
-  SUMMARY_LARGE  := $(DATA)/$(SUMMARY_FILE_LARGE)
-  SUMMARY_VERIFY_MEDIUM := 
-  SUMMARY_VERIFY_LARGE  := 
+SUMMARY_MEDIUM := $(DATA)/$(SUMMARY_FILE_MEDIUM)
+SUMMARY_LARGE  := $(DATA)/$(SUMMARY_FILE_LARGE)
+SUMMARY_VERIFY_MEDIUM := 
+SUMMARY_VERIFY_LARGE  := 
 endif
 
 
@@ -253,7 +256,8 @@ $$(LSMAX_$(1)): $$(LMAX_$(1)) | $(OUT)
 ifeq ($(and $(SKIP_SUMMARY_ML),$(filter MEDIUM LARGE,$(1))),)
 $$(SUMMARY_VERIFY_$(1)): $(VALIDATESUMMARY) $(BITMAP) $(RAW) $$(SUMMARY_$(1)) | $(OUT)
 	$(VALIDATESUMMARY) --file "$$(SUMMARY_$(1))" --bitmap "$(BITMAP)" --raw "$(RAW)" | tee "$$@"
-	sha256sum "$$(SUMMARY_$(1))" | tee -a "$$@"
+	@(echo -n sha256= | tee -a "$$@")
+	sha256sum < "$$(SUMMARY_$(1))" | tee -a "$$@"
 endif
 
 # sha256-only verifies use a single pattern rule (see below)
@@ -307,12 +311,18 @@ GBP_VERIFY    := $(GBP).verify
 
 $(BITMAP_VERIFY): $(CERTIFYPRIMES) $(BITMAP) | $(OUT)
 	./$(CERTIFYPRIMES) --bitmap --file "$(BITMAP)" | tee "$@"
+	@(echo -n "sha256=" | tee -a "$@")
+	sha256sum < "$(BITMAP)"| tee -a "$@"
 
 $(RAW_VERIFY): $(CERTIFYPRIMES) $(RAW) | $(OUT)
 	./$(CERTIFYPRIMES) --binary --file "$(RAW)" | tee "$@"
+	@(echo -n "sha256=" | tee -a "$@")
+	sha256sum < "$(RAW)"| tee -a "$@"
 
 $(GBP_VERIFY): $(CERTIFYGBPAIRS) $(GBP) $(BITMAP) | $(OUT)
 	./$(CERTIFYGBPAIRS) --bitmap "$(BITMAP)" --file "$(GBP)" | tee "$@"
+	@(echo -n "sha256=" | tee -a "$@")
+	sha256sum < "$(BITMAP)"| tee -a "$@"
 
 certify: $(BITMAP_VERIFY) $(RAW_VERIFY) $(GBP_VERIFY) $(SGB_VERIFY_SMALL) \
 	$(SUMMARY_VERIFY_SMALL) $(JOIN_VERIFY_SMALL) $(CPSLB_VERIFY_SMALL) \
@@ -389,7 +399,7 @@ validate-skip-summary-ml: ; @$(MAKE) SKIP_SUMMARY_ML=1 validate-large
 
 # ---------- Housekeeping ----------
 .PHONY: all generate generate-medium generate-large clean clobber 
- 
+
 clean:
 	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*.verify "$(OUT)"/*.sha256
 

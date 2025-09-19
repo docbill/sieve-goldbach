@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
                d=1;
 	   }
 	   n_geom = ((uint64_t)floorl(powl(10.0L, k)*sqrtl((long double)d*(d+1))))|((k == 0)?0ULL:1ULL);
-	   hlCorrAvg = 0.5*(hlCorr(n_geom,n_geom>>1)+hlCorr(n_geom+1,(n_geom+1)>>1));
+	   hlCorrAvg = (n_geom >= 10)?(0.5*(hlCorr(n_geom,n_geom>>1)+hlCorr(n_geom+1,(n_geom+1)>>1))):hlCorr(n_geom,n_geom>>1);
            if(n == nextDecade) {
                step *= 10;
                decade++;
