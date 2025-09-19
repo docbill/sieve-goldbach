@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
 	   pairCountMin *= hlCorr(minAt,minAt>>1);
 	   pairCountMax *= hlCorr(maxAt,maxAt>>1);
 	   cpred_min *= hlCorr(n_0,n_0>>1);
-	   cpred_max *= hlCorr(n_1,n_0>>1);
+	   cpred_max *= hlCorr(n_1,n_1>>1);
            printf("%d,%" PRIu64 ",%.6f,%" PRIu64 ",%.6f,%" PRIu64 ",%.8f,%" PRIu64 ",%.8f,%" PRIu64 ",%.8f,%.8f,%.8f\n",
                decade,
                minAt, pairCountMin,
