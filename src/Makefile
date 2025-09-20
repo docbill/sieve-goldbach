@@ -49,7 +49,7 @@ AR       ?= ar
 ARFLAGS  ?= rcs
 
 PROGRAMS := primesieve_bitmap printprimes storeprimes \
-            pairrangesummary pairrange2sgbll \
+            pairrangesummary \
             cpslowerbound findgbpairs certifyprimes certifygbpairs \
             validatepairrangesummary
 

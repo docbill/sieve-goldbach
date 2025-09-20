@@ -37,6 +37,7 @@ all: validate-skip-summary-ml
 # ---------- Parameters ----------
 LIMIT        := 200000000
 GBCOUNT      := 10000
+SMALLSTART   := 4
 SMALLCOUNT   := 1000000
 MEDIUMCOUNT  := 10000000
 LARGECOUNT   := 100000000
@@ -55,14 +56,13 @@ PRIME_BITMAP_BIN := src/primesieve_bitmap/primesieve_bitmap
 STOREPRIMES_BIN  := src/storeprimes/storeprimes
 FINDGBPAIRS_BIN  := src/findgbpairs/findgbpairs
 CPSLB_BIN        := src/cpslowerbound/cpslowerbound
-SGB_BIN          := src/pairrange2sgbll/pairrange2sgbll
 SUMMARY_BIN      := src/pairrangesummary/pairrangesummary
 CERTIFYPRIMES    := src/certifyprimes/certifyprimes
 CERTIFYGBPAIRS   := src/certifygbpairs/certifygbpairs
 VALIDATESUMMARY  := src/validatepairrangesummary/validatepairrangesummary
 
 PROGRAMS := $(PRIME_BITMAP_BIN) $(STOREPRIMES_BIN) $(FINDGBPAIRS_BIN) \
-            $(CPSLB_BIN) $(SGB_BIN) $(CERTIFYPRIMES) $(CERTIFYGBPAIRS) \
+            $(CPSLB_BIN) $(CERTIFYPRIMES) $(CERTIFYGBPAIRS) \
             $(SUMMARY_BIN) $(VALIDATESUMMARY)
 
 # Dispatcher: build any src/<prog>/<prog> via src/Makefile (inherits toolchain)
@@ -101,7 +101,7 @@ GBP_GOLD    := $(DATA)/$(notdir $(GBP)).verify
 # ---------- Per-size templated outputs & verifies ----------
 # Templated variables expanded for each SIZE in $(SIZES)
 # For SIZE in {SMALL,MEDIUM,LARGE} this defines:
-#   SGB_{SIZE}, SUMMARY_{SIZE}, CPSLB_{SIZE}, LAMBDA_{TYPE}_{SIZE}
+#   SUMMARY_{SIZE}, CPSLB_{SIZE}, LAMBDA_{TYPE}_{SIZE}
 #   their generation rules, and corresponding *_VERIFY targets.
 
 # Helper to read “value of variable named NAME_SIZE”
@@ -173,10 +173,10 @@ $(foreach SZ,$(SIZES),$(eval $(call SIZE_TEMPLATE,$(SZ))))
 
 # --- Rebind only after all per-size vars are defined ---
 ifeq ($(SKIP_SUMMARY_ML),1)
-SUMMARY_MEDIUM := $(DATA)/$(SUMMARY_FILE_MEDIUM)
-SUMMARY_LARGE  := $(DATA)/$(SUMMARY_FILE_LARGE)
-SUMMARY_VERIFY_MEDIUM := 
-SUMMARY_VERIFY_LARGE  := 
+  SUMMARY_MEDIUM := $(DATA)/$(SUMMARY_FILE_MEDIUM)
+  SUMMARY_LARGE  := $(DATA)/$(SUMMARY_FILE_LARGE)
+  SUMMARY_VERIFY_MEDIUM := 
+  SUMMARY_VERIFY_LARGE  := 
 endif
 
 
@@ -184,32 +184,35 @@ define SIZE_TEMPLATE2
 
 # --- Generation rules ---
 
-# Predicted HL-A pairs
-$$(SGB_$(1)): $(SGB_BIN) $(RAW) | $(OUT)
-	$$(if $$(filter LARGE,$(1)), \
-		./$(SGB_BIN) "$(RAW)" $$(CNT_$(1)) | tee "$$@", \
-		$$(if $$(filter MEDIUM,$(1)), \
-			( if [ -r "$$(call GET,SGB,LARGE)" ]; then grep -v '^7,'  < "$$(call GET,SGB,LARGE)"; else ./$(SGB_BIN) "$(RAW)" $$(CNT_$(1)); fi ) | tee "$$@", \
-			( if [ -r "$$(call GET,SGB,LARGE)" ]; then grep -v '^[67],' < "$$(call GET,SGB,LARGE)"; elif [ -r "$$(call GET,SGB,MEDIUM)" ]; then grep -v '^6,' < "$$(call GET,SGB,MEDIUM)"; else ./$(SGB_BIN) "$(RAW)" $$(CNT_$(1)); fi ) | tee "$$@" \
-		) \
-	)
-
-# Fast summary counts
-# - If SKIP_SUMMARY_ML=1 and SIZE is MEDIUM or LARGE: DO NOT define a rule (read data/)
-# - If SKIP_SUMMARY_ML=1 and SIZE is SMALL: always generate (no reuse)
-# - Else: keep the existing reuse-from-larger behavior
+# Fast summary counts via copy+append using --no-header
+# - SMALL: generate with header up to SMALLCOUNT
+# - MEDIUM: depend on SMALL; copy SMALL header, then append from SMALLCOUNT..MEDIUMCOUNT
+# - LARGE:  depend on MEDIUM; copy MEDIUM header, then append from MEDIUMCOUNT..LARGECOUNT
+# - If SKIP_SUMMARY_ML=1 and SIZE is MEDIUM/LARGE: DO NOT define a rule (read data/)
 ifeq ($(and $(SKIP_SUMMARY_ML),$(filter MEDIUM LARGE,$(1))),)
-$$(SUMMARY_$(1)): $(SUMMARY_BIN) $(RAW) | $(OUT)
-	$$(if $$(and $$(SKIP_SUMMARY_ML),$$(filter SMALL,$(1))), \
-		./$(SUMMARY_BIN) "$(RAW)" $$(CNT_$(1)) | tee "$$@", \
-		$$(if $$(filter LARGE,$(1)), \
-			./$(SUMMARY_BIN) "$(RAW)" $$(CNT_$(1)) | tee "$$@", \
-			$$(if $$(filter MEDIUM,$(1)), \
-				( if [ -r "$$(call GET,SUMMARY,LARGE)" ]; then grep -v '^7,'  < "$$(call GET,SUMMARY,LARGE)"; else ./$(SUMMARY_BIN) "$(RAW)" $$(CNT_$(1)); fi ) | tee "$$@", \
-				( if [ -r "$$(call GET,SUMMARY,LARGE)" ]; then grep -v '^[67],' < "$$(call GET,SUMMARY,LARGE)"; elif [ -r "$$(call GET,SUMMARY,MEDIUM)" ]; then grep -v '^6,' < "$$(call GET,SUMMARY,MEDIUM)"; else ./$(SUMMARY_BIN) "$(RAW)" $$(CNT_$(1)); fi ) | tee "$$@" \
-			) \
-		) \
-	)
+
+# SMALL
+$$(if $$(filter SMALL,$(1)),$$(eval \
+$(SUMMARY_SMALL): $(SUMMARY_BIN) $(RAW) | $(OUT) ; \
+	./$(SUMMARY_BIN) --compat=v0.1.5 --model=empirical "$(RAW)" $$(CNT_$(1)) | tee "$(SUMMARY_SMALL)" \
+))
+
+# MEDIUM
+$$(if $$(filter MEDIUM,$(1)),$$(eval \
+$(SUMMARY_MEDIUM): $(SUMMARY_BIN) $(RAW) $(SUMMARY_SMALL) | $(OUT) ; \
+	cp "$(SUMMARY_SMALL)" "$(SUMMARY_MEDIUM)" ; \
+	head -n 1 < "$(SUMMARY_MEDIUM)" ; \
+	./$(SUMMARY_BIN) --compat=v0.1.5 --model=empirical --start-n $(SMALLCOUNT) --no-header "$(RAW)" $(MEDIUMCOUNT) | tee -a "$(SUMMARY_MEDIUM)" \
+))
+
+# LARGE
+$$(if $$(filter LARGE,$(1)),$$(eval \
+$(SUMMARY_LARGE): $(SUMMARY_BIN) $(RAW) $(SUMMARY_MEDIUM) | $(OUT) ; \
+	cp "$(SUMMARY_MEDIUM)" "$(SUMMARY_LARGE)" ; \
+	head -n 1 < "$(SUMMARY_LARGE)" ; \
+	./$(SUMMARY_BIN) --compat=v0.1.5 --model=empirical --start-n $(MEDIUMCOUNT) --no-header "$(RAW)" $(LARGECOUNT) | tee -a "$(SUMMARY_LARGE)" \
+))
+
 endif
 
 # Join summary as sgb files
@@ -286,6 +289,20 @@ endef
 # Expand the per-size template for all sizes
 $(foreach SZ,$(SIZES),$(eval $(call SIZE_TEMPLATE2,$(SZ))))
 
+# Predicted HL-A pairs
+$(SGB_SMALL): $(SUMMARY_BIN) $(RAW)
+	./$(SUMMARY_BIN) --compat=v0.1.5 --model=hl-a --start-n $(SMALLSTART) "$(RAW)" "$(SMALLCOUNT)" | tee "$@"
+
+$(SGB_MEDIUM): $(SUMMARY_BIN) $(RAW) $(SGB_SMALL)
+	@cp "$(SGB_SMALL)" "$@"
+	@head -1 < "$@"
+	./$(SUMMARY_BIN) --compat=v0.1.5 --model=hl-a --start-n $(SMALLCOUNT) --no-header "$(RAW)" "$(MEDIUMCOUNT)" |tee -a "$@"
+
+$(SGB_LARGE): $(SUMMARY_BIN) $(RAW) $(SGB_MEDIUM)
+	@cp "$(SGB_MEDIUM)" "$@"
+	@head -1 < "$@"
+	./$(SUMMARY_BIN) --compat=v0.1.5 --model=hl-a --start-n $(MEDIUMCOUNT) --no-header "$(RAW)" "$(LARGECOUNT)" |tee -a "$@"
+	
 
 # ---------- Generic sha256 rule ----------
 %.sha256: %
@@ -399,7 +416,7 @@ validate-skip-summary-ml: ; @$(MAKE) SKIP_SUMMARY_ML=1 validate-large
 
 # ---------- Housekeeping ----------
 .PHONY: all generate generate-medium generate-large clean clobber 
-
+ 
 clean:
 	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*.verify "$(OUT)"/*.sha256
 
