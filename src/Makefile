@@ -23,7 +23,7 @@ CC        ?= gcc
 CFLAGS    ?= -O3 -Wall -Wextra -I$(ROOT)/lib
 
 CXX       ?= g++
-CXXFLAGS  ?= -O3 -Wall -Wextra -std=c++17
+CXXFLAGS  ?= -O3 -Wall -Wextra -std=c++17 -I$(ROOT)/lib
 
 CPPFLAGS  ?=
 LDFLAGS   ?=

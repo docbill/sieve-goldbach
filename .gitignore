@@ -1,4 +1,5 @@
 output/
+*.a
 *.o
 *.log
 *.aux

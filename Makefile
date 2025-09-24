@@ -34,22 +34,38 @@ DATA := data
 .PHONY: all
 all: validate-skip-summary-ml
 
+# --- Pick all alphas, and the one that mirrors into legacy output/ ---
+ALPHAS := $(shell awk 'BEGIN{r=exp(log(2)/8);a=exp(log(2)*-10);eps=1e-12;while(a<1-eps){printf "%.12g ",a;a*=r}print "1"}')
+ALPHA_DEFAULT ?= 0.5
+# Expand to: --alpha 0.5 --alpha 0.6 ...
+ALPHA_ARGS := $(foreach a,$(ALPHAS),--alpha $(a))
+
 # ---------- Parameters ----------
 LIMIT        := 200000000
 GBCOUNT      := 10000
 SMALLSTART   := 4
+SPRIMSTART   := 6
+SPRIMCOUNT   := 1021020
 SMALLCOUNT   := 1000000
 MEDIUMCOUNT  := 10000000
+MPRIMCOUNT   := 9699690
 LARGECOUNT   := 100000000
+LPRIMCOUNT   := 111546435
 
 # Size axes
-SIZES      := SMALL MEDIUM LARGE
+SIZES      := SMALL SPRIM MEDIUM MPRIM LARGE LPRIM
 SUFFIX_SMALL  := 1M
+SUFFIX_SPRIM  := 17PR2
 SUFFIX_MEDIUM := 10M
+SUFFIX_MPRIM  := 19PR
 SUFFIX_LARGE  := 100M
+SUFFIX_LPRIM  := 23PR.5
 COUNT_SMALL   := $(SMALLCOUNT)
+COUNT_SPRIM   := $(SPRIMCOUNT)
 COUNT_MEDIUM  := $(MEDIUMCOUNT)
+COUNT_MPRIM   := $(MPRIMCOUNT)
 COUNT_LARGE   := $(LARGECOUNT)
+COUNT_LPRIM   := $(LPRIMCOUNT)
 
 # ---------- Binaries (real paths) ----------
 PRIME_BITMAP_BIN := src/primesieve_bitmap/primesieve_bitmap
@@ -62,8 +78,8 @@ CERTIFYGBPAIRS   := src/certifygbpairs/certifygbpairs
 VALIDATESUMMARY  := src/validatepairrangesummary/validatepairrangesummary
 
 PROGRAMS := $(PRIME_BITMAP_BIN) $(STOREPRIMES_BIN) $(FINDGBPAIRS_BIN) \
-            $(CPSLB_BIN) $(CERTIFYPRIMES) $(CERTIFYGBPAIRS) \
-            $(SUMMARY_BIN) $(VALIDATESUMMARY)
+	    $(CPSLB_BIN) $(CERTIFYPRIMES) $(CERTIFYGBPAIRS) \
+	    $(SUMMARY_BIN) $(VALIDATESUMMARY)
 
 # Dispatcher: build any src/<prog>/<prog> via src/Makefile (inherits toolchain)
 $(PROGRAMS):
@@ -93,7 +109,6 @@ $(GBP): $(FINDGBPAIRS_BIN) $(RAW) | $(OUT)
 	./$(FINDGBPAIRS_BIN) "$(RAW)" $(GBCOUNT) > "$@"
 
 # ---------- Gold (reference) files ----------
-
 BITMAP_GOLD := $(DATA)/$(notdir $(BITMAP)).verify
 RAW_GOLD    := $(DATA)/$(notdir $(RAW)).verify
 GBP_GOLD    := $(DATA)/$(notdir $(GBP)).verify
@@ -116,19 +131,27 @@ define SIZE_TEMPLATE
 SFX_$(1) := $(call GET,SUFFIX,$(1))
 CNT_$(1) := $(call GET,COUNT,$(1))
 
-SGB_FILE_$(1)       := pairrange2sgbll-$$(SFX_$(1)).csv
-SUMMARY_FILE_$(1)   := pairrangesummary-$$(SFX_$(1)).csv
-JOIN_FILE_$(1)      := pairrangejoin-$$(SFX_$(1)).csv
-CPSLB_FILE_$(1)     := cpslowerbound-$$(SFX_$(1)).csv
-LAVG_FILE_$(1)      := lambdaavg-$$(SFX_$(1)).csv
-LMIN_FILE_$(1)      := lambdamin-$$(SFX_$(1)).csv
-LMAX_FILE_$(1)      := lambdamax-$$(SFX_$(1)).csv
-LSAVG_FILE_$(1)      := lambdastatsavg-$$(SFX_$(1)).csv
-LSMIN_FILE_$(1)      := lambdastatsmin-$$(SFX_$(1)).csv
-LSMAX_FILE_$(1)      := lambdastatsmax-$$(SFX_$(1)).csv
+SGB_FILE_$(1)             := pairrange2sgbll-$$(SFX_$(1)).csv
+SGB_TPL_FILE_$(1)         := pairrange2sgbll-$$(SFX_$(1))--=ALPHA=-.csv
+SGB_DEFAULT_FILE_$(1)     := pairrange2sgbll-$$(SFX_$(1))-$(ALPHA_DEFAULT).csv
+SUMMARY_FILE_$(1)         := pairrangesummary-$$(SFX_$(1)).csv
+SUMMARY_TPL_FILE_$(1)     := pairrangesummary-$$(SFX_$(1))--=ALPHA=-.csv
+SUMMARY_DEFAULT_FILE_$(1) := pairrangesummary-$$(SFX_$(1))-$(ALPHA_DEFAULT).csv
+JOIN_FILE_$(1)            := pairrangejoin-$$(SFX_$(1)).csv
+CPSLB_FILE_$(1)           := cpslowerbound-$$(SFX_$(1)).csv
+LAVG_FILE_$(1)            := lambdaavg-$$(SFX_$(1)).csv
+LMIN_FILE_$(1)            := lambdamin-$$(SFX_$(1)).csv
+LMAX_FILE_$(1)            := lambdamax-$$(SFX_$(1)).csv
+LSAVG_FILE_$(1)           := lambdastatsavg-$$(SFX_$(1)).csv
+LSMIN_FILE_$(1)           := lambdastatsmin-$$(SFX_$(1)).csv
+LSMAX_FILE_$(1)           := lambdastatsmax-$$(SFX_$(1)).csv
 
-SGB_$(1)      := $(OUT)/$$(SGB_FILE_$(1))
-SUMMARY_$(1)  := $(OUT)/$$(SUMMARY_FILE_$(1))
+SGB_$(1)             := $(OUT)/$$(SGB_FILE_$(1))
+SGB_TPL_$(1)         := $(OUT)/alpha--=ALPHA=-/$$(SGB_TPL_FILE_$(1))
+SGB_DEFAULT_$(1)     := $(OUT)/alpha-$(ALPHA_DEFAULT)/$$(SGB_DEFAULT_FILE_$(1))
+SUMMARY_$(1)         := $(OUT)/$$(SUMMARY_FILE_$(1))
+SUMMARY_TPL_$(1)     := $(OUT)/alpha--=ALPHA=-/$$(SUMMARY_TPL_FILE_$(1))
+SUMMARY_DEFAULT_$(1) := $(OUT)/alpha-$(ALPHA_DEFAULT)/$$(SUMMARY_DEFAULT_FILE_$(1))
 JOIN_$(1)     := $(OUT)/$$(JOIN_FILE_$(1))
 CPSLB_$(1)    := $(OUT)/$$(CPSLB_FILE_$(1))
 LAVG_$(1)     := $(OUT)/$$(LAVG_FILE_$(1))
@@ -139,8 +162,8 @@ LSMIN_$(1)     := $(OUT)/$$(LSMIN_FILE_$(1))
 LSMAX_$(1)     := $(OUT)/$$(LSMAX_FILE_$(1))
 
 OUTPUT_$(1)   := $$(SGB_$(1)) $$(SUMMARY_$(1)) $$(JOIN_$(1)) $$(CPSLB_$(1)) \
-	         $$(LAVG_$(1)) $$(LMIN_$(1)) $$(LMAX_$(1)) \
-	         $$(LSAVG_$(1)) $$(LSMIN_$(1)) $$(LSMAX_$(1))
+	  $$(LAVG_$(1)) $$(LMIN_$(1)) $$(LMAX_$(1)) \
+	  $$(LSAVG_$(1)) $$(LSMIN_$(1)) $$(LSMAX_$(1))
 
 # Verifies (sha256 or tool-specific)
 SGB_VERIFY_$(1)      := $$(SGB_$(1)).sha256
@@ -173,47 +196,17 @@ $(foreach SZ,$(SIZES),$(eval $(call SIZE_TEMPLATE,$(SZ))))
 
 # --- Rebind only after all per-size vars are defined ---
 ifeq ($(SKIP_SUMMARY_ML),1)
-  SUMMARY_MEDIUM := $(DATA)/$(SUMMARY_FILE_MEDIUM)
-  SUMMARY_LARGE  := $(DATA)/$(SUMMARY_FILE_LARGE)
-  SUMMARY_VERIFY_MEDIUM := 
-  SUMMARY_VERIFY_LARGE  := 
+SUMMARY_MEDIUM := $(DATA)/$(SUMMARY_FILE_MEDIUM)
+SUMMARY_LARGE  := $(DATA)/$(SUMMARY_FILE_LARGE)
+SUMMARY_VERIFY_MEDIUM := 
+SUMMARY_VERIFY_LARGE  := 
+
 endif
 
 
 define SIZE_TEMPLATE2
 
 # --- Generation rules ---
-
-# Fast summary counts via copy+append using --no-header
-# - SMALL: generate with header up to SMALLCOUNT
-# - MEDIUM: depend on SMALL; copy SMALL header, then append from SMALLCOUNT..MEDIUMCOUNT
-# - LARGE:  depend on MEDIUM; copy MEDIUM header, then append from MEDIUMCOUNT..LARGECOUNT
-# - If SKIP_SUMMARY_ML=1 and SIZE is MEDIUM/LARGE: DO NOT define a rule (read data/)
-ifeq ($(and $(SKIP_SUMMARY_ML),$(filter MEDIUM LARGE,$(1))),)
-
-# SMALL
-$$(if $$(filter SMALL,$(1)),$$(eval \
-$(SUMMARY_SMALL): $(SUMMARY_BIN) $(RAW) | $(OUT) ; \
-	./$(SUMMARY_BIN) --compat=v0.1.5 --model=empirical "$(RAW)" $$(CNT_$(1)) | tee "$(SUMMARY_SMALL)" \
-))
-
-# MEDIUM
-$$(if $$(filter MEDIUM,$(1)),$$(eval \
-$(SUMMARY_MEDIUM): $(SUMMARY_BIN) $(RAW) $(SUMMARY_SMALL) | $(OUT) ; \
-	cp "$(SUMMARY_SMALL)" "$(SUMMARY_MEDIUM)" ; \
-	head -n 1 < "$(SUMMARY_MEDIUM)" ; \
-	./$(SUMMARY_BIN) --compat=v0.1.5 --model=empirical --start-n $(SMALLCOUNT) --no-header "$(RAW)" $(MEDIUMCOUNT) | tee -a "$(SUMMARY_MEDIUM)" \
-))
-
-# LARGE
-$$(if $$(filter LARGE,$(1)),$$(eval \
-$(SUMMARY_LARGE): $(SUMMARY_BIN) $(RAW) $(SUMMARY_MEDIUM) | $(OUT) ; \
-	cp "$(SUMMARY_MEDIUM)" "$(SUMMARY_LARGE)" ; \
-	head -n 1 < "$(SUMMARY_LARGE)" ; \
-	./$(SUMMARY_BIN) --compat=v0.1.5 --model=empirical --start-n $(MEDIUMCOUNT) --no-header "$(RAW)" $(LARGECOUNT) | tee -a "$(SUMMARY_LARGE)" \
-))
-
-endif
 
 # Join summary as sgb files
 $$(JOIN_$(1)): $$(SUMMARY_$(1)) $$(SGB_$(1)) | $(OUT)
@@ -289,37 +282,151 @@ endef
 # Expand the per-size template for all sizes
 $(foreach SZ,$(SIZES),$(eval $(call SIZE_TEMPLATE2,$(SZ))))
 
-# Predicted HL-A pairs
-$(SGB_SMALL): $(SUMMARY_BIN) $(RAW)
-	./$(SUMMARY_BIN) --compat=v0.1.5 --model=hl-a --start-n $(SMALLSTART) "$(RAW)" "$(SMALLCOUNT)" | tee "$@"
+# Fast summary counts via copy+append using
+# - SMALL: generate with header up to SMALLCOUNT
+# - MEDIUM: depend on SMALL; copy SMALL header, then append from SMALLCOUNT..MEDIUMCOUNT
+# - LARGE:  depend on MEDIUM; copy MEDIUM header, then append from MEDIUMCOUNT..LARGECOUNT
+# - If SKIP_SUMMARY_ML=1 and SIZE is MEDIUM/LARGE: DO NOT define a rule (read data/)
 
-$(SGB_MEDIUM): $(SUMMARY_BIN) $(RAW) $(SGB_SMALL)
-	@cp "$(SGB_SMALL)" "$@"
-	@head -1 < "$@"
-	./$(SUMMARY_BIN) --compat=v0.1.5 --model=hl-a --start-n $(SMALLCOUNT) --no-header "$(RAW)" "$(MEDIUMCOUNT)" |tee -a "$@"
+# SMALL
+$(SUMMARY_SMALL): $(SUMMARY_BIN) $(RAW) | $(OUT) 
+	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
+	for a in $(ALPHAS); do mkdir -p "$(OUT)/alpha-$$a"; done
+	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=v0.1.5 --model=empirical \
+	  --dec-n-start $(SMALLSTART) --dec-n-end $(SMALLCOUNT) \
+	  --prim-n-start $(SPRIMSTART) --prim-n-end $(SPRIMCOUNT) \
+	  --trace=primorial \
+	  --dec-out="$(SUMMARY_TPL_SMALL)" --prim-out="$(SUMMARY_TPL_SPRIM)" "$(RAW)"
+	@cp "$(SUMMARY_DEFAULT_SMALL)" "$(SUMMARY_SMALL)"
+
+# Emit the MEDIUM rule only when we actually build it (not when using data/)
+ifneq ($(SKIP_SUMMARY_ML),1)
+# make sure SUMMARY_MEDIUM resolves under output/, not data/
+ifeq ($(patsubst $(OUT)/%,ok,$(SUMMARY_MEDIUM)),ok)
+
+$(SUMMARY_MEDIUM): $(SUMMARY_BIN) $(RAW) $(SUMMARY_SMALL) | $(OUT)
+	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
+	for a in $(ALPHAS); do \
+	  src="$(SUMMARY_TPL_SMALL)"; dst="$(SUMMARY_TPL_MEDIUM)"; \
+	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
+	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+	  cp "$$src" "$$dst"; \
+	  src="$(SUMMARY_TPL_SPRIM)"; dst="$(SUMMARY_TPL_MPRIM)"; \
+	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
+	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+	  cp "$$src" "$$dst"; \
+	done
+	@cp "$(SUMMARY_SMALL)" "$(SUMMARY_MEDIUM)"
+	@head -n 1 < "$(SUMMARY_MEDIUM)"
+	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=v0.1.5 --model=empirical \
+	  --dec-n-start $(SMALLCOUNT) --dec-n-end $(MEDIUMCOUNT) \
+	  --prim-n-start $(SPRIMCOUNT) --prim-n-end $(MPRIMCOUNT) \
+	  --append --trace=primorial \
+	  --dec-out="$(SUMMARY_TPL_MEDIUM)" --prim-out="$(SUMMARY_TPL_MPRIM)" "$(RAW)"
+	@cp "$(SUMMARY_DEFAULT_MEDIUM)" "$(SUMMARY_MEDIUM)"
+
+endif
+endif
+
+# Emit the LARGE rule only when we actually build it (not when using data/)
+ifneq ($(SKIP_SUMMARY_ML),1)
+# make sure SUMMARY_LARGE resolves under output/, not data/
+ifeq ($(patsubst $(OUT)/%,ok,$(SUMMARY_LARGE)),ok)
+
+$(SUMMARY_LARGE): $(SUMMARY_BIN) $(RAW) $(SUMMARY_MEDIUM) | $(OUT)
+	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
+	for a in $(ALPHAS); do \
+	  src="$(SUMMARY_TPL_MEDIUM)"; dst="$(SUMMARY_TPL_LARGE)"; \
+	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
+	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+	  cp "$$src" "$$dst"; \
+	  src="$(SUMMARY_TPL_MPRIM)"; dst="$(SUMMARY_TPL_LPRIM)"; \
+	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
+	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+	  cp "$$src" "$$dst"; \
+	done
+	@cp "$(SUMMARY_MEDIUM)" "$(SUMMARY_LARGE)"
+	@head -n 1 < "$(SUMMARY_LARGE)"
+	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=v0.1.5 --model=empirical \
+	  --dec-n-start $(MEDIUMCOUNT) --dec-n-end $(LARGECOUNT) \
+	  --prim-n-start $(MPRIMCOUNT) --prim-n-end $(LPRIMCOUNT) \
+	  --append --trace=primorial \
+	  --dec-out="$(SUMMARY_TPL_LARGE)" --prim-out="$(SUMMARY_TPL_LPRIM)" "$(RAW)"
+	@cp "$(SUMMARY_DEFAULT_LARGE)" "$(SUMMARY_LARGE)"
+
+endif
+endif
+
+# Predicted HL-A pairs
+$(SGB_SMALL): $(SUMMARY_BIN) $(RAW) | $(OUT)
+	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
+	for a in $(ALPHAS); do mkdir -p "$(OUT)/alpha-$$a"; done
+	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=v0.1.5 --model=hl-a \
+	--dec-n-start $(SMALLSTART) --dec-n-end $(SMALLCOUNT) \
+	--prim-n-start $(SPRIMSTART) --prim-n-end $(SPRIMCOUNT) \
+	--trace=primorial \
+	--dec-out="$(SGB_TPL_SMALL)" --prim-out="$(SGB_TPL_SPRIM)" "$(RAW)" 
+	@cp "$(SGB_DEFAULT_SMALL)" "$(SGB_SMALL)"
+
+$(SGB_MEDIUM): $(SUMMARY_BIN) $(RAW) $(SGB_SMALL) | $(OUT)
+	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
+	for a in $(ALPHAS); do \
+	  src="$(SGB_TPL_SMALL)"; dst="$(SGB_TPL_MEDIUM)"; \
+	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
+	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+	  cp "$$src" "$$dst"; \
+	  src="$(SGB_TPL_SPRIM)"; dst="$(SGB_TPL_MPRIM)"; \
+	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
+	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+	  cp "$$src" "$$dst"; \
+	done
+	@cp "$(SGB_SMALL)" "$(SGB_MEDIUM)"
+	@head -1 < "$(SGB_MEDIUM)"
+	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=v0.1.5 --model=hl-a \
+	  --dec-n-start $(SMALLCOUNT) --dec-n-end $(MEDIUMCOUNT) \
+	  --prim-n-start $(SPRIMCOUNT) --prim-n-end $(MPRIMCOUNT) \
+	  --append --trace=primorial \
+	  --dec-out="$(SGB_TPL_MEDIUM)" --prim-out="$(SGB_TPL_MPRIM)" "$(RAW)"
+	@cp "$(SGB_DEFAULT_MEDIUM)" "$(SGB_MEDIUM)"
 
 $(SGB_LARGE): $(SUMMARY_BIN) $(RAW) $(SGB_MEDIUM)
-	@cp "$(SGB_MEDIUM)" "$@"
-	@head -1 < "$@"
-	./$(SUMMARY_BIN) --compat=v0.1.5 --model=hl-a --start-n $(MEDIUMCOUNT) --no-header "$(RAW)" "$(LARGECOUNT)" |tee -a "$@"
-	
+	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
+	for a in $(ALPHAS); do \
+	  src="$(SGB_TPL_MEDIUM)"; dst="$(SGB_TPL_LARGE)"; \
+	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
+	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+	  cp "$$src" "$$dst"; \
+	  src="$(SGB_TPL_MPRIM)"; dst="$(SGB_TPL_LPRIM)"; \
+	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
+	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+	  cp "$$src" "$$dst"; \
+	done
+	@cp "$(SGB_MEDIUM)" "$(SGB_LARGE)"
+	@head -1 < "$(SGB_LARGE)"
+	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=v0.1.5 --model=hl-a \
+	  --dec-n-start $(MEDIUMCOUNT) --dec-n-end $(LARGECOUNT) \
+	  --prim-n-start $(MPRIMCOUNT) --prim-n-end $(LPRIMCOUNT) \
+	  --append --trace=primorial \
+	  --dec-out="$(SGB_TPL_LARGE)" --prim-out="$(SGB_TPL_LPRIM)" "$(RAW)"
+	@cp "$(SGB_DEFAULT_LARGE)" "$(SGB_LARGE)"
+
 
 # ---------- Generic sha256 rule ----------
 %.sha256: %
 	sha256sum "$<" | tee "$@"
 
 # ---------- Top-level generation groups ----------
-generate:       $(BITMAP) $(RAW) $(GBP) $(SGB_SMALL) $(SUMMARY_SMALL) \
-		$(JOIN_SMALL) $(CPSLB_SMALL) $(LAVG_SMALL) $(LMIN_SMALL) \
-		$(LMAX_SMALL) $(LSAVG_SMALL) $(LSMIN_SMALL) $(LSMAX_SMALL)
+generate:       $(BITMAP) $(RAW) $(GBP) $(SGB_SMALL) $(SGB_SPRIM) $(SUMMARY_SMALL) \
+	$(JOIN_SMALL) $(CPSLB_SMALL) $(LAVG_SMALL) $(LMIN_SMALL) \
+	$(LMAX_SMALL) $(LSAVG_SMALL) $(LSMIN_SMALL) $(LSMAX_SMALL)
 
 generate-medium: $(BITMAP) $(RAW) $(GBP) $(SGB_MEDIUM) $(SUMMARY_MEDIUM) \
-		$(JOIN_MEDIUM) $(CPSLB_MEDIUM) $(LAVG_MEDIUM) $(LMIN_MEDIUM) \
-		$(LMAX_MEDIUM) $(LSAVG_MEDIUM) $(LSMIN_MEDIUM) $(LSMAX_MEDIUM)
+	$(JOIN_MEDIUM) $(CPSLB_MEDIUM) $(LAVG_MEDIUM) $(LMIN_MEDIUM) \
+	$(LMAX_MEDIUM) $(LSAVG_MEDIUM) $(LSMIN_MEDIUM) $(LSMAX_MEDIUM)
 
 generate-large: $(BITMAP) $(RAW) $(GBP) $(SGB_LARGE) $(SUMMARY_LARGE) \
-		$(JOIN_LARGE) $(CPSLB_LARGE) $(LAVG_LARGE) $(LMIN_LARGE) \
-		$(LMAX_LARGE) $(LSAVG_LARGE) $(LSMIN_LARGE) $(LSMAX_LARGE)
+	$(JOIN_LARGE) $(CPSLB_LARGE) $(LAVG_LARGE) $(LMIN_LARGE) \
+	$(LMAX_LARGE) $(LSAVG_LARGE) $(LSMIN_LARGE) $(LSMAX_LARGE)
 
 # ---------- Certification (base + per-size chains) ----------
 BITMAP_VERIFY := $(BITMAP).verify

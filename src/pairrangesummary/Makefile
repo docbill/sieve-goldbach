@@ -19,12 +19,14 @@
 # Assumes LIBFILE is passed from the top Makefile
 
 TARGET = pairrangesummary
-SRC = main.c
+SRC = pairrangesummary.cpp pairrange.cpp pairrangewindow.cpp
+INCL = pairinterval.hpp pairrange.hpp pairrangewindow.hpp hlcorrstate.hpp
 
 all: $(TARGET)
 
-$(TARGET): $(SRC) $(LIBFILE)
-	$(CC) $(CFLAGS) -o $@ $(SRC) $(LIBFILE) -lm
+$(TARGET): $(SRC) $(LIBFILE) $(INCL)
+	$(CXX) $(CXXFLAGS) -o $@ $(SRC) $(LIBFILE) -lm
+#	$(CC) $(CFLAGS) -o $@ $(SRC) $(LIBFILE) -lm
 
 clean:
 	$(RM) $(TARGET)
