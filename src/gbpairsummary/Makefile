@@ -18,9 +18,9 @@
 
 # Assumes LIBFILE is passed from the top Makefile
 
-TARGET = pairrangesummary
-SRC = pairrangesummary.cpp pairrange.cpp pairrangewindow.cpp
-INCL = pairinterval.hpp pairrange.hpp pairrangewindow.hpp hlcorrstate.hpp
+TARGET = gbpairsummary
+SRC = gbpairsummary.cpp gbaggregate.cpp gbrange.cpp gbdecade.cpp gbprimorial.cpp gbwindow.cpp eulerproductseries.cpp gblongintervalsummary.cpp
+INCL = gblongintervalsummary.hpp gbaggregate.hpp gbdecade.hpp gbprimorial.hpp gbrange.hpp gbwindow.hpp hlcorrstate.hpp eulerproductseries.hpp
 
 all: $(TARGET)
 

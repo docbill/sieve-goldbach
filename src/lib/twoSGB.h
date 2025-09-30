@@ -37,7 +37,7 @@ static inline uint64_t oddPart(uint64_t n){
 static inline double twoSGB(
     uint64_t n,
     const uint64_t *primes,
-    size_t primes_len)
+    const size_t primes_len)
 {
     const double base = 4.0 * TWIN_PRIME_C2;
     n = oddPart(n);

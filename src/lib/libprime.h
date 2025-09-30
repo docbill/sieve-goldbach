@@ -50,7 +50,7 @@ extern int countPairs(uint64_t n, uint64_t **current, uint64_t *lowest, uint64_t
 // Assumes: *current points to first prime > n, or a lower prime value in sorted buffer of primes.
 // lowest: start of prime buffer
 // highest: end of prime buffer (1 past last valid element)
-extern uint64_t countRangedPairs(uint64_t n, uint64_t n_min,uint64_t **current, uint64_t *lowest, uint64_t *highest);
+extern uint64_t countRangedPairs(const uint64_t n, const uint64_t n_min,const uint64_t **current, const uint64_t *lowest, const uint64_t * highest);
 
 // Resume counting the number of Goldbach pairs for p+q=2n in the range (n_min,2n-n_min) excluding 0.
 // n_min: the minimum value to count.
@@ -59,7 +59,7 @@ extern uint64_t countRangedPairs(uint64_t n, uint64_t n_min,uint64_t **current, 
 // highest: end of prime buffer (1 past last valid element)
 // lo: Pointer to the next lo prime to check
 // hi: Pointer to the next hi prime to check
-extern uint64_t countRangedPairsIter(uint64_t n, uint64_t n_min,uint64_t **current, uint64_t *lowest, uint64_t *highest,uint64_t **lo,uint64_t **hi);
+extern uint64_t countRangedPairsIter(const uint64_t n, const uint64_t n_min,const uint64_t **current, const uint64_t *lowest, const uint64_t *highest,const uint64_t **lo,const uint64_t **hi);
 
 // Find the minimum m > 0 value for Q_m (n-m)(n+m) for Goldbach pairs p+q=2n 
 // primes: ascending array in [lowest, highest); *current is a moving cursor.

@@ -1,4 +1,4 @@
-// pairrangewindow - class for aggregating windows
+// gbprimorial - class for aggregating range interval counts
 // Copyright (C) 2025 Bill C. Riemers
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,28 +15,23 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
+#ifndef GB_PRIMORIAL_HPP
+#define GB_PRIMORIAL_HPP 1
 
-#include <cstdio>
-#include "pairrangewindow.hpp"
+#include "gbaggregate.hpp"
 
-void PairRangeWindow::dec_close() {
-    if(dec_out && dec_out != stdout) {
-        std::fclose(dec_out);
-        dec_out = nullptr;
-    }
-    dec_trace = nullptr;
-}
+class GBPrimorial : public GBAggregate {
+public:
+    std::uint64_t thresholdMajor = 3;
+    std::uint64_t thresholdMinor = 1;
+    int major = 3;
+    int minor = 1;
+    FILE *cps_summary = nullptr;
 
-void PairRangeWindow::prim_close() {
-    if(prim_out && prim_out != stdout) {
-        std::fclose(prim_out);
-        prim_out = nullptr;
-    }
-    prim_trace = nullptr;
-}
+    GBPrimorial();
+    
+    void reset(std::uint64_t &n_start,bool inclusiveInterval) override;
+};
 
-PairRangeWindow::~PairRangeWindow() {
-    dec_close();
-    prim_close();
-}
+#endif // GB_PRIMORIAL_HPP
 

@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
-#ifndef HLCORR_CALC_HPP
-#define HLCORR_CALC_HPP 1
+#ifndef HLCORR_STATE_HPP
+#define HLCORR_STATE_HPP 1
 
 #include <cstdint>
 #include <cmath>
@@ -62,5 +62,5 @@ static inline long double hlCorr(std::uint64_t n, std::uint64_t delta) {
     return HLCorrState().eval(n,delta);
 }
 
-#endif // HLCORR_CALC_HPP
+#endif // HLCORR_STATE_HPP
 

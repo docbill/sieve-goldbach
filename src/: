@@ -1,0 +1,612 @@
+// pairinterval - class for aggregating interval counts
+// Copyright (C) 2025 Bill C. Riemers
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+#include <cstdarg>   // for va_list, va_start, va_end, va_copy
+#include <cstdio>    // for std::vfprintf, std::fflush
+#include "pairrange.hpp"
+
+// ----- Small helpers -----
+static inline std::uint64_t log_floor_u64(std::uint64_t n, std::uint64_t base) {
+    std::uint64_t k = 0;
+    for (; n >= base; n /= base, ++k) {}
+    return k;
+}
+
+static inline std::uint64_t ipow_u64(std::uint64_t base, std::uint64_t exp) {
+    std::uint64_t p = 1;
+    while (exp--) p *= base;
+    return p;
+}
+
+// odd primes for primorial steps
+static const std::uint32_t ODD_PRIMES[] = {
+    3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97
+};
+static const std::size_t ODD_PRIMES_N = sizeof(ODD_PRIMES)/sizeof(ODD_PRIMES[0]);
+
+static inline void odd_primorial_base_and_next(std::uint64_t n, std::uint64_t* P, std::uint64_t* P_next) {
+    std::uint64_t p = 1, next = 0;
+    for (std::size_t i = 0; i < ODD_PRIMES_N; ++i) {
+        __uint128_t cand = (__uint128_t)p * (__uint128_t)ODD_PRIMES[i];
+        if (cand > (__uint128_t)n) {
+            if (cand <= (__uint128_t)UINT64_MAX) next = (std::uint64_t)cand;
+            break;
+        }
+        p = (std::uint64_t)cand;
+        if (i + 1 < ODD_PRIMES_N) {
+            __uint128_t cand2 = (__uint128_t)p * (__uint128_t)ODD_PRIMES[i + 1];
+            next = (cand2 <= (__uint128_t)UINT64_MAX) ? (std::uint64_t)cand2 : 0;
+        } else {
+            next = 0;
+        }
+    }
+    if (p < 3 && n >= 3) p = 3;
+    *P = p; *P_next = next;
+}
+
+static inline std::uint64_t next_multiple_ceiling(std::uint64_t n, std::uint64_t B) {
+    if (B == 0) return n;
+    std::uint64_t k = (n + B - 1) / B;
+    return k * B;
+}
+
+static inline std::uint64_t maxPrefEven(long double value, std::uint64_t minValue) {
+    std::uint64_t retval = (~1ULL) & (std::uint64_t)ceill(value);
+    return (retval >= minValue) ? retval : minValue;
+}
+
+static inline std::uint64_t minPrefOdd(long double value, std::uint64_t maxValue) {
+    std::uint64_t retval = 1ULL | (std::uint64_t)floorl(value);
+    return (retval <= maxValue) ? retval : maxValue;
+}
+
+// Printf to up to two FILE*s.
+static inline void vfprintf_both(FILE* a, FILE* b, const char* fmt, va_list ap) {
+    if (a) {
+        va_list ap2;
+        va_copy(ap2, ap);
+        std::vfprintf(a, fmt, ap2); va_end(ap2);
+        std::fflush(a);
+    }
+    if (b) {
+        std::vfprintf(b, fmt, ap);
+        std::fflush(b);
+    }
+}
+
+static inline void fprintf_both(FILE* a, FILE* b, const char* fmt, ...) {
+    va_list ap; va_start(ap, fmt);
+    vfprintf_both(a, b, fmt, ap);
+    va_end(ap);
+}
+
+static inline void fputs_both(const char* s, FILE* a, FILE* b) {
+    if (a) {
+        std::fputs(s, a);
+    }
+    if (b) {
+       std::fputs(s, b);
+    }
+}
+ 
+static void print_header_full(FILE *out1,FILE *out2,bool useLegacy,Model model) {
+    fputs_both(
+        useLegacy
+            ?(model == Model::Empirical
+               ?"DECADE,MIN AT,MIN,MAX AT,MAX,n_0,C_min,n_1,C_max,n_geom,<COUNT>,C_avg\n"
+               :"DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr\n")
+            :(model == Model::Empirical
+                ?"START,FIRST,LAST,minAt,G(minAt),maxAt,G(maxAt),n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg\n"
+                :"START,FIRST,LAST,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg\n"),
+        out1, out2);
+}
+
+static void print_header_raw(FILE *out1,FILE *out2,Model model) {
+    fputs_both(
+        (model == Model::Empirical
+            ?"START,FIRST,LAST,minAt,G(minAt),maxAt,G(maxAt),n_geom,<COUNT>\n"
+            :"START,FIRST,LAST,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_geom,<COUNT>*\n"),
+        out1, out2);
+}
+
+static void print_header_norm(FILE *out1,FILE *out2,Model model) {
+    fputs_both(
+        (model == Model::Empirical
+            ?"START,FIRST,LAST,n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg\n"
+            :"START,FIRST,LAST,n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,Cpred_avg\n"),
+        out1, out2);
+}
+
+static void print_header_cps(FILE *out1,bool legacy) {
+    if(out1) {
+        std::fputs(
+            (legacy
+                ?"Dec.,n_0,Cmin,Cminus,Cmin-Cminus,CminusAsym,Cmin-CminusAsym\n"
+                :"n,C(n),Cminus(n),C(n)-Cminus(n),CminusAsym(n),C(n)-CminusAsym(n),alpha(n),preMertens\n"),
+        out1);
+    }
+}
+
+void PairRange::print_headers() {
+    for(auto &w : windows) {
+        print_header_full(w->dec_out,w->dec_trace,(compat_ver == CompatVer::V015),model);
+        print_header_full(w->prim_out,w->prim_trace,false,model);
+        print_header_raw(w->dec_raw,w->prim_raw,model);
+        print_header_norm(w->dec_norm,w->prim_norm,model);
+        print_header_cps(w->dec_cps,(compat_ver == CompatVer::V015));
+        print_header_cps(w->prim_cps,false);
+    }
+}
+
+std::uint64_t PairRange::dec_reset(std::uint64_t n_start) {
+    int need_reset = 0;
+    for(auto &w : windows) {
+        if(w->is_dec_active()) {
+            need_reset = 1;
+            w->dec_interval.reset();
+        }
+    }
+    if(! need_reset) {
+        return n_start;
+    }
+    if(n_start < dec_left) {
+        n_start = dec_left;
+    }
+    decade      = (int)log_floor_u64(n_start, 10);
+    dec_base   = ipow_u64(10, (std::uint64_t)decade);
+    dec_right  = (n_start - (n_start % dec_base)) + dec_base;
+    dec_threshold  = 10ULL * dec_base;
+    dec_left = dec_right - dec_base;
+    dec_n_geom = sqrtl((long double)dec_left * (long double)(compat_ver != CompatVer::V015 ? (dec_right - 1) : dec_right));
+    if(dec_left >= dec_n_end) {
+        dec_close();
+    }
+    return dec_left;
+}
+
+std::uint64_t PairRange::prim_reset(std::uint64_t n_start) {
+    int need_reset = 0;
+    for(auto &w : windows) {
+        if(w->is_prim_active()) {
+            need_reset = 1;
+            w->prim_interval.reset();
+        }
+    }
+    if(! need_reset) {
+        return n_start;
+    }
+    if (n_start < prim_left) {
+        n_start = prim_left;
+    }
+    if(n_start < 7*5*3) {
+        if(n_start < 5*3) {
+            prim_base = 1;
+            odd_primorial_major = 3;
+            odd_primorial_minor = 2;
+            prim_threshold_minor = 3;
+            prim_threshold_major = 5*3;
+            prim_right = n_start+1;
+        }
+        else {
+            prim_base = 5*3;
+            odd_primorial_major = 7;
+            odd_primorial_minor = 5;
+            prim_threshold_minor = prim_base;
+            prim_threshold_major = 7*prim_base;
+            prim_right = next_multiple_ceiling(n_start, prim_base);
+        }
+    }
+    else {
+        odd_primorial_base_and_next(n_start, &prim_threshold_minor, &prim_threshold_major);
+        if (prim_threshold_minor <= prim_base) {
+            prim_threshold_minor = prim_base;
+            prim_threshold_major = prim_threshold_minor * odd_primorial_major;
+        } else {
+            std::uint64_t dummy;
+            odd_primorial_base_and_next(prim_threshold_minor - 1, &prim_base, &dummy);
+            odd_primorial_major = (int)(prim_threshold_minor / prim_base);
+            std::uint64_t prev;
+            odd_primorial_base_and_next(prim_base - 1, &prev, &dummy);
+            odd_primorial_minor = (int)(prim_base / prev);
+    	}
+        prim_right = next_multiple_ceiling(n_start, prim_base);
+    }
+    while (prim_right <= n_start) {
+        prim_right += prim_base;
+    }
+    prim_left = prim_right - prim_base;
+    prim_n_geom = sqrtl((long double)prim_left * (long double)(prim_right - 1));
+    if(prim_left >= prim_n_end) {
+        prim_close();
+    }
+    return prim_left;
+}
+
+void PairRange::dec_calc_average(PairRangeWindow &w, int applyHLCorr) {
+    if(! w.is_dec_active()) {
+        return;
+    }
+    PairInterval &dec_interval = w.dec_interval;
+    dec_interval.pairCountAvg     = dec_interval.pairCountTotal     / (dec_right - dec_left);
+    dec_interval.cAvg = dec_interval.pairCountTotalNorm / (dec_right - dec_left);
+    if (applyHLCorr) {
+        const std::uint64_t n_geom_odd  = (compat_ver == CompatVer::V015 ? ((1ULL | (std::uint64_t)floorl(dec_n_geom))) : minPrefOdd(dec_n_geom,dec_right - 1));
+        const std::uint64_t delta_odd = w.computeDelta(n_geom_odd);
+        const std::uint64_t n_geom_even  = (compat_ver == CompatVer::V015 ? (1ULL + n_geom_odd) : maxPrefEven(dec_n_geom,dec_left));
+        const std::uint64_t delta_even = w.computeDelta(n_geom_even);
+        dec_interval.applyHLCorr(n_geom_even, delta_even, n_geom_odd, delta_odd,
+            decEvenCalc, decOddCalc, decMinCalc, decMaxCalc, decMinNormCalc, decMaxNormCalc );
+    }
+}
+    
+void PairRange::prim_calc_average(PairRangeWindow &w,int applyHLCorr) {
+    if(! w.is_prim_active()) {
+        return;
+    }
+    PairInterval &prim_interval = w.prim_interval;
+    prim_interval.pairCountAvg     = prim_interval.pairCountTotal     / (prim_right - prim_left);
+    prim_interval.cAvg = prim_interval.pairCountTotalNorm / (prim_right - prim_left);
+    if (applyHLCorr) {
+        const std::uint64_t n_geom_odd  = minPrefOdd(prim_n_geom,prim_right - 1);
+        const std::uint64_t delta_odd = w.computeDelta(n_geom_odd);
+        const std::uint64_t n_geom_even  = maxPrefEven(prim_n_geom,prim_left);
+        const std::uint64_t delta_even = w.computeDelta(n_geom_even);
+        prim_interval.applyHLCorr(n_geom_even, delta_even, n_geom_odd, delta_odd,
+            primEvenCalc, primOddCalc, primMinCalc, primMaxCalc, primMinNormCalc, primMaxNormCalc );
+    }
+}
+
+void PairRange::prim_output_full(PairRangeWindow &w) {
+    if(w.prim_out || w.prim_trace) {
+        PairInterval &prim_interval = w.prim_interval;
+        int isMajor = (prim_left % odd_primorial_major == 0);
+        fprintf_both(w.prim_out,w.prim_trace,
+            (model == Model::Empirical)
+                ? "(%d#)%.1f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.0Lf,%.6Lf,%.9Lf\n"
+                : "(%d#)%.1f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.0Lf,%.6Lf,%.9Lf\n",
+            isMajor ? odd_primorial_major : odd_primorial_minor,
+            ((double)(int)((prim_right - 1) / (isMajor ? prim_threshold_minor : prim_base))) * 0.5,
+            prim_left, prim_right -1,
+            prim_interval.minAt,     prim_interval.pairCountMin,
+            prim_interval.maxAt,     prim_interval.pairCountMax,
+            prim_interval.n0, prim_interval.cMin,
+            prim_interval.n1, prim_interval.cMax,
+            prim_n_geom,
+            prim_interval.pairCountAvg,
+            prim_interval.cAvg
+        );
+    }
+}
+
+void PairRange::dec_output_full(PairRangeWindow &w) {
+    if(! (w.dec_out || w.dec_trace)) {
+        return;
+    }
+    PairInterval &dec_interval = w.dec_interval;
+    if(compat_ver != CompatVer::V015) {
+        fprintf_both(w.dec_out,w.dec_trace,
+            (model == Model::Empirical)
+                ? "%de%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf\n"
+                : "%de%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf\n",
+            (int)((dec_right - 1) / dec_base),
+            decade,
+            dec_left, dec_right -1,
+            dec_interval.minAt,     dec_interval.pairCountMin,
+            dec_interval.maxAt,     dec_interval.pairCountMax,
+            dec_interval.n0, dec_interval.cMin,
+            dec_interval.n1, dec_interval.cMax,
+            dec_n_geom,
+            dec_interval.pairCountAvg,
+            dec_interval.cAvg
+        );
+        return;
+    }
+    if(model == Model::Empirical) {
+        fprintf_both(w.dec_out,w.dec_trace,"%d,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.6Lf\n",
+            decade,
+            dec_interval.minAt,     dec_interval.pairCountMin,
+            dec_interval.maxAt,     dec_interval.pairCountMax,
+            dec_interval.n0, dec_interval.cMin,
+            dec_interval.n1, dec_interval.cMax,
+            ((std::uint64_t)floorl(dec_n_geom)) | (dec_n_geom >= 10L ? 1ULL : 0ULL),
+            dec_interval.pairCountAvg,
+            dec_interval.cAvg
+        );
+        return;
+    }
+    fprintf_both(w.dec_out,w.dec_trace,"%d,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%" PRIu64 ",%.8Lf,%" PRIu64 ",%.8Lf,%.8Lf,%.8Lf\n",
+        decade,
+        dec_interval.minAt,     dec_interval.pairCountMin,
+        dec_interval.maxAt,     dec_interval.pairCountMax,
+        dec_interval.n0, dec_interval.cMin,
+        dec_interval.n1, dec_interval.cMax,
+        ((std::uint64_t)floorl(dec_n_geom)) | (dec_n_geom >= 10L ? 1ULL : 0ULL),
+        dec_interval.pairCountAvg,
+        dec_interval.cAvg,
+        dec_interval.hlCorrAvg
+    );
+}
+
+void PairRange::dec_output_raw(PairRangeWindow &w) {
+    if(w.dec_raw) {
+        PairInterval &dec_interval = w.dec_interval;
+        std::fprintf(w.dec_raw,
+            (model == Model::Empirical)
+                ? "%de%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%.0Lf,%.6Lf\n"
+                : "%de%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%.0Lf,%.6Lf\n",
+            (int)((dec_right - 1) / dec_base),
+            decade,
+            dec_left, dec_right -1,
+            dec_interval.minAt,     dec_interval.pairCountMin,
+            dec_interval.maxAt,     dec_interval.pairCountMax,
+            dec_n_geom,
+            dec_interval.pairCountAvg
+        );
+    }
+}
+
+void PairRange::prim_output_raw(PairRangeWindow &w) {
+    if(w.prim_raw) {
+        PairInterval &prim_interval = w.prim_interval;
+        int isMajor = (prim_left % odd_primorial_major == 0);
+        std::fprintf(w.prim_raw,
+            (model == Model::Empirical)
+                ? "(%d#)%.1f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%.0Lf,%.6Lf\n"
+                : "(%d#)%.1f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%.0Lf,%.6Lf\n",
+            isMajor ? odd_primorial_major : odd_primorial_minor,
+            ((double)(int)((prim_right - 1) / (isMajor ? prim_threshold_minor : prim_base))) * 0.5,
+            prim_left, prim_right -1,
+            prim_interval.minAt, prim_interval.pairCountMin,
+            prim_interval.maxAt, prim_interval.pairCountMax,
+            prim_n_geom,
+            prim_interval.pairCountAvg
+        );
+    }
+}
+
+void PairRange::dec_output_norm(PairRangeWindow &w) {
+    if(w.dec_norm) {
+        PairInterval &dec_interval = w.dec_interval;
+        std::fprintf(w.dec_norm,
+            (model == Model::Empirical)
+                ? "%de%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf\n"
+                : "%de%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf\n",
+            (int)((dec_right - 1) / dec_base),
+            decade,
+            dec_left, dec_right -1,
+            dec_interval.n0, dec_interval.cMin,
+            dec_interval.n1, dec_interval.cMax,
+            dec_n_geom,
+            dec_interval.cAvg
+        );
+    }
+}
+
+void PairRange::prim_output_norm(PairRangeWindow &w) {
+    if(w.prim_norm) {
+        PairInterval &prim_interval = w.prim_interval;
+        int isMajor = (prim_left % odd_primorial_major == 0);
+        std::fprintf(w.prim_norm,
+            (model == Model::Empirical)
+                ? "(%d#)%.1f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.0Lf,%.9Lf\n"
+                : "(%d#)%.1f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.0Lf,%.9Lf\n",
+            isMajor ? odd_primorial_major : odd_primorial_minor,
+            ((double)(int)((prim_right - 1) / (isMajor ? prim_threshold_minor : prim_base))) * 0.5,
+            prim_left, prim_right -1,
+            prim_interval.n0, prim_interval.cMin,
+            prim_interval.n1, prim_interval.cMax,
+            prim_n_geom,
+            prim_interval.cAvg
+        );
+    }
+}
+
+int PairRange::addRow(
+    PairRangeWindow &w,
+    std::uint64_t n,
+    std::uint64_t delta,
+    const long double logN,
+    const long double logNlogN,
+    std::uint64_t pc,
+    long double twoSGB
+) {
+    PairInterval &prim_interval = w.prim_interval;
+    PairInterval &dec_interval = w.dec_interval;
+
+    const long double deltaL = (long double)delta;
+    const long double denom = (include_trivial ? 0.5L : 0.0L) + deltaL;
+    const long double norm  = (denom > 0.0L) ? (logNlogN / denom) : 0.0L;
+
+    if (norm < 0.0L) {
+        std::fprintf(stderr, "HL-A: non-positive norm at %" PRIu64 "\n", n);
+        return -1;
+    }
+
+    prim_interval.useHLCorrInst = dec_interval.useHLCorrInst = 0;
+
+    if (model == Model::Empirical) {
+        long double cminus = w.calcCminus(n,delta,logNlogN);
+        long double cminusAsymp = w.calcCminusAsymp(logN);
+        long double pairCount = (long double)pc;
+        long double c_of_n = pairCount * norm;
+        prim_interval.pairCount = dec_interval.pairCount = pairCount;
+        prim_interval.c_of_n = dec_interval.c_of_n = c_of_n;
+        w.checkCrossing(n,c_of_n <= cminus);
+        w.checkCrossingAsymp(n,c_of_n <= cminusAsymp);
+        w.updateN5percent(n,delta,logNlogN);
+    }
+    else { // HLA
+        prim_interval.pairCount = dec_interval.pairCount = 0.0L;
+        prim_interval.c_of_n = dec_interval.c_of_n = 0.0L;
+
+        prim_interval.hlCorrAvg = dec_interval.hlCorrAvg = 1.0L;
+        long double hlCorrAvg = 0.0L;
+        if(w.is_prim_active()) {
+            if(odd_primorial_minor < 5) {
+                prim_interval.useHLCorrInst = 1;
+                prim_interval.hlCorrAvg = hlCorrAvg = hlCorr(n,delta);
+                prim_interval.c_of_n = twoSGB*hlCorrAvg;
+            }
+            else {
+                prim_interval.c_of_n = twoSGB;
+            }
+            if (pc) {
+                prim_interval.pairCount  = (norm > 0.5L) ? (prim_interval.c_of_n / deltaL) : 1.0L;
+                prim_interval.c_of_n = prim_interval.pairCount * norm;
+            } else if (norm > 0.0L) {
+                prim_interval.pairCount = prim_interval.c_of_n / norm;
+            }
+        }
+        if(w.is_dec_active()) {
+            if (dec_base < 10) {
+                dec_interval.useHLCorrInst  = 1;
+                if(hlCorrAvg == 0.0L) {
+                    hlCorrAvg = hlCorr(n,delta);
+                } 
+                dec_interval.hlCorrAvg = hlCorrAvg;
+                dec_interval.c_of_n = twoSGB*hlCorrAvg;
+            }
+            else {
+                dec_interval.c_of_n = twoSGB;
+            }
+            if (pc) {
+                dec_interval.pairCount  = (norm > 0.5L) ? (dec_interval.c_of_n / deltaL) : 1.0L;
+                dec_interval.c_of_n = dec_interval.pairCount * norm;
+            } else if (norm > 0.0L) {
+                dec_interval.pairCount = dec_interval.c_of_n / norm;
+            }
+        }
+    }
+    aggregate(w, n, delta, w.calcCminus(n,delta,logNlogN), w.calcCminusAsymp(logN));
+    return 0;
+}
+
+void PairRange::prim_close() {
+    prim_right = 0;
+    for(auto &w : windows) {
+        w->prim_close();
+    }
+}
+
+void PairRange::dec_close() {
+    dec_right = 0;
+    for(auto &w : windows) {
+        w->dec_close();
+    }
+}
+
+int PairRange::processRows() {
+    const std::uint64_t* current = prime_array;
+    bool prim_is_active = false;
+    bool dec_is_active = false;
+    for(auto &w : windows) {
+        dec_is_active = dec_is_active || w->is_dec_active();
+        prim_is_active = prim_is_active || w->is_prim_active();
+    }
+
+    std::uint64_t n_start = prim_is_active
+	? ((dec_is_active && dec_left < prim_left)?dec_left:prim_left)
+	: dec_left;
+    std::uint64_t n_end = prim_is_active
+	? ((dec_is_active && dec_n_end > prim_n_end)?dec_n_end:prim_n_end)
+	: dec_n_end;
+
+    for (std::uint64_t n = n_start; n < n_end; ) {
+       
+        const long double twoSGB_n = (model == Model::Empirical ? 0.0L : (long double)twoSGB(n, prime_array, prime_array_len));
+        if (twoSGB_n < 0.0L) {
+            std::fprintf(stderr, "Failed HL-A prediction at %" PRIu64 "\n", n);
+            return -1;
+        }
+        int need_trivial = include_trivial;
+        std::uint64_t pc = 0;
+        // we use pointers here, so we know where we left off.
+        const std::uint64_t *lo = nullptr;
+        const std::uint64_t *hi = nullptr;
+        // Here is where we add a loop if we needed to support multiple windows,
+        // as twoSGB_n is alpha independant and does not need to be recomputed.
+        bool need_dec_reset = false;
+        bool need_prim_reset = false;
+        long double logN = 0.0L;
+        long double logNlogN = 0.0L;
+        long double eulerCapAlpha = 0.0L;
+        for(auto & w : windows) {
+            std::uint64_t delta = w->computeDelta(n,eulerCapAlpha);
+            if (delta == ~0ULL) {
+                return 2;
+            }
+            if (model == Model::Empirical) {
+                std::uint64_t _pc = countRangedPairsIter(n, n - delta - 1, &current, prime_array, prime_array_end, &lo, &hi);
+                if (_pc == ~0ULL) {
+                    std::fprintf(stderr, "Failed to count pairs at %" PRIu64 "\n", n);
+                    return -1;
+                }
+                if (need_trivial && current > prime_array && current < prime_array_end && current[-1] == n) {
+                    pc += 1ULL+_pc;
+                    need_trivial = 0;
+                }
+                else {
+                    pc += _pc;
+                }
+            }
+            else if (need_trivial) {
+                need_trivial = 0;
+                // simply called to position the current pointer
+                countRangedPairs(n, n, &current, prime_array, prime_array_end);
+                if (current > prime_array && current < prime_array_end && current[-1] == n) {
+                    pc = 1;
+                }
+            }
+            if(logN == 0.0L) {
+                logN = logl((long double)n); 
+                logNlogN = logN*logN;
+            }
+            int retval = addRow(*w, n, delta, logN, logNlogN, pc, twoSGB_n);
+            if(retval != 0) {
+                return retval;
+            }
+        }
+        n++;
+        for(auto & w : windows) {
+            if (w->is_dec_active() && n == dec_right) {
+                dec_calc_average(*w,model == Model::HLA && ! w->dec_interval.useHLCorrInst);
+                dec_output_full(*w);
+                dec_output_raw(*w);
+                dec_output_norm(*w);
+                w->dec_interval.output_cps(w->dec_cps,w->alpha_n,(compat_ver == CompatVer::V015)?decade:-1);
+                need_dec_reset = true;
+            }
+            if (w->is_prim_active() && n == prim_right) {
+                prim_calc_average(*w,model == Model::HLA && ! w->prim_interval.useHLCorrInst);
+                prim_output_full(*w);
+                prim_output_raw(*w);
+                prim_output_norm(*w);
+                w->prim_interval.output_cps(w->prim_cps,w->alpha_n,-1);
+                need_prim_reset = true;
+            }
+        }
+        if(need_dec_reset) {
+            dec_reset(dec_right);
+        }
+        if(need_prim_reset) {
+            prim_reset(prim_right);
+        }
+    }
+    return 0;
+}
+
+

@@ -6,3 +6,13 @@ output/
 *.bbl
 *.blg
 *.toc
+*.synctex.gz
+src/certifygbpairs/certifygbpairs
+src/certifyprimes/certifyprimes
+src/cpslowerbound/cpslowerbound
+src/findgbpairs/findgbpairs
+src/primesieve_bitmap/primesieve_bitmap
+src/printprimes/printprimes
+src/storeprimes/storeprimes
+src/validatepairrangesummary/validatepairrangesummary
+paper/sieve_goldbach.out

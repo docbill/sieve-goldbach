@@ -24,10 +24,10 @@
 // Move cur to the first prime > n using linear adjustment.
 // lowest .. highest is a half-open range [lowest, highest).
 static inline uint64_t* seek_first_prime_gt_linear(
-    uint64_t n,
-    uint64_t *cur,
-    uint64_t *lowest,
-    uint64_t *highest
+    const uint64_t n,
+    const uint64_t *cur,
+    const uint64_t *lowest,
+    const uint64_t *highest
 ) {
     if (cur <= lowest) {
         cur = lowest;
@@ -51,14 +51,14 @@ static inline uint64_t* seek_first_prime_gt_linear(
 // i.e. pairs in (n_min, 2n - n_min). Excludes the diagonal (n,n).
 // primes: ascending array in [lowest, highest); *current is a moving cursor.
 uint64_t countRangedPairs(
-    uint64_t n,
-    uint64_t n_min,
-    uint64_t **current,
-    uint64_t *lowest,
-    uint64_t *highest
+    const uint64_t n,
+    const uint64_t n_min,
+    const uint64_t **current,
+    const uint64_t *lowest,
+    const uint64_t *highest
 ) {
-    uint64_t *lo = NULL;
-    uint64_t *hi = NULL;
+    const uint64_t *lo = NULL;
+    const uint64_t *hi = NULL;
     return countRangedPairsIter(n,n_min,current,lowest,highest,&lo,&hi);
 }
 
@@ -66,13 +66,13 @@ uint64_t countRangedPairs(
 // i.e. pairs in (n_min, 2n - n_min). Excludes the diagonal (n,n).
 // primes: ascending array in [lowest, highest); *current is a moving cursor.
 uint64_t countRangedPairsIter(
-    uint64_t n,
-    uint64_t n_min,
-    uint64_t **current,
-    uint64_t *lowest,
-    uint64_t *highest,
-    uint64_t **loPtr,
-    uint64_t **hiPtr
+    const uint64_t n,
+    const uint64_t n_min,
+    const uint64_t **current,
+    const uint64_t *lowest,
+    const uint64_t *highest,
+    const uint64_t **loPtr,
+    const uint64_t **hiPtr
 ) {
     const uint64_t twoN = n << 1;
 
