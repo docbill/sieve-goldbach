@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <cstdarg>   // for va_list, va_start, va_end, va_copy
 #include <cstdio>    // for std::vfprintf, std::fflush
+#include <cstring>   // for strstr
 #include "gbrange.hpp"
 
 // ----- Small helpers -----
@@ -100,12 +101,12 @@ static void printHeaderCps(FILE *out1,bool legacy) {
 static void printHeaderCpsSummary(FILE *out1,FILE *out2,Model model) {
     if(model == Model::Empirical) {
         fputs_both(
-            "FIRST,LAST,Alpha,PreMertens,Mertens,DeltaMertens,n_5precent,NzeroStat,EtaStat\n",
+            "FIRST,LAST,Alpha,PreMertens,Mertens,DeltaMertens,n_5precent,NzeroStat,EtaStat,MertensAsymp,DeltaMertensAsymp,NzeroStatAsymp,EtaStatAsymp\n",
         out1,out2);
     }
 }
 
-void GBRange::print_headers() {
+void GBRange::printHeaders() {
     for(auto &w : windows) {
         printHeaderFull(w->dec.out,w->dec.trace,(compat_ver == CompatVer::V015),model);
         printHeaderFull(w->prim.out,w->prim.trace,false,model);
@@ -114,6 +115,9 @@ void GBRange::print_headers() {
         printHeaderCps(w->dec.cps,(compat_ver == CompatVer::V015));
         printHeaderCps(w->prim.cps,false);
     }
+}
+
+void GBRange::printCpsSummaryHeaders() {
     printHeaderCpsSummary(decAgg.cps_summary,primAgg.cps_summary,model);
 }
 
@@ -257,30 +261,195 @@ void GBRange::decOutputCpsSummary(GBWindow &w) {
     }
     //if(w->preMertens > 1 && w->dec.nstar > 1 && w->dec.deltaMertens > 0.0L) {
         std::fprintf(decAgg.cps_summary,
-            "%" PRIu64 ",%" PRIu64 ",%.12Lg,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf\n",
+            "%" PRIu64 ",%" PRIu64 ",%.12Lg,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf\n",
             decAgg.n_start, decAgg.n_end,
             w.alpha,
-            w.preMertens,w.dec.nstar,
-            w.dec.deltaMertens,
-            w.n_5percent,w.nzeroStat,
-            w.etaStat );
+            w.preMertens,w.dec.nstar,w.dec.deltaMertens,
+            w.n_5percent,w.nzeroStat,w.etaStat,
+            w.dec.nstarAsymp,w.dec.deltaMertensAsymp,w.nzeroStatAsymp,w.etaStatAsymp );
     //}
+}
+
+int GBRange::decInputCpsSummary(const char* filename) {
+    FILE* file = std::fopen(filename, "r");
+    if (!file) {
+        std::fprintf(stderr, "Error: Cannot open file %s for reading\n", filename);
+        return -1;
+    }
+    
+    char line[1024];
+    int lineNum = 0;
+    int updatedCount = 0;
+    
+    // Skip header line if it exists
+    if (std::fgets(line, sizeof(line), file)) {
+        lineNum++;
+        // Check if this looks like a header (contains "FIRST" or "Alpha")
+        if (strstr(line, "FIRST") || strstr(line, "Alpha")) {
+            // This is a header, continue to next line
+        } else {
+            // This is data, rewind to beginning
+            std::rewind(file);
+            lineNum = 0;
+        }
+    }
+    
+    while (std::fgets(line, sizeof(line), file)) {
+        lineNum++;
+        
+        // Skip empty lines
+        if (line[0] == '\n' || line[0] == '\r') {
+            continue;
+        }
+        
+        // Parse the line: n_start, n_end, alpha, preMertens, nstar, deltaMertens, n_5percent, nzeroStat, etaStat, nstarAsymp, deltaMertensAsymp, nzeroStatAsymp, etaStatAsymp
+        std::uint64_t n_start, n_end, preMertens, nstar, n_5percent, nzeroStat, nstarAsymp, nzeroStatAsymp;
+        long double alpha, deltaMertens, etaStat, deltaMertensAsymp, etaStatAsymp;
+        
+        int parsed = std::sscanf(line, "%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%Lf,%" SCNu64 ",%Lf",
+                                &n_start, &n_end, &alpha, &preMertens, &nstar, &deltaMertens, &n_5percent, &nzeroStat, &etaStat, &nstarAsymp, &deltaMertensAsymp, &nzeroStatAsymp, &etaStatAsymp);
+        
+        if (parsed != 13) {
+            std::fprintf(stderr, "Warning: Skipping malformed line %d in %s\n", lineNum, filename);
+            continue;
+        }
+        
+        // Find the window with matching alpha value
+        bool found = false;
+        for (auto &w : windows) {
+            // Use a small epsilon for floating point comparison
+            if (std::abs(w->alpha - alpha) < 1e-12L) {
+                // Update the window values
+                w->preMertens = preMertens;
+                w->dec.nstar = nstar;
+                w->dec.deltaMertens = deltaMertens;
+                w->dec.nstarAsymp = nstarAsymp;
+                w->dec.deltaMertensAsymp = deltaMertensAsymp;
+                w->n_5percent = n_5percent;
+                w->nzeroStat = nzeroStat;
+                w->nzeroStatAsymp = nzeroStatAsymp;
+                w->etaStat = etaStat;
+                w->etaStatAsymp = etaStatAsymp;
+                
+                updatedCount++;
+                found = true;
+                break;
+            }
+        }
+        decAgg.n_start = n_start;
+        if (!found) {
+            std::fprintf(stderr, "Warning: No window found with alpha=%.12Lg on line %d\n", alpha, lineNum);
+        }
+    }
+    
+    std::fclose(file);
+    
+    if (updatedCount == 0) {
+        std::fprintf(stderr, "Warning: No windows were updated from file %s\n", filename);
+        return 1;
+    }
+    
+    // std::fprintf(stderr, "Successfully updated %d windows from file %s\n", updatedCount, filename);
+    return 0;
 }
 
 void GBRange::primOutputCpsSummary(GBWindow &w) {
     if(! primAgg.cps_summary) {
         return;
     }
-    //if(w->preMertens > 1 && w->prim.nstar > 1 && w->prim.deltaMertens > 0.0L) {
-        std::fprintf(primAgg.cps_summary,
-            "%" PRIu64 ",%" PRIu64 ",%.12Lg,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf\n",
-            primAgg.n_start, primAgg.n_end,
-            w.alpha,
-            w.preMertens,w.prim.nstar,
-            w.prim.deltaMertens,
-            w.n_5percent,w.nzeroStat,
-            w.etaStat );
-    //}
+    std::fprintf(primAgg.cps_summary,
+        "%" PRIu64 ",%" PRIu64 ",%.12Lg,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf\n",
+        primAgg.n_start, primAgg.n_end,
+        w.alpha,
+        w.preMertens,w.prim.nstar,w.prim.deltaMertens,
+        w.n_5percent,w.nzeroStat,w.etaStat,
+        w.prim.nstarAsymp,w.prim.deltaMertensAsymp,w.nzeroStatAsymp,w.etaStatAsymp );
+}
+
+int GBRange::primInputCpsSummary(const char* filename) {
+    FILE* file = std::fopen(filename, "r");
+    if (!file) {
+        std::fprintf(stderr, "Error: Cannot open file %s for reading\n", filename);
+        return -1;
+    }
+    
+    char line[1024];
+    int lineNum = 0;
+    int updatedCount = 0;
+    
+    // Skip header line if it exists
+    if (std::fgets(line, sizeof(line), file)) {
+        lineNum++;
+        // Check if this looks like a header (contains "FIRST" or "Alpha")
+        if (strstr(line, "FIRST") || strstr(line, "Alpha")) {
+            // This is a header, continue to next line
+        } else {
+            // This is data, rewind to beginning
+            std::rewind(file);
+            lineNum = 0;
+        }
+    }
+    
+    while (std::fgets(line, sizeof(line), file)) {
+        lineNum++;
+        
+        // Skip empty lines
+        if (line[0] == '\n' || line[0] == '\r') {
+            continue;
+        }
+        
+        // Parse the line: n_start, n_end, alpha, preMertens, nstar, deltaMertens, n_5percent, nzeroStat, etaStat, nstarAsymp, deltaMertensAsymp, nzeroStatAsymp, etaStatAsymp
+        std::uint64_t n_start, n_end, preMertens, nstar, n_5percent, nzeroStat, nstarAsymp, nzeroStatAsymp;
+        long double alpha, deltaMertens, etaStat, deltaMertensAsymp, etaStatAsymp;
+        
+        int parsed = std::sscanf(line, "%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%Lf,%" SCNu64 ",%Lf",
+            &n_start, &n_end, &alpha, &preMertens,
+            &nstar, &deltaMertens, &n_5percent, &nzeroStat, &etaStat,
+            &nstarAsymp, &deltaMertensAsymp, &nzeroStatAsymp, &etaStatAsymp
+        );
+        
+        if (parsed != 13) {
+            std::fprintf(stderr, "Warning: Skipping malformed line %d in %s\n", lineNum, filename);
+            continue;
+        }
+        
+        // Find the window with matching alpha value
+        bool found = false;
+        for (auto &w : windows) {
+            // Use a small epsilon for floating point comparison
+            if (std::abs(w->alpha - alpha) < 1e-12L) {
+                // Update the window values
+                w->preMertens = preMertens;
+                w->prim.nstar = nstar;
+                w->prim.deltaMertens = deltaMertens;
+                w->prim.nstarAsymp = nstarAsymp;
+                w->prim.deltaMertensAsymp = deltaMertensAsymp;
+                w->n_5percent = n_5percent;
+                w->nzeroStat = nzeroStat;
+                w->nzeroStatAsymp = nzeroStatAsymp;
+                w->etaStat = etaStat;
+                w->etaStatAsymp = etaStatAsymp;
+                
+                updatedCount++;
+                found = true;
+                break;
+            }
+        }
+        primAgg.n_start = n_start;
+        if (!found) {
+            std::fprintf(stderr, "Warning: No window found with alpha=%.12Lg on line %d\n", alpha, lineNum);
+        }
+    }
+    
+    std::fclose(file);
+    
+    if (updatedCount == 0) {
+        std::fprintf(stderr, "Warning: No windows were updated from file %s\n", filename);
+        return 1;
+    }
+    
+    // std::fprintf(stderr, "Successfully updated %d windows from file %s\n", updatedCount, filename);
+    return 0;
 }
 
 int GBRange::addRow(

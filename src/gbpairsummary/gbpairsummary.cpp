@@ -66,11 +66,13 @@ static void print_usage(const char* prog) {
         "  --dec-norm=FILE      Write decade normaziled aggregation CSV to FILE (use \"-\" for stdout)\n"
         "  --dec-cps=FILE       Write decade cps CSV to FILE (use \"-\" for stdout)\n"
         "  --dec-cps-summary=FILE  Write a summary cps values to a text file (use \"-\" for stdout)\n"
+        "  --dec-cps-summary-resume=FILE Resume processing by reading previous cps summary from FILE\n"
         "  --prim-out=FILE      Write primorial aggregation CSV to FILE (use \"-\" for stdout)\n"
         "  --prim-raw=FILE      Write primorial unnormalized aggregation CSV to FILE (use \"-\" for stdout)\n"
         "  --prim-norm=FILE     Write primorial normalized aggregation CSV to FILE (use \"-\" for stdout)\n"
         "  --prim-cps=FILE      Write primorial cps CSV to FILE (use \"-\" for stdout)\n"
         "  --prim-cps-summary=FILE Write a summary cps values to a text file (use \"-\" for stdout)\n"
+        "  --prim-cps-summary-resume=FILE Resume processing by reading previous cps summary from FILE\n"
         "  --compat=VERSION     v0.1 (aka v0.1.5) or v0.2/current. Default: v0.2\n"
         "  --model=MODE         empirical (default) or hl-a\n"
         "  --start-n=N          Start n (uint64). Default: 4\n"
@@ -209,11 +211,13 @@ int main(int argc, char* argv[]) try {
     const char* dec_norm_path  = nullptr;
     const char* dec_cps_path  = nullptr;
     const char* dec_cps_summary_path  = nullptr;
+    const char* dec_cps_summary_resume_path = nullptr;
     const char* prim_out_path = nullptr;
     const char* prim_raw_path = nullptr;
     const char* prim_norm_path = nullptr;
     const char* prim_cps_path = nullptr;
     const char* prim_cps_summary_path = nullptr;
+    const char* prim_cps_summary_resume_path = nullptr;
     bool append_to_file  = false;
     std::vector<long double> alphas;
     FILE * dec_trace = nullptr;
@@ -229,11 +233,13 @@ int main(int argc, char* argv[]) try {
         {"dec-norm",        required_argument, 0,  0 },
         {"dec-cps",         required_argument, 0,  0 },
         {"dec-cps-summary", required_argument, 0,  0 },
+        {"dec-cps-summary-resume", required_argument, 0,  0 },
         {"prim-out",        required_argument, 0,  0 },
         {"prim-raw",        required_argument, 0,  0 },
         {"prim-norm",       required_argument, 0,  0 },
         {"prim-cps",        required_argument, 0,  0 },
         {"prim-cps-summary",required_argument, 0,  0 },
+        {"prim-cps-summary-resume",required_argument, 0,  0 },
         {"n-start",         required_argument, 0,  0 },
         {"prim-n-start",    required_argument, 0,  0 },
         {"dec-n-start",     required_argument, 0,  0 },
@@ -291,6 +297,9 @@ int main(int argc, char* argv[]) try {
                 else if (!std::strcmp(name, "dec-cps-summary")) {
                     dec_cps_summary_path = optarg; // "-" means stdout
                 }
+                else if (!std::strcmp(name, "dec-cps-summary-resume")) {
+                    dec_cps_summary_resume_path = optarg;
+                }
                 else if (!std::strcmp(name, "prim-out")) {
                     prim_out_path = optarg; // "-" means stdout
                 }
@@ -305,6 +314,9 @@ int main(int argc, char* argv[]) try {
                 }
                 else if (!std::strcmp(name, "prim-cps-summary")) {
                     prim_cps_summary_path = optarg; // "-" means stdout
+                }
+                else if (!std::strcmp(name, "prim-cps-summary-resume")) {
+                    prim_cps_summary_resume_path = optarg;
                 }
                 else if (!std::strcmp(name, "dec-n-start")) {
                     char* endp = nullptr;
@@ -566,7 +578,7 @@ int main(int argc, char* argv[]) try {
             need_trace = false;
         }
         if (dec_cps_summary_path) {
-            range.decAgg.cps_summary  = open_stream_from_template(dec_cps_summary_path, w->alpha, "cps-summary", append_to_file);
+            range.decAgg.cps_summary  = open_stream_from_template(dec_cps_summary_path, w->alpha, "cps-summary", false);
             if(! range.decAgg.cps_summary) {
                 return 1;
             }
@@ -600,7 +612,7 @@ int main(int argc, char* argv[]) try {
             need_trace = false;
         }
         if (prim_cps_summary_path) {
-            range.primAgg.cps_summary  = open_stream_from_template(prim_cps_summary_path, w->alpha, "cps-summary", append_to_file);
+            range.primAgg.cps_summary  = open_stream_from_template(prim_cps_summary_path, w->alpha, "cps-summary", false);
             if(! range.primAgg.cps_summary) {
                 return 1;
             }
@@ -619,9 +631,27 @@ int main(int argc, char* argv[]) try {
     range.init(primes.begin(),primes.end(),primes.size(),eulerCap);
 
     if (! append_to_file) {
-        range.print_headers();
+        range.printHeaders();
     }
 
+    // Resume from previous cps summary if specified
+    if (dec_cps_summary_resume_path) {
+        int resume_result = range.decInputCpsSummary(dec_cps_summary_resume_path);
+        if (resume_result != 0) {
+            std::fprintf(stderr, "Error: Failed to resume decade from %s (return code: %d)\n", 
+                dec_cps_summary_resume_path, resume_result);
+            return -1;
+        }
+    }
+    if (prim_cps_summary_resume_path) {
+        int resume_result = range.primInputCpsSummary(prim_cps_summary_resume_path);
+        if (resume_result != 0) {
+            std::fprintf(stderr, "Error: Failed to resume primorial from %s (return code: %d)\n", 
+                prim_cps_summary_resume_path, resume_result);
+            return -1;
+        }
+    }
+    range.printCpsSummaryHeaders();
     range.processRows();
     
     return exitStatus;

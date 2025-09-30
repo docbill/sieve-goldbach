@@ -60,7 +60,8 @@ public:
         primReset(primAgg.left);
     }
 
-    void print_headers();
+    void printHeaders();
+    void printCpsSummaryHeaders();
     std::uint64_t decReset(std::uint64_t n_start);
     std::uint64_t primReset(std::uint64_t n_start);
     void outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegacy);
@@ -68,6 +69,8 @@ public:
     void outputRaw(GBAggregate &agg,GBLongInterval &interval);
     void decOutputCpsSummary(GBWindow &w);
     void primOutputCpsSummary(GBWindow &w);
+    int decInputCpsSummary(const char* filename);
+    int primInputCpsSummary(const char* filename);
 
     int addRow( GBWindow &w, std::uint64_t n, std::uint64_t delta, const long double logN, const long double logNlogN, std::uint64_t pc, long double twoSGB );
 

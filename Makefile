@@ -332,7 +332,8 @@ $(SUMMARY_DEFAULT_MEDIUM): $(SUMMARY_SMALL)
 	  --prim-n-start $(SPRIMCOUNT) --prim-n-end $(MPRIMCOUNT) \
 	  --append --trace=primorial \
 	  --dec-out="$(SUMMARY_TPL_MEDIUM)" --prim-out="$(SUMMARY_TPL_MPRIM)" "$(RAW)" \
-	  --dec-cps-summary="$(CPS_SUMMARY_MEDIUM)" --prim-cps-summary="$(CPS_SUMMARY_MPRIM)"
+	  --dec-cps-summary="$(CPS_SUMMARY_MEDIUM)" --prim-cps-summary="$(CPS_SUMMARY_MPRIM)" \
+	  --dec-cps-summary-resume="$(CPS_SUMMARY_SMALL_RESUME)" --prim-cps-summary-resume="$(CPS_SUMMARY_SPRIM_RESUME)"
 
 $(SUMMARY_MEDIUM): $(SUMMARY_DEFAULT_MEDIUM)
 	cp "$(SUMMARY_DEFAULT_MEDIUM)" "$(SUMMARY_MEDIUM)"
@@ -365,7 +366,8 @@ $(SUMMARY_DEFAULT_LARGE): $(SUMMARY_BIN) $(RAW) $(SUMMARY_MEDIUM) | $(OUT)
 	  --prim-n-start $(MPRIMCOUNT) --prim-n-end $(LPRIMCOUNT) \
 	  --append --trace=primorial \
 	  --dec-out="$(SUMMARY_TPL_LARGE)" --prim-out="$(SUMMARY_TPL_LPRIM)" "$(RAW)" \
-	  --dec-cps-summary="$(CPS_SUMMARY_LARGE)" --prim-cps-summary="$(CPS_SUMMARY_LPRIM)"
+	  --dec-cps-summary="$(CPS_SUMMARY_LARGE)" --prim-cps-summary="$(CPS_SUMMARY_LPRIM)" \
+	  --dec-cps-summary-resume="$(CPS_SUMMARY_MEDIUM_RESUME)" --prim-cps-summary-resume="$(CPS_SUMMARY_MPRIM_RESUME)"
 
 $(SUMMARY_LARGE): $(SUMMARY_DEFAULT_LARGE)
 	cp "$(SUMMARY_DEFAULT_LARGE)" "$(SUMMARY_LARGE)"
