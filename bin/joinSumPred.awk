@@ -21,9 +21,11 @@
 #   awk -f joinSumPred.awk pairrangesummary-100M.csv pairrange2sgbll-100M.csv > joined.csv
 #
 # File 1 (pairrangesummary) columns:
-#   1: DECADE, 6: n_0, 7: C_min, 8: n_1, 9: C_max, 10: n_geom, 12: C_avg
+#   v0.1.5: 1: DECADE, 6: n_0, 7: C_min, 8: n_1, 9: C_max, 10: n_geom, 12: C_avg
+#   v0.2.0: 1: FIRST, 8: n_0, 9: C_min(n_0), 10: n_1, 11: C_max(n_1), 12: n_geom, 14: C_avg
 # File 2 (pairrange2sgbll) columns:
-#   1: DECADE, 6: n_0(pred), 7: Cpred_min, 8: n_1(pred), 9: Cpred_max, 10: N_geom, 12: Cpred_avg
+#   v0.1.5: 1: DECADE, 6: n_0(pred), 7: Cpred_min, 8: n_1(pred), 9: Cpred_max, 10: N_geom, 12: Cpred_avg
+#   v0.2.0: 1: FIRST, 8: n_0(pred), 9: Cpred_min, 10: n_1(pred), 11: Cpred_max, 12: N_geom, 14: Cpred_avg
 #
 # Join key: (DECADE, n_geom/N_geom)
 
@@ -31,17 +33,51 @@ BEGIN { FS=","; OFS="," }
 
 function trim(s){ sub(/^[ \t\r]+/,"",s); sub(/[ \t\r]+$/,"",s); return s }
 
+# Detect format version based on header
+function detect_format(header) {
+    if (index(header, "FIRST") > 0) {
+        return "v0.2.0"
+    } else {
+        return "v0.1.5"
+    }
+}
+
+# Get column numbers based on format
+function get_columns(format) {
+    if (format == "v0.2.0") {
+        col_dec = 1
+        col_n0 = 8
+        col_cmin = 9
+        col_n1 = 10
+        col_cmax = 11
+        col_ngeom = 12
+        col_cavg = 14
+    } else {
+        col_dec = 1
+        col_n0 = 6
+        col_cmin = 7
+        col_n1 = 8
+        col_cmax = 9
+        col_ngeom = 10
+        col_cavg = 12
+    }
+}
+
 # ---- Pass 1: read pairrangesummary (file1) ----
 FNR==NR {
     sub(/\r$/,"")
-    if (FNR==1) next  # skip header
-    dec   = trim($1)
-    n0    = trim($6)
-    cmin  = trim($7)
-    n1    = trim($8)
-    cmax  = trim($9)
-    ngeom = trim($10)
-    cavg  = trim($12)
+    if (FNR==1) {
+        format = detect_format($0)
+        get_columns(format)
+        next  # skip header
+    }
+    dec   = trim($col_dec)
+    n0    = trim($col_n0)
+    cmin  = trim($col_cmin)
+    n1    = trim($col_n1)
+    cmax  = trim($col_cmax)
+    ngeom = trim($col_ngeom)
+    cavg  = trim($col_cavg)
 
     key = dec SUBSEP ngeom
     sum_n0[key]   = n0
@@ -63,13 +99,13 @@ FNR==1 {
 
 {
     sub(/\r$/,"")
-    dec    = trim($1)
-    n0p    = trim($6)
-    cpmin  = trim($7)
-    n1p    = trim($8)
-    cpmax  = trim($9)
-    ngeomp = trim($10)     # N_geom in file2
-    cpavg  = trim($12)
+    dec    = trim($col_dec)
+    n0p    = trim($col_n0)
+    cpmin  = trim($col_cmin)
+    n1p    = trim($col_n1)
+    cpmax  = trim($col_cmax)
+    ngeomp = trim($col_ngeom)     # N_geom in file2
+    cpavg  = trim($col_cavg)
 
     key = dec SUBSEP ngeomp
 

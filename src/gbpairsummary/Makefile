@@ -46,6 +46,7 @@ endif
 TARGET = gbpairsummary
 SRC = gbpairsummary.cpp gbaggregate.cpp gbrange.cpp gbdecade.cpp gbprimorial.cpp gbwindow.cpp eulerproductseries.cpp gblongintervalsummary.cpp
 INCL = gblongintervalsummary.hpp gbaggregate.hpp gbdecade.hpp gbprimorial.hpp gbrange.hpp gbwindow.hpp hlcorrstate.hpp eulerproductseries.hpp
+LIBFILE = ../lib/libprime.a
 
 all: $(TARGET)
 

@@ -29,6 +29,25 @@ BEGIN {
 
     TMPDIR = (ENVIRON["TMPDIR"] != "" ? ENVIRON["TMPDIR"] : "/tmp")
     pid = PROCINFO["pid"]; if (pid == "") pid = int(1000000 * rand() + 1)
+    
+    # Create unique base name from input file using MD5 hash
+    input_file = ARGV[1]
+    if (input_file == "") {
+        # Fallback to pid if no input file specified
+        unique_base = "lambda_" pid
+    } else {
+        # Generate random seed and concatenate with filename
+        srand()
+        random_seed = int(rand() * 1000000)
+        combined_input = input_file "_" random_seed "_" pid
+        
+        # Generate MD5 hash of the combined string
+        md5_cmd = "echo '" combined_input "' | md5sum | cut -d' ' -f1"
+        md5_cmd | getline file_hash
+        close(md5_cmd)
+        unique_base = file_hash
+    }
+    
 }
 
 function trim(s){ sub(/^[ \t\r]+/,"",s); sub(/[ \t\r]+$/,"",s); return s }
@@ -65,8 +84,8 @@ NR == 1 {
     if (lam > 0) poscnt[dec]++
 
     if (tfile[dec] == "") {
-        tfile[dec] = TMPDIR "/lambda_abs_dec" dec "_" pid ".tmp"
-        sfile[dec] = TMPDIR "/lambda_abs_dec" dec "_" pid ".srt"
+        tfile[dec] = TMPDIR "/" unique_base "_dec" dec ".tmp"
+        sfile[dec] = TMPDIR "/" unique_base "_dec" dec ".srt"
     }
     printf "%0.8f\n", lam_abs[dec,k] >> tfile[dec]
 }

@@ -148,6 +148,7 @@ public:
         GBLongInterval &interval,
         long double alpha_n,
         int decade,
+        std::uint64_t n_start,
         std::uint64_t preMertens,
         std::uint64_t preMertensAsymp
     );
@@ -158,6 +159,7 @@ private:
         std::uint64_t n,
         long double alpha_n,
         int decade,
+        std::uint64_t n_start,
         std::uint64_t preMertens,
         std::uint64_t preMertensAsymp
     );

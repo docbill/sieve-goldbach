@@ -1,4 +1,4 @@
-// gbrangesummary - counts goldbach pairs in a window
+
 // Copyright (C) 2025 Bill C. Riemers
 //
 // This program is free software: you can redistribute it and/or modify

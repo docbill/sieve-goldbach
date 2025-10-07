@@ -1,4 +1,6 @@
 output/
+backups/
+parts/
 *.a
 *.o
 *.log
@@ -16,3 +18,5 @@ src/printprimes/printprimes
 src/storeprimes/storeprimes
 src/validatepairrangesummary/validatepairrangesummary
 paper/sieve_goldbach.out
+src/mergecps/mergecps
+src/gbpairsummary/gbpairsummary

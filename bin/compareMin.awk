@@ -18,24 +18,54 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # Usage: awk -f compareMin.awk file1.csv file2.csv > merged.csv
-# file1: A=Dec, F=n_0, G=C_min, J=n_geom
-# file2: A=Dec, F=npred_0, G=Cpred_min, J=n_geom
+# v0.1.5: A=Dec, F=n_0, G=C_min, J=n_geom
+# v0.2.0: A=FIRST, H=n_0, I=C_min(n_0), L=n_geom
 # For decade 0, include minAt (col B) in the key.
 
 BEGIN { FS=","; OFS="," }
 
 function trim(s){ sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
 
+# Detect format version based on header
+function detect_format(header) {
+    if (index(header, "FIRST") > 0) {
+        return "v0.2.0"
+    } else {
+        return "v0.1.5"
+    }
+}
+
+# Get column numbers based on format
+function get_columns(format) {
+    if (format == "v0.2.0") {
+        col_dec = 1
+        col_minat = 2
+        col_n0 = 8
+        col_cmin = 9
+        col_ngeom = 12
+    } else {
+        col_dec = 1
+        col_minat = 2
+        col_n0 = 6
+        col_cmin = 7
+        col_ngeom = 10
+    }
+}
+
 # ---------- Pass 1: read file1, stash C_min by key ----------
 FNR==NR {
     sub(/\r$/, "")
-    if (FNR==1) next  # skip header
+    if (FNR==1) {
+        format = detect_format($0)
+        get_columns(format)
+        next  # skip header
+    }
     # normalize fields we use
-    dec  = trim($1)
-    minA = trim($2)
-    n_0  = trim($6)
-    c    = trim($7) + 0
-    ngeo = trim($10)
+    dec  = trim($col_dec)
+    minA = trim($col_minat)
+    n_0  = trim($col_n0)
+    c    = trim($col_cmin) + 0
+    ngeo = trim($col_ngeom)
 
     # build key: (Dec,n_geom) normally; (Dec,minAt,n_geom) for decade 0
     key = dec SUBSEP ngeo
@@ -53,11 +83,11 @@ FNR==1 {
 
 {
     sub(/\r$/, "")
-    dec  = trim($1)
-    minA = trim($2)
-    np_0  = trim($6)
-    cp   = trim($7) + 0
-    ngeo = trim($10)
+    dec  = trim($col_dec)
+    minA = trim($col_minat)
+    np_0  = trim($col_n0)
+    cp   = trim($col_cmin) + 0
+    ngeo = trim($col_ngeom)
 
     key = dec SUBSEP ngeo
     cmn = (key in cmin) ? cmin[key] : ""

@@ -418,8 +418,15 @@ int GBRange::primInputCpsSummary(const char* filename) {
         for (auto &w : windows) {
             // Use a small epsilon for floating point comparison
             if (std::abs(w->alpha - alpha) < 1e-12L) {
-                // Update the window values
+                // Implement preMertens inheritance logic for out-of-order processing
+                // If we have a resume file, use the preMertens value from it (what actually happened)
+                // Otherwise, initialize to n_start - 1 (assumes never negative in range)
+                // The existing logic will handle updating it based on actual count behavior:
+                // - 0 means most recent value is negative
+                // - n_start - 1 means it was never negative in the range  
+                // - >= n_start means it was negative but turned positive
                 w->preMertens = preMertens;
+                
                 w->prim.nstar = nstar;
                 w->prim.deltaMertens = deltaMertens;
                 w->prim.nstarAsymp = nstarAsymp;
@@ -561,18 +568,48 @@ int GBRange::processRows() {
     const std::uint64_t* current = primeArray;
     bool prim_is_active = false;
     bool dec_is_active = false;
+    
+    // Also check for CPS summary outputs at the aggregate level
     for(auto &w : windows) {
-        dec_is_active = dec_is_active || w->is_dec_active();
-        prim_is_active = prim_is_active || w->is_prim_active();
+        if(w->is_dec_active()) {
+            dec_is_active = true;
+        }
+        else if(decAgg.cps_summary) {
+            w->dec.out = std::fopen("/dev/null", "w");
+            w->dec.active = true;
+            dec_is_active = true;
+        }
+        if(w->is_prim_active()) {
+            prim_is_active = true;
+        }
+        else if(primAgg.cps_summary) {
+            w->prim.out = std::fopen("/dev/null", "w");
+            w->prim.active = true;
+            prim_is_active = true;
+        }
     }
 
-    std::uint64_t n_start = prim_is_active
-	? ((dec_is_active && decAgg.left < primAgg.left)?decAgg.left:primAgg.left)
-	: decAgg.left;
-    std::uint64_t n_end = prim_is_active
-	? ((dec_is_active && decAgg.n_end > primAgg.n_end)?decAgg.n_end:primAgg.n_end)
-	: decAgg.n_end;
-
+    std::uint64_t n_start, n_end;
+    if (prim_is_active && dec_is_active) {
+        // Both active - use the wider range
+        n_start = (decAgg.left < primAgg.left) ? decAgg.left : primAgg.left;
+        n_end = (decAgg.n_end > primAgg.n_end) ? decAgg.n_end : primAgg.n_end;
+    } else if (prim_is_active) {
+        // Only primorial active
+        n_start = primAgg.left;
+        n_end = primAgg.n_end;
+    } else if (dec_is_active) {
+        // Only decade active
+        n_start = decAgg.left;
+        n_end = decAgg.n_end;
+    } else {
+        // Neither active - this is an error condition
+        std::fprintf(stderr, "Error: No output streams configured. At least one of decade or primorial output must be specified.\n");
+        return -1;
+    }
+    for(auto &w : windows) {
+        w->preMertens = w->preMertensAsymp = n_start - 1;
+    }
     for (std::uint64_t n = n_start; n < n_end; ) {
 
         const long double twoSGB_n = (model == Model::Empirical ? 0.0L : (long double)twoSGB(n, primeArray, primeArrayEndlen));
@@ -635,7 +672,7 @@ int GBRange::processRows() {
                 outputFull(decAgg,w->dec,(compat_ver == CompatVer::V015));
                 outputRaw(decAgg,w->dec);
                 outputNorm(decAgg,w->dec);
-                w->dec.summary.outputCps(w->dec,w->alpha_n,(compat_ver == CompatVer::V015)?decAgg.decade:-1,w->preMertens,w->preMertensAsymp);
+                w->dec.summary.outputCps(w->dec,w->alpha_n,(compat_ver == CompatVer::V015)?decAgg.decade:-1,n_start,w->preMertens,w->preMertensAsymp);
                 need_decReset = true;
             }
             if (w->is_prim_active() && n == primAgg.right) {
@@ -643,7 +680,7 @@ int GBRange::processRows() {
                 outputFull(primAgg,w->prim,false);
                 outputRaw(primAgg,w->prim);
                 outputNorm(primAgg,w->prim);
-                w->prim.summary.outputCps(w->prim,w->alpha_n,-1,w->preMertens,w->preMertensAsymp);
+                w->prim.summary.outputCps(w->prim,w->alpha_n,-1,n_start,w->preMertens,w->preMertensAsymp);
                 need_primReset = true;
             }
         }
