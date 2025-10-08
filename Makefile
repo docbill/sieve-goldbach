@@ -485,6 +485,7 @@ $$(LSMAX_VERIFY_$(1)):   $$(LSMAX_$(1)).csv
 
 clean-$$(SFX_$(1)): 
 	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(SFX_$(1))*-$(COMPAT).csv.{verify,sha256}
+	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(SFX_$(1))-$(COMPAT).csv.{verify,sha256}
 	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(SFX_$(1))-$(COMPAT).csv
 	@for a in $(ALPHAS); do \
 		dir="$(OUT)"/alpha-$$$$a;  \
@@ -493,6 +494,10 @@ clean-$$(SFX_$(1)):
 		$(RM) "$$$$dir"/*-$$(SFX_$(1))-$(COMPAT).csv.{verify,sha256}; \
 		$(RM) "$$$$dir"/lambda*-$$(SFX_$(1))-$(COMPAT).csv.{verify,sha256}; \
 		$(RM) "$$$$dir"/lambda*-$$(SFX_$(1))-*-$(COMPAT).csv.{verify,sha256}; \
+		$(RM) "$$$$dir"/*-$$(SFX_$(1))-*-$(COMPAT).csv; \
+		$(RM) "$$$$dir"/*-$$(SFX_$(1))-$(COMPAT).csv; \
+		$(RM) "$$$$dir"/lambda*-$$(SFX_$(1))-$(COMPAT).csv; \
+		$(RM) "$$$$dir"/lambda*-$$(SFX_$(1))-*-$(COMPAT).csv; \
 	done
 
 clobber-$$(SFX_$(1)): clean-$$(SFX_$(1))
@@ -868,14 +873,14 @@ verify: certify
 	@cmp "$(SGB_SPRIM).csv.verify"    "$(SGB_GOLD_SPRIM)" && echo "Validated $(SGB_SPRIM).csv"
 	@cmp "$(SUMMARY_SPRIM).csv.verify" "$(SUMMARY_GOLD_SPRIM)" && echo "Validated $(SUMMARY_SPRIM).csv"
 #	@cmp "$(CPS_SUMMARY_VERIFY_SPRIM)" "$(CPS_SUMMARY_GOLD_SPRIM)" && echo "Validated $(CPS_SUMMARY_SPRIM).csv"
-#	@cmp "$(JOIN_VERIFY_SPRIM)" "$(JOIN_GOLD_SPRIM)" && echo "Validated $(JOIN_SPRIM)"
+	@cmp "$(JOIN_VERIFY_SPRIM)" "$(JOIN_GOLD_SPRIM)" && echo "Validated $(JOIN_SPRIM)"
 	@cmp "$(CPSLB_VERIFY_SPRIM)"   "$(CPSLB_GOLD_SPRIM)" && echo "Validated $(CPSLB_SPRIM).csv"
 	@cmp "$(LAVG_VERIFY_SPRIM)"    "$(LAVG_GOLD_SPRIM)" && echo "Validated $(LAVG_SPRIM).csv"
 	@cmp "$(LMIN_VERIFY_SPRIM)"    "$(LMIN_GOLD_SPRIM)" && echo "Validated $(LMIN_SPRIM).csv"
 	@cmp "$(LMAX_VERIFY_SPRIM)"    "$(LMAX_GOLD_SPRIM)" && echo "Validated $(LMAX_SPRIM).csv"
-#	@cmp "$(LSAVG_VERIFY_SPRIM)"    "$(LSAVG_GOLD_SPRIM)" && echo "Validated $(LSAVG_SPRIM).csv"
-#	@cmp "$(LSMIN_VERIFY_SPRIM)"    "$(LSMIN_GOLD_SPRIM)" && echo "Validated $(LSMIN_SPRIM).csv"
-#	@cmp "$(LSMAX_VERIFY_SPRIM)"    "$(LSMAX_GOLD_SPRIM)" && echo "Validated $(LSMAX_SPRIM).csv"
+	@cmp "$(LSAVG_VERIFY_SPRIM)"    "$(LSAVG_GOLD_SPRIM)" && echo "Validated $(LSAVG_SPRIM).csv"
+	@cmp "$(LSMIN_VERIFY_SPRIM)"    "$(LSMIN_GOLD_SPRIM)" && echo "Validated $(LSMIN_SPRIM).csv"
+	@cmp "$(LSMAX_VERIFY_SPRIM)"    "$(LSMAX_GOLD_SPRIM)" && echo "Validated $(LSMAX_SPRIM).csv"
 
 verify-medium: $(OUT)/verify-medium-$(COMPAT).stamp
 	@echo "Medium validation completed successfully!"
@@ -894,14 +899,14 @@ $(OUT)/verify-medium-$(COMPAT).stamp: certify-medium verify
 	@cmp "$(LSMAX_VERIFY_MEDIUM)"    "$(LSMAX_GOLD_MEDIUM)" && echo "Validated $(LSMAX_MEDIUM).csv"
 	@cmp "$(SUMMARY_MPRIM).csv.verify" "$(SUMMARY_GOLD_MPRIM)" && echo "Validated $(SUMMARY_MPRIM).csv"
 #	@cmp "$(CPS_SUMMARY_VERIFY_MPRIM)" "$(CPS_SUMMARY_GOLD_MPRIM)" && echo "Validated $(CPS_SUMMARY_MPRIM).csv"
-#	@cmp "$(JOIN_VERIFY_MPRIM)"   "$(JOIN_GOLD_MPRIM)" && echo "Validated $(JOIN_MPRIM)"
+	@cmp "$(JOIN_VERIFY_MPRIM)"   "$(JOIN_GOLD_MPRIM)" && echo "Validated $(JOIN_MPRIM)"
 	@cmp "$(CPSLB_VERIFY_MPRIM)"   "$(CPSLB_GOLD_MPRIM)" && echo "Validated $(CPSLB_MPRIM).csv"
 	@cmp "$(LAVG_VERIFY_MPRIM)"    "$(LAVG_GOLD_MPRIM)" && echo "Validated $(LAVG_MPRIM).csv"
 	@cmp "$(LMIN_VERIFY_MPRIM)"    "$(LMIN_GOLD_MPRIM)" && echo "Validated $(LMIN_MPRIM).csv"
 	@cmp "$(LMAX_VERIFY_MPRIM)"    "$(LMAX_GOLD_MPRIM)" && echo "Validated $(LMAX_MPRIM).csv"
-#	@cmp "$(LSAVG_VERIFY_MPRIM)"    "$(LSAVG_GOLD_MPRIM)" && echo "Validated $(LSAVG_MPRIM).csv"
-#	@cmp "$(LSMIN_VERIFY_MPRIM)"    "$(LSMIN_GOLD_MPRIM)" && echo "Validated $(LSMIN_MPRIM).csv"
-#	@cmp "$(LSMAX_VERIFY_MPRIM)"    "$(LSMAX_GOLD_MPRIM)" && echo "Validated $(LSMAX_MPRIM).csv"
+	@cmp "$(LSAVG_VERIFY_MPRIM)"    "$(LSAVG_GOLD_MPRIM)" && echo "Validated $(LSAVG_MPRIM).csv"
+	@cmp "$(LSMIN_VERIFY_MPRIM)"    "$(LSMIN_GOLD_MPRIM)" && echo "Validated $(LSMIN_MPRIM).csv"
+	@cmp "$(LSMAX_VERIFY_MPRIM)"    "$(LSMAX_GOLD_MPRIM)" && echo "Validated $(LSMAX_MPRIM).csv"
 	@touch "$@"
 
 verify-large: $(OUT)/verify-large-$(COMPAT).stamp
@@ -921,14 +926,14 @@ $(OUT)/verify-large-$(COMPAT).stamp: certify-large verify-medium
 	@cmp "$(LSMAX_VERIFY_LARGE)"    "$(LSMAX_GOLD_LARGE)" && echo "Validated $(LSMAX_LARGE).csv"
 	@cmp "$(SUMMARY_LPRIM).csv.verify" "$(SUMMARY_GOLD_LPRIM)" && echo "Validated $(SUMMARY_LPRIM).csv"
 #	@cmp "$(CPS_SUMMARY_VERIFY_LPRIM)" "$(CPS_SUMMARY_GOLD_LPRIM)" && echo "Validated $(CPS_SUMMARY_LPRIM).csv"
-#	@cmp "$(JOIN_VERIFY_LPRIM)"   "$(JOIN_GOLD_LPRIM)" && echo "Validated $(JOIN_LPRIM)"
+	@cmp "$(JOIN_VERIFY_LPRIM)"   "$(JOIN_GOLD_LPRIM)" && echo "Validated $(JOIN_LPRIM)"
 	@cmp "$(CPSLB_VERIFY_LPRIM)"   "$(CPSLB_GOLD_LPRIM)" && echo "Validated $(CPSLB_LPRIM).csv"
 	@cmp "$(LAVG_VERIFY_LPRIM)"    "$(LAVG_GOLD_LPRIM)" && echo "Validated $(LAVG_LPRIM).csv"
 	@cmp "$(LMIN_VERIFY_LPRIM)"    "$(LMIN_GOLD_LPRIM)" && echo "Validated $(LMIN_LPRIM).csv"
 	@cmp "$(LMAX_VERIFY_LPRIM)"    "$(LMAX_GOLD_LPRIM)" && echo "Validated $(LMAX_LPRIM).csv"
-#	@cmp "$(LSAVG_VERIFY_LPRIM)"    "$(LSAVG_GOLD_LPRIM)" && echo "Validated $(LSAVG_LPRIM).csv"
-#	@cmp "$(LSMIN_VERIFY_LPRIM)"    "$(LSMIN_GOLD_LPRIM)" && echo "Validated $(LSMIN_LPRIM).csv"
-#	@cmp "$(LSMAX_VERIFY_LPRIM)"    "$(LSMAX_GOLD_LPRIM)" && echo "Validated $(LSMAX_LPRIM).csv"
+	@cmp "$(LSAVG_VERIFY_LPRIM)"    "$(LSAVG_GOLD_LPRIM)" && echo "Validated $(LSAVG_LPRIM).csv"
+	@cmp "$(LSMIN_VERIFY_LPRIM)"    "$(LSMIN_GOLD_LPRIM)" && echo "Validated $(LSMIN_LPRIM).csv"
+	@cmp "$(LSMAX_VERIFY_LPRIM)"    "$(LSMAX_GOLD_LPRIM)" && echo "Validated $(LSMAX_LPRIM).csv"
 	@touch "$@"
 
 validate: verify

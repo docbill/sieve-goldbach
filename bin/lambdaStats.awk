@@ -18,7 +18,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # Usage: awk -f lambdaStats.awk input.csv > lambda_decade_stats.csv
-# Uses Dec in column 1 and Lambda in the LAST column (from header).
+# For v0.1.5: Uses Dec in column 1 and Lambda in the LAST column
+# For v0.2.0: Uses n_geom in column 2 to calculate decade, Lambda in the LAST column
 # Portable for BSD/POSIX awk (no asort, no C-style comments).
 
 BEGIN {
@@ -29,6 +30,10 @@ BEGIN {
 
     TMPDIR = (ENVIRON["TMPDIR"] != "" ? ENVIRON["TMPDIR"] : "/tmp")
     pid = PROCINFO["pid"]; if (pid == "") pid = int(1000000 * rand() + 1)
+    
+    # Format detection variables
+    format_detected = 0
+    is_v0_2_0 = 0
     
     # Create unique base name from input file using MD5 hash
     input_file = ARGV[1]
@@ -53,6 +58,29 @@ BEGIN {
 function trim(s){ sub(/^[ \t\r]+/,"",s); sub(/[ \t\r]+$/,"",s); return s }
 function absd(x){ return (x<0 ? -x : x) }
 
+# Detect file format based on header
+function detect_format(header) {
+    if (index(header, "START") > 0) {
+        return "v0.2.0"
+    } else {
+        return "v0.1.5"
+    }
+}
+
+# Calculate decade from n_geom value for v0.2.0 files
+function calculate_decade(n_geom) {
+    if (n_geom <= 0) return -1
+    if (n_geom < 10) return 0
+    if (n_geom < 100) return 1
+    if (n_geom < 1000) return 2
+    if (n_geom < 10000) return 3
+    if (n_geom < 100000) return 4
+    if (n_geom < 1000000) return 5
+    if (n_geom < 10000000) return 6
+    if (n_geom < 100000000) return 7
+    return 8  # Beyond our range
+}
+
 # Type-7 quantile (R’s default): sorted[1..n], p in [0,1]
 function quantile(sorted, n, p,   h,k,frac,val) {
     if (n <= 0) return ""
@@ -67,13 +95,29 @@ function quantile(sorted, n, p,   h,k,frac,val) {
 
 NR == 1 {
     header_line = $0
+    if (!format_detected) {
+        format = detect_format($0)
+        if (format == "v0.2.0") {
+            is_v0_2_0 = 1
+        }
+        format_detected = 1
+    }
     next
 }
 
 {
     sub(/\r$/,"")
 
-    dec = trim($1) + 0
+    # Determine decade based on format
+    if (is_v0_2_0) {
+        # For v0.2.0: use n_geom (column 2) to calculate decade
+        n_geom = trim($2) + 0
+        dec = calculate_decade(n_geom)
+    } else {
+        # For v0.1.5: use decade directly from column 1
+        dec = trim($1) + 0
+    }
+    
     if (dec < 0 || dec >= want_decades) next
 
     lam = trim($NF) + 0.0   # last column = Lambda
@@ -93,7 +137,7 @@ NR == 1 {
 END {
     for (d = 0; d < want_decades; d++) {
         n = cnt[d] + 0
-        if (n == 0) { printf "%d,,,,,,,,\n", d; continue }
+        if (n < 5) { continue }
 
         # sort -> read back
         system("sort -n " q(tfile[d]) " > " q(sfile[d]))
