@@ -490,6 +490,9 @@ clean-$$(SFX_$(1)):
 		dir="$(OUT)"/alpha-$$$$a;  \
 		[ -d "$$$$dir" ] || continue; \
 		$(RM) "$$$$dir"/*-$$(SFX_$(1))-*-$(COMPAT).csv.{verify,sha256}; \
+		$(RM) "$$$$dir"/*-$$(SFX_$(1))-$(COMPAT).csv.{verify,sha256}; \
+		$(RM) "$$$$dir"/lambda*-$$(SFX_$(1))-$(COMPAT).csv.{verify,sha256}; \
+		$(RM) "$$$$dir"/lambda*-$$(SFX_$(1))-*-$(COMPAT).csv.{verify,sha256}; \
 	done
 
 clobber-$$(SFX_$(1)): clean-$$(SFX_$(1))

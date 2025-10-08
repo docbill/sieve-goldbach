@@ -22,7 +22,23 @@
 # v0.2.0: A=FIRST, J=n_1, K=C_max(n_1), L=n_geom
 # For decade 0, include minAt (col B) in the key.
 
-BEGIN { FS=","; OFS="," }
+BEGIN {
+    FS=","; OFS=","
+    
+    # Global variables
+    col_label = 0
+    col_minat = 0
+    col_n1 = 0
+    col_cmax = 0
+    col_ngeom = 0
+    
+    # Second file variables
+    col_label2 = 0
+    col_minat_2 = 0
+    col_n1_2 = 0
+    col_cmax_2 = 0
+    col_ngeom_2 = 0
+}
 
 function trim(s){ sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
 
@@ -38,12 +54,12 @@ function detect_format(header) {
 # Get column numbers based on format
 function get_columns(format) {
     if (format == "v0.2.0") {
-        col_dec = 1
+        col_label = 3
         col_n1 = 10
         col_cmax = 11
         col_ngeom = 12
     } else {
-        col_dec = 1
+        col_label = 1
         col_n1 = 8
         col_cmax = 9
         col_ngeom = 10
@@ -55,17 +71,31 @@ FNR==NR {
     sub(/\r$/, "")
     if (FNR==1) {
         format = detect_format($0)
-        get_columns(format)
+        if (format == "v0.2.0") {
+            col_label = 3; col_minat = 4; col_n1 = 10; col_cmax = 11; col_ngeom = 12
+        } else {
+            col_label = 1; col_minat = 2; col_n1 = 8; col_cmax = 9; col_ngeom = 10
+        }
         next  # skip header
     }
+    
+    # Set column variables for first file if not already set
+    if (col_label == 0) {
+        if (index($0, "FIRST") > 0) {
+            col_label = 3; col_minat = 4; col_n1 = 10; col_cmax = 11; col_ngeom = 12
+        } else {
+            col_label = 1; col_minat = 2; col_n1 = 8; col_cmax = 9; col_ngeom = 10
+        }
+    }
+    
     # normalize fields we use
-    dec  = trim($col_dec)
+    label  = trim($col_label)
     n_1  = trim($col_n1)
     c    = trim($col_cmax) + 0
     ngeo = trim($col_ngeom)
 
     # build key: (Dec,n_geom)
-    key = dec SUBSEP ngeo
+    key = label "\034" ngeo
     cmax[key] = c
     n1[key] = n_1
     count1[key]++
@@ -74,32 +104,54 @@ FNR==NR {
 
 # ---------- Pass 2: file2, emit merged ----------
 FNR==1 {
-    print "Dec","n_1","C_max","Npred_1","Cpred_max","Lambda_max"
+    format = detect_format($0)
+    if (format == "v0.2.0") {
+        col_label2 = 3; col_minat_2 = 4; col_n1_2 = 10; col_cmax_2 = 11; col_ngeom_2 = 12
+    } else {
+        col_label2 = 1; col_minat_2 = 2; col_n1_2 = 8; col_cmax_2 = 9; col_ngeom_2 = 10
+    }
+    
+    if(col_label2 == 1) {
+        print "Dec","n_1","C_max","Npred_1","Cpred_max","Lambda_max"
+    }
+    else {
+        print "START","n_1","C_max","Npred_1","Cpred_max","Lambda_max"
+    }
     next
 }
 
 {
     sub(/\r$/, "")
-    dec  = trim($col_dec)
-    minA = trim($2)
-    np_1  = trim($col_n1)
-    cp   = trim($col_cmax) + 0
-    ngeo = trim($col_ngeom)
+    
+    # Set column variables for second file if not already set
+    if (col_label2 == 0) {
+        if (index($0, "FIRST") > 0) {
+            col_label2 = 3; col_minat_2 = 4; col_n1_2 = 10; col_cmax_2 = 11; col_ngeom_2 = 12
+        } else {
+            col_label2 = 1; col_minat_2 = 2; col_n1_2 = 8; col_cmax_2 = 9; col_ngeom_2 = 10
+        }
+    }
+    
+    label  = trim($col_label2)
+    minA = trim($col_minat_2)
+    np_1  = trim($col_n1_2)
+    cp   = trim($col_cmax_2) + 0
+    ngeo = trim($col_ngeom_2)
 
-    key = dec SUBSEP ngeo
+    key = label "\034" ngeo
     cmx = (key in cmax) ? cmax[key] : ""
     n = (key in n1) ? n1[key] : ""
 
     if (cmx=="") {
         # No match from file1 for this row
         printf("WARN: unmatched key in file2: Dec=%s, n_geom=%s%s\n",
-               dec, ngeo, (dec=="0"?sprintf(", minAt=%s",minA):"")) > "/dev/stderr"
+               label, ngeo, (label=="0"?sprintf(", minAt=%s",minA):"")) > "/dev/stderr"
         next
     }
 
     # Lambda_max = log(C_max/Cpred_max) in scientific notation; blank if C_max==0
     if ((cmx+0) > 0 && (cp+0) > 0) {
-        printf "%d,%d,%.6f,%d,%.6f,%.6e\n", dec, n, cmx, np_1, cp, log((cmx+0)/(cp+0))
+        printf "%s,%d,%.6f,%d,%.6f,%.6e\n", label, n, cmx, np_1, cp, log((cmx+0)/(cp+0))
     }
     seen[key]++
 }

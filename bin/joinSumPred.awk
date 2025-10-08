@@ -31,6 +31,25 @@
 
 BEGIN { FS=","; OFS="," }
 
+# Global variables
+col_label = 0
+col_n0 = 0
+col_cmin = 0
+col_n1 = 0
+col_cmax = 0
+col_ngeom = 0
+col_cavg = 0
+first_file_processed = 0
+
+# Second file variables
+col_label2 = 0
+col_n0_2 = 0
+col_cmin_2 = 0
+col_n1_2 = 0
+col_cmax_2 = 0
+col_ngeom_2 = 0
+col_cavg_2 = 0
+
 function trim(s){ sub(/^[ \t\r]+/,"",s); sub(/[ \t\r]+$/,"",s); return s }
 
 # Detect format version based on header
@@ -42,44 +61,67 @@ function detect_format(header) {
     }
 }
 
-# Get column numbers based on format
-function get_columns(format) {
-    if (format == "v0.2.0") {
-        col_dec = 1
-        col_n0 = 8
-        col_cmin = 9
-        col_n1 = 10
-        col_cmax = 11
-        col_ngeom = 12
-        col_cavg = 14
-    } else {
-        col_dec = 1
-        col_n0 = 6
-        col_cmin = 7
-        col_n1 = 8
-        col_cmax = 9
-        col_ngeom = 10
-        col_cavg = 12
-    }
-}
+# Set column numbers based on format (inline)
 
 # ---- Pass 1: read pairrangesummary (file1) ----
 FNR==NR {
     sub(/\r$/,"")
     if (FNR==1) {
         format = detect_format($0)
-        get_columns(format)
+        if (format == "v0.2.0") {
+            col_label = 3
+            col_n0 = 8
+            col_cmin = 9
+            col_n1 = 10
+            col_cmax = 11
+            col_ngeom = 12
+            col_cavg = 14
+        } else {
+            col_label = 1
+            col_n0 = 6
+            col_cmin = 7
+            col_n1 = 8
+            col_cmax = 9
+            col_ngeom = 10
+            col_cavg = 12
+        }
+        first_file_processed = 1
         next  # skip header
     }
-    dec   = trim($col_dec)
+    # Set column variables for first file if not already set
+    if (col_label == 0) {
+        # This is the first data row of the first file, set columns
+        if (index($0, "FIRST") > 0) {
+            col_label = 3
+            col_n0 = 8
+            col_cmin = 9
+            col_n1 = 10
+            col_cmax = 11
+            col_ngeom = 12
+            col_cavg = 14
+        } else {
+            col_label = 1
+            col_n0 = 6
+            col_cmin = 7
+            col_n1 = 8
+            col_cmax = 9
+            col_ngeom = 10
+            col_cavg = 12
+        }
+    }
+    
+    label   = trim($col_label)
     n0    = trim($col_n0)
     cmin  = trim($col_cmin)
     n1    = trim($col_n1)
     cmax  = trim($col_cmax)
     ngeom = trim($col_ngeom)
     cavg  = trim($col_cavg)
+    
 
-    key = dec SUBSEP ngeom
+    key = label "\034" ngeom
+    
+    
     sum_n0[key]   = n0
     sum_cmin[key] = cmin
     sum_n1[key]   = n1
@@ -91,30 +133,88 @@ FNR==NR {
 
 # ---- Pass 2: read pairrange2sgbll (file2), emit join ----
 FNR==1 {
-    print "DECADE","n_0","C_min","Npred_0","Cpred_min",
-          "n_1","C_max","Npred_1","Cpred_max",
-          "n_geom","C_avg","Cpred_avg"
+    
+    # Detect format from second file header and set columns
+    format = detect_format($0)
+    if (format == "v0.2.0") {
+        col_label2 = 3
+        col_n0_2 = 8
+        col_cmin_2 = 9
+        col_n1_2 = 10
+        col_cmax_2 = 11
+        col_ngeom_2 = 12
+        col_cavg_2 = 14
+    } else {
+        col_label2 = 1
+        col_n0_2 = 6
+        col_cmin_2 = 7
+        col_n1_2 = 8
+        col_cmax_2 = 9
+        col_ngeom_2 = 10
+        col_cavg_2 = 12
+    }
+    if(col_label2 == 1) {
+        print "DECADE","n_0","C_min","Npred_0","Cpred_min",
+            "n_1","C_max","Npred_1","Cpred_max",
+            "n_geom","C_avg","Cpred_avg"
+    }
+    else {
+        print "START","n_0","C_min","Npred_0","Cpred_min",
+            "n_1","C_max","Npred_1","Cpred_max",
+            "n_geom","C_avg","Cpred_avg"
+
+    }
     next
 }
 
 {
     sub(/\r$/,"")
-    dec    = trim($col_dec)
-    n0p    = trim($col_n0)
-    cpmin  = trim($col_cmin)
-    n1p    = trim($col_n1)
-    cpmax  = trim($col_cmax)
-    ngeomp = trim($col_ngeom)     # N_geom in file2
-    cpavg  = trim($col_cavg)
+    
+    # Set column variables for second file if not already set
+    if (col_label2 == 0) {
+        # This is the first data row of the second file, set columns
+        if (index($0, "FIRST") > 0) {
+            col_label2 = 3
+            col_n0_2 = 8
+            col_cmin_2 = 9
+            col_n1_2 = 10
+            col_cmax_2 = 11
+            col_ngeom_2 = 12
+            col_cavg_2 = 14
+        } else {
+            col_label2 = 1
+            col_n0_2 = 6
+            col_cmin_2 = 7
+            col_n1_2 = 8
+            col_cmax_2 = 9
+            col_ngeom_2 = 10
+            col_cavg_2 = 12
+        }
+    }
+    
+    label  = trim($col_label2)
+    n0p    = trim($col_n0_2)
+    cpmin  = trim($col_cmin_2)
+    n1p    = trim($col_n1_2)
+    cpmax  = trim($col_cmax_2)
+    ngeomp = trim($col_ngeom_2)     # N_geom in file2
+    cpavg  = trim($col_cavg_2)
+    
 
-    key = dec SUBSEP ngeomp
+    key = label "\034" ngeomp
+    
 
     if (!(key in sum_n0)) {
-        printf("WARN: no match for DECADE=%s n_geom=%s in file1\n", dec, ngeomp) > "/dev/stderr"
+        if(col_label2 == 1) {
+            printf("WARN: no match for DECADE=%s n_geom=%s in file1\n", label, ngeomp) > "/dev/stderr"
+        }
+        else {
+            printf("WARN: no match for START=%s n_geom=%s in file1\n", label, ngeomp) > "/dev/stderr"
+        }
         next
     }
 
-    print dec,
+    print label,
           sum_n0[key], sum_cmin[key], n0p, cpmin,
           sum_n1[key], sum_cmax[key], n1p, cpmax,
           sum_ng[key], sum_cavg[key], cpavg

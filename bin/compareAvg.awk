@@ -22,7 +22,21 @@
 # v0.2.0: A=FIRST, L=n_geom, N=C_avg
 # For decade 0, include minAt (col B) in the key.
 
-BEGIN { FS=","; OFS="," }
+BEGIN {
+    FS=","; OFS=","
+    
+    # Global variables
+    col_label = 0
+    col_minat = 0
+    col_ngeom = 0
+    col_cavg = 0
+    
+    # Second file variables
+    col_label2 = 0
+    col_minat_2 = 0
+    col_ngeom_2 = 0
+    col_cavg_2 = 0
+}
 
 function trim(s){ sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
 
@@ -38,12 +52,12 @@ function detect_format(header) {
 # Get column numbers based on format
 function get_columns(format) {
     if (format == "v0.2.0") {
-        col_dec = 1
-        col_minat = 2
+        col_label = 3
+        col_minat = 4
         col_ngeom = 12
         col_cavg = 14
     } else {
-        col_dec = 1
+        col_label = 1
         col_minat = 2
         col_ngeom = 10
         col_cavg = 12
@@ -55,17 +69,31 @@ FNR==NR {
     sub(/\r$/, "")
     if (FNR==1) {
         format = detect_format($0)
-        get_columns(format)
+        if (format == "v0.2.0") {
+            col_label = 3
+            col_minat = 4
+            col_ngeom = 12
+            col_cavg = 14
+        } else {
+            col_label = 1
+            col_minat = 2
+            col_ngeom = 10
+            col_cavg = 12
+        }
         next  # skip header
     }
+    
+    # Columns are already set in header processing
+    
     # normalize fields we use
-    dec  = trim($col_dec)
+    label  = trim($col_label)
     minA = trim($col_minat)
     ngeo = trim($col_ngeom)
     c    = trim($col_cavg) + 0
 
     # build key: (Dec,n_geom) normally; (Dec,minAt,n_geom) for decade 0
-    key = (dec=="0") ? (dec SUBSEP minA SUBSEP ngeo) : (dec SUBSEP ngeo)
+    key = (label=="0") ? (label "\034" minA "\034" ngeo) : (label "\034" ngeo)
+    
     cavg[key] = c
     count1[key]++
     next
@@ -73,30 +101,72 @@ FNR==NR {
 
 # ---------- Pass 2: file2, emit merged ----------
 FNR==1 {
-    print "Dec","n_geom","C_avg","Cpred_avg","Lambda_avg"
+    # Detect format from second file header and set columns
+    format = detect_format($0)
+    if (format == "v0.2.0") {
+        col_label2 = 3
+        col_minat_2 = 4
+        col_ngeom_2 = 12
+        col_cavg_2 = 14
+    } else {
+        col_label2 = 1
+        col_minat_2 = 2
+        col_ngeom_2 = 10
+        col_cavg_2 = 12
+    }
+    
+    if(col_label2 == 1) {
+        print "Dec","n_geom","C_avg","Cpred_avg","Lambda_avg"
+    }
+    else {
+        print "START","n_geom","C_avg","Cpred_avg","Lambda_avg"
+    }
     next
 }
 
 {
     sub(/\r$/, "")
-    dec  = trim($col_dec)
-    minA = trim($col_minat)
-    ngeo = trim($col_ngeom)
-    cp   = trim($col_cavg) + 0
+    
+    # Set column variables for second file if not already set
+    if (col_label2 == 0) {
+        # This is the first data row of the second file, set columns
+        if (index($0, "FIRST") > 0) {
+            col_label2 = 3
+            col_minat_2 = 4
+            col_ngeom_2 = 12
+            col_cavg_2 = 14
+        } else {
+            col_label2 = 1
+            col_minat_2 = 2
+            col_ngeom_2 = 10
+            col_cavg_2 = 12
+        }
+    }
+    
+    label  = trim($col_label2)
+    minA = trim($col_minat_2)
+    ngeo = trim($col_ngeom_2)
+    cp   = trim($col_cavg_2) + 0
 
-    key = (dec=="0") ? (dec SUBSEP minA SUBSEP ngeo) : (dec SUBSEP ngeo)
+    key = (label=="0") ? (label "\034" minA "\034" ngeo) : (label "\034" ngeo)
     cav = (key in cavg) ? cavg[key] : ""
 
     if (cav=="") {
         # No match from file1 for this row
-        printf("WARN: unmatched key in file2: Dec=%s, n_geom=%s%s\n",
-               dec, ngeo, (dec=="0"?sprintf(", minAt=%s",minA):"")) > "/dev/stderr"
+        if(col_label2 == 1) {
+            printf("WARN: unmatched key in file2: Dec=%s, n_geom=%s%s\n",
+               label, ngeo, (label=="0"?sprintf(", minAt=%s",minA):"")) > "/dev/stderr"
+        }
+        else {
+            printf("WARN: unmatched key in file2: START=%s, n_geom=%s%s\n",
+               label, ngeo, (label=="0"?sprintf(", minAt=%s",minA):"")) > "/dev/stderr"
+        }
         next
     }
 
     # Lambda_avg = log(C_avg/Cpred_avg) in scientific notation; blank if C_avg==0
     if ((cav+0) > 0 && (cp+0) > 0) {
-        printf "%d,%d,%.6f,%.6f,%.6e\n", dec, ngeo, cav, cp, log((cav+0)/(cp+0))
+        printf "%s,%d,%.6f,%.6f,%.6e\n", label, ngeo, cav, cp, log((cav+0)/(cp+0))
     }
 
     seen[key]++
