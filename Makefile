@@ -44,14 +44,6 @@ ALPHA_ARGS := $(foreach a,$(ALPHAS),--alpha $(a))
 # ---------- Parameters ----------
 LIMIT        := 250000000
 GBCOUNT      := 10000
-SMALLSTART   := 4
-SPRIMSTART   := 4
-SPRIMCOUNT   := 1021020
-SMALLCOUNT   := 1000000
-MEDIUMCOUNT  := 10000000
-MPRIMCOUNT   := 9699690
-LARGECOUNT   := 100000000
-LPRIMCOUNT   := 111546435
 FORMATS_HL_A := full raw norm
 FORMATS_EMP  := full raw norm cps
 COMPAT       := v0.1.5
@@ -59,60 +51,162 @@ COMPAT       := v0.1.5
 
 SUFFIX_SMALLA := 500K
 START_SMALLA := 4
-COUNT_SMALLA := 500000
+END_SMALLA := 500000
 
 SUFFIX_SMALLB := 700K
-START_SMALLB := $(COUNT_SMALLA)
-COUNT_SMALLB := 700000
+START_SMALLB := $(END_SMALLA)
+END_SMALLB := 700000
 
 SUFFIX_SMALLC := 800K
-START_SMALLC := $(COUNT_SMALLB)
-COUNT_SMALLC := 800000
+START_SMALLC := $(END_SMALLB)
+END_SMALLC := 800000
 
 SUFFIX_SMALLD := 900K
-START_SMALLD := $(COUNT_SMALLC)
-COUNT_SMALLD := 900000
+START_SMALLD := $(END_SMALLC)
+END_SMALLD := 900000
 
-SUFFIX_SMALLE := 1M
-START_SMALLE := $(COUNT_SMALLD)
-COUNT_SMALLE := 1000000
+SUFFIX_SMALLE := 1000K
+START_SMALLE := $(END_SMALLD)
+END_SMALLE := 1000000
 
 SUFFIX_SPRIMA := 13PR34D2
 START_SPRIMA := 4
-COUNT_SPRIMA := 510510
+END_SPRIMA := 510510
 
 SUFFIX_SPRIMB := 13PR47D2
-START_SPRIMB := $(COUNT_SPRIMA)
-COUNT_SPRIMB := 705705
+START_SPRIMB := $(END_SPRIMA)
+END_SPRIMB := 705705
 
 SUFFIX_SPRIMC := 13PR53D2
-START_SPRIMC := $(COUNT_SPRIMB)
-COUNT_SPRIMC := 795795
+START_SPRIMC := $(END_SPRIMB)
+END_SPRIMC := 795795
 
 SUFFIX_SPRIMD := 13PR60D2
-START_SPRIMD := $(COUNT_SPRIMC)
-COUNT_SPRIMD := 900900
+START_SPRIMD := $(END_SPRIMC)
+END_SPRIMD := 900900
 
 SUFFIX_SPRIME := 13PR68D2
-START_SPRIME := $(COUNT_SPRIMD)
-COUNT_SPRIME := 1021020
+START_SPRIME := $(END_SPRIMD)
+END_SPRIME := 1021020
+
+SUFFIX_SMALL  := 1M
+START_SMALL   := $(START_SMALLA)
+END_SMALL     := $(END_SMALLE)
+
+SUFFIX_SPRIM  := 17PR2
+START_SPRIM   := $(START_SPRIMA)
+END_SPRIM     := $(END_SPRIME)
 
 SMALLPARTS := A B C D E
 
+
+SUFFIX_MEDIUMA := 5M
+START_MEDIUMA := $(END_SMALL)
+END_MEDIUMA := 5000000
+
+SUFFIX_MEDIUMB := 7M
+START_MEDIUMB := $(END_MEDIUMA)
+END_MEDIUMB := 7000000
+
+SUFFIX_MEDIUMC := 8M
+START_MEDIUMC := $(END_MEDIUMB)
+END_MEDIUMC := 8000000
+
+SUFFIX_MEDIUMD := 9M
+START_MEDIUMD := $(END_MEDIUMC)
+END_MEDIUMD := 9000000
+
+SUFFIX_MEDIUME := 10M
+START_MEDIUME := $(END_MEDIUMD)
+END_MEDIUME := 10000000
+
+SUFFIX_MPRIMA := 17PR20D2
+START_MPRIMA := $(END_SPRIM)
+END_MPRIMA := 5105100
+
+SUFFIX_MPRIMB := 17PR27D2
+START_MPRIMB := $(END_MPRIMA)
+END_MPRIMB := 6891885
+
+SUFFIX_MPRIMC := 17PR31D2
+START_MPRIMC := $(END_MPRIMB)
+END_MPRIMC := 7912905
+
+SUFFIX_MPRIMD := 17PR35D2
+START_MPRIMD := $(END_MPRIMC)
+END_MPRIMD := 8933925
+
+SUFFIX_MPRIME := 17PR38D2
+START_MPRIME := $(END_MPRIMD)
+END_MPRIME := 9699690
+
+SUFFIX_MEDIUM := 10M
+END_MEDIUM  := $(END_MEDIUME)
+
+SUFFIX_MPRIM  := 19PR
+END_MPRIM   := $(END_MPRIME)
+
+MEDIUMPARTS := A B C D E
+
+
+SUFFIX_LARGEA := 50M
+START_LARGEA := $(END_MEDIUM)
+END_LARGEA := 50000000
+
+SUFFIX_LARGEB := 70M
+START_LARGEB := $(END_LARGEA)
+END_LARGEB := 70000000
+
+SUFFIX_LARGEC := 80M
+START_LARGEC := $(END_LARGEB)
+END_LARGEC := 80000000
+
+SUFFIX_LARGED := 90M
+START_LARGED := $(END_LARGEC)
+END_LARGED := 90000000
+
+SUFFIX_LARGEE := 100M
+START_LARGEE := $(END_LARGED)
+END_LARGEE := 100000000
+
+SUFFIX_LARGEF := nonsensical
+START_LARGEF := $(END_LARGEE)
+END_LARGEF := 110000000
+
+SUFFIX_LPRIMA := 17PR196D2
+START_LPRIMA := $(END_MPRIM)
+END_LPRIMA := 50029980
+
+SUFFIX_LPRIMB := 17PR274D2
+START_LPRIMB := $(END_LPRIMA)
+END_LPRIMB := 69939870
+
+SUFFIX_LPRIMC := 17PR314D2
+START_LPRIMC := $(END_LPRIMB)
+END_LPRIMC := 80150070
+
+SUFFIX_LPRIMD := 17PR352D2
+START_LPRIMD := $(END_LPRIMC)
+END_LPRIMD := 89849760
+
+SUFFIX_LPRIME := 17PR400D2
+START_LPRIME := $(END_LPRIMD)
+END_LPRIME := 102102000
+
+SUFFIX_LPRIMF := 17PR437D2
+START_LPRIMF := $(END_LPRIME)
+END_LPRIMF := 111546435
+
+SUFFIX_LARGE  := 100M
+END_LARGE   := $(END_LARGEF)
+
+SUFFIX_LPRIM  := 23PR.5
+END_LPRIM   := $(END_LPRIMF)
+
+LARGEPARTS := A B C D E F
+
 # Size axes
 SIZES         := SMALL SPRIM MEDIUM MPRIM LARGE LPRIM
-SUFFIX_SMALL  := 1M
-SUFFIX_SPRIM  := 17PR2
-SUFFIX_MEDIUM := 10M
-SUFFIX_MPRIM  := 19PR
-SUFFIX_LARGE  := 100M
-SUFFIX_LPRIM  := 23PR.5
-COUNT_SMALL   := $(SMALLCOUNT)
-COUNT_SPRIM   := $(SPRIMCOUNT)
-COUNT_MEDIUM  := $(MEDIUMCOUNT)
-COUNT_MPRIM   := $(MPRIMCOUNT)
-COUNT_LARGE   := $(LARGECOUNT)
-COUNT_LPRIM   := $(LPRIMCOUNT)
 
 # ---------- Binaries (real paths) ----------
 PRIME_BITMAP_BIN := src/primesieve_bitmap/primesieve_bitmap
@@ -193,8 +287,10 @@ GBP_GOLD    := $(DATA)/$(notdir $(GBP)).verify
 # Helper to read “value of variable named NAME_SIZE”
 # Usage: $(call GET,SUFFIX,SMALL) -> 1M
 GET = $($(1)_$(2))
-
+SFX = $(SUFFIX_$(1))
 # ---------------------------------------------------------------------------
+
+LOWER_CASE = $(shell echo $(1) | tr '[:upper:]' '[:lower:]')
 
 define SUMMARY_TEMPLATE
 
@@ -208,7 +304,6 @@ SUMMARY_$(1)         := $(OUT)/$$(SUMMARY_FILE_$(1))
 SUMMARY_TPL_$(1)     := $(OUT)/alpha--=ALPHA=-/$$(SUMMARY_TPL_FILE_$(1))
 CPS_SUMMARY_FILE_$(1)     := cpssummary-$$(SFX_$(1))-$(COMPAT)
 CPS_SUMMARY_$(1)     := $(OUT)/$$(CPS_SUMMARY_FILE_$(1))
-# SUFFIX_$(1)_PARTS := $(foreach LOOPVAR,$$(SFX_$(1)$(PRT_$(1))),$(LOOPVAR))
 endef
 
 define SIZE_TEMPLATE2
@@ -218,6 +313,7 @@ SGB_TPL_FILE_$(1)         := gbpairsummary-$$(SFX_$(1))-hl-a--=FORMAT=---=ALPHA=
 SGB_DEFAULT_FILE_$(1)     := gbpairsummary-$$(SFX_$(1))-hl-a-full-$(ALPHA_DEFAULT)-$(COMPAT)
 JOIN_FILE_$(1)            := pairrangejoin-$$(SFX_$(1))-$(COMPAT).csv
 CPSLB_FILE_$(1)           := cpslowerbound-$$(SFX_$(1))-$(COMPAT)
+CPSLB_TPL_FILE_$(1)       := gbpairsummary-$$(SFX_$(1))-empirical-cps--=ALPHA=--$(COMPAT)
 CPSLB_DEFAULT_FILE_$(1)   := gbpairsummary-$$(SFX_$(1))-empirical-cps-$(ALPHA_DEFAULT)-$(COMPAT)
 
 # Alpha-specific lambda files
@@ -248,6 +344,7 @@ SGB_DEFAULT_$(1)     := $(OUT)/alpha-$(ALPHA_DEFAULT)/$$(SGB_DEFAULT_FILE_$(1))
 SUMMARY_DEFAULT_$(1) := $(OUT)/alpha-$(ALPHA_DEFAULT)/$$(SUMMARY_DEFAULT_FILE_$(1))
 JOIN_$(1)     := $(OUT)/$$(JOIN_FILE_$(1))
 CPSLB_$(1)    := $(OUT)/$$(CPSLB_FILE_$(1))
+CPSLB_TPL_$(1)    := $(OUT)/alpha--=ALPHA=-/$$(CPSLB_TPL_FILE_$(1))
 CPSLB_DEFAULT_$(1)    := $(OUT)/alpha-$(ALPHA_DEFAULT)/$$(CPSLB_DEFAULT_FILE_$(1))
 LAVG_$(1)     := $(OUT)/$$(LAVG_FILE_$(1))
 LMIN_$(1)     := $(OUT)/$$(LMIN_FILE_$(1))
@@ -321,23 +418,23 @@ $$(SGB_$(1)).csv: $$(SGB_DEFAULT_$(1)).csv
 # Join summary as sgb files (skip MEDIUM/LARGE when SKIP_SUMMARY_ML is not set)
 $$(JOIN_$(1)): $$(SUMMARY_$(1)).csv $$(SGB_$(1)).csv $(SUMMARY_DEFAULT_$(1)).csv $(SGB_DEFAULT_$(1)).csv | $(OUT)
 	chmod ugo+x ./bin/joinSumPred.awk
-	./bin/joinSumPred.awk "$$(SUMMARY_$(1)).csv" "$$(SGB_$(1)).csv" > "$$@"
+	./bin/joinSumPred.awk "$$(call GET,SUMMARY,$(1)).csv" "$$(call GET,SGB,$(1)).csv" > "$$@"
 
 # CPS lower bound (needs n_0 from SUMMARY)
 $$(CPSLB_$(1)).csv: $(CPSLB_BIN) $(RAW) $$(SUMMARY_$(1)).csv $(SUMMARY_DEFAULT_$(1)).csv | $(OUT)
-	cp "$$(CPSLB_DEFAULT_$(1)).csv" "$$@"
+	cp "$$(call GET,CPSLB_DEFAULT,$(1)).csv" "$$@"
 
 $$(LAVG_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv | $(OUT)
 	@chmod ugo+x ./bin/compareAvg.awk
 	# Generate lambda files for all alphas
-	set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
+	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
-		summary_src="$$(SUMMARY_TPL_$(1))"; sgb_src="$$(SGB_TPL_$(1))"; \
+		summary_src="$$(call GET,SUMMARY_TPL,$(1))"; sgb_src="$$(call GET,SGB_TPL,$(1))"; \
 		summary_src="$$$${summary_src//-=ALPHA=-/$$$$a}"; sgb_src="$$$${sgb_src//-=ALPHA=-/$$$$a}"; \
 		summary_src="$$$${summary_src//-=FORMAT=-/full}"; sgb_src="$$$${sgb_src//-=FORMAT=-/full}"; \
 		[ -r "$$$$summary_src.csv" ] || (echo "Failed to find $$$$summary_src.csv" >&2; exit 1) ; \
 		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
-		lavg_dst="$$(LAVG_TPL_$(1))"; \
+		lavg_dst="$$(call GET,LAVG_TPL,$(1))"; \
 		lavg_dst="$$$${lavg_dst//-=ALPHA=-/$$$$a}"; \
 		./bin/compareAvg.awk "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lavg_dst.csv"; \
 	done
@@ -351,12 +448,12 @@ $$(LMIN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv
 	# Generate lambda files for all alphas
 	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
-		summary_src="$$(SUMMARY_TPL_$(1))"; sgb_src="$$(SGB_TPL_$(1))"; \
+		summary_src="$$(call GET,SUMMARY_TPL,$(1))"; sgb_src="$$(call GET,SGB_TPL,$(1))"; \
 		summary_src="$$$${summary_src//-=ALPHA=-/$$$$a}"; sgb_src="$$$${sgb_src//-=ALPHA=-/$$$$a}"; \
 		summary_src="$$$${summary_src//-=FORMAT=-/full}"; sgb_src="$$$${sgb_src//-=FORMAT=-/full}"; \
 		[ -r "$$$$summary_src.csv" ] || (echo "Failed to find $$$$summary_src.csv" >&2; exit 1) ; \
 		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
-		lmin_dst="$$(LMIN_TPL_$(1))"; \
+		lmin_dst="$$(call GET,LMIN_TPL,$(1))"; \
 		lmin_dst="$$$${lmin_dst//-=ALPHA=-/$$$$a}"; \
 		./bin/compareMin.awk "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lmin_dst.csv"; \
 	done
@@ -369,12 +466,12 @@ $$(LMAX_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv
 	# Generate lambda files for all alphas
 	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
-		summary_src="$$(SUMMARY_TPL_$(1))"; sgb_src="$$(SGB_TPL_$(1))"; \
+		summary_src="$$(call GET,SUMMARY_TPL,$(1))"; sgb_src="$$(call GET,SGB_TPL,$(1))"; \
 		summary_src="$$$${summary_src//-=ALPHA=-/$$$$a}"; sgb_src="$$$${sgb_src//-=ALPHA=-/$$$$a}"; \
 		summary_src="$$$${summary_src//-=FORMAT=-/full}"; sgb_src="$$$${sgb_src//-=FORMAT=-/full}"; \
 		[ -r "$$$$summary_src.csv" ] || (echo "Failed to find $$$$summary_src.csv" >&2; exit 1) ; \
 		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
-		lmax_dst="$$(LMAX_TPL_$(1))"; \
+		lmax_dst="$$(call GET,LMAX_TPL,$(1))"; \
 		lmax_dst="$$$${lmax_dst//-=ALPHA=-/$$$$a}"; \
 		./bin/compareMax.awk "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lmax_dst.csv"; \
 	done
@@ -387,7 +484,7 @@ $$(LSAVG_DEFAULT_$(1)).csv: $$(LAVG_DEFAULT_$(1)).csv | $(OUT)
 	# Generate lambda files for all alphas
 	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
-		lavg_dst="$$(LAVG_TPL_$(1))"; \
+		lavg_dst="$$(call GET,LAVG_TPL,$(1))"; \
 		lavg_dst="$$$${lavg_dst//-=ALPHA=-/$$$$a}"; \
 		[ -r "$$$$lavg_dst.csv" ] || (echo "Failed to find $$$$lavg_dst.csv" >&2; exit 1) ; \
 		./bin/lambdaStats.awk "$$$$lavg_dst.csv" > "$$$${lavg_dst/lambdaavg/lambdastatsavg}.csv"; \
@@ -402,7 +499,7 @@ $$(LSMIN_DEFAULT_$(1)).csv: $$(LMIN_DEFAULT_$(1)).csv | $(OUT)
 	# Generate lambda files for all alphas
 	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
-		lmin_dst="$$(LMIN_TPL_$(1))"; \
+		lmin_dst="$$(call GET,LMIN_TPL,$(1))"; \
 		lmin_dst="$$$${lmin_dst//-=ALPHA=-/$$$$a}"; \
 		[ -r "$$$$lmin_dst.csv" ] || (echo "Failed to find $$$$lmin_dst.csv" >&2; exit 1) ; \
 		./bin/lambdaStats.awk "$$$$lmin_dst.csv" > "$$$${lmin_dst/lambdamin/lambdastatsmin}.csv"; \
@@ -416,7 +513,7 @@ $$(LSMAX_DEFAULT_$(1)).csv: $$(LMAX_DEFAULT_$(1)).csv | $(OUT)
 	# Generate lambda files for all alphas
 	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
-		lmax_dst="$$(LMAX_TPL_$(1))"; \
+		lmax_dst="$$(call GET,LMAX_TPL,$(1))"; \
 		lmax_dst="$$$${lmax_dst//-=ALPHA=-/$$$$a}"; \
 		[ -r "$$$$lmax_dst.csv" ] || (echo "Failed to find $$$$lmax_dst.csv" >&2; exit 1) ; \
 		./bin/lambdaStats.awk "$$$$lmax_dst.csv" > "$$$${lmax_dst/lambdamax/lambdastatsmax}.csv"; \
@@ -430,96 +527,101 @@ $$(LSMAX_$(1)).csv: $$(LSMAX_DEFAULT_$(1)).csv | $(OUT)
 SGB_FILE_$(1)             := pairrange2sgbll-$$(SFX_$(1))-$(COMPAT)
 # SUMMARY verify uses validator + SHA
 $$(SUMMARY_$(1)).csv.verify: $(VALIDATESUMMARY) $(BITMAP) $(RAW) $$(SUMMARY_$(1)).csv | $(OUT)
-	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
+	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
-		echo "Validating alpha-$$$$a empirical $$(SFX_$(1))..."; \
-		( $(VALIDATESUMMARY) --model empirical --compat "$(COMPAT)" \
-			--alpha "$$$$a" --file "$(OUT)/alpha-$$$$a/gbpairsummary-$$(SFX_$(1))-empirical-full-$$$$a-$(COMPAT).csv" --bitmap "$(BITMAP)" --raw "$(RAW)" \
-			&& echo -n sha256= && sha256sum < "$(OUT)/alpha-$$$$a/gbpairsummary-$$(SFX_$(1))-empirical-full-$$$$a-$(COMPAT).csv" ) \
-		|tee "$(OUT)/alpha-$$$$a/gbpairsummary-$$(SFX_$(1))-empirical-full-$$$$a-$(COMPAT).csv.verify" || exit 1; \
+		echo "Validating alpha-$$$$a empirical $$(call SFX,$(1))..."; \
+		file="$$(call GET,SUMMARY_TPL,$(1))"; \
+		file="$$$${file//-=ALPHA=-/$$$$a}"; \
+		file="$$$${file//-=FORMAT=-/full}"; \
+		$(VALIDATESUMMARY) --model empirical --compat "$(COMPAT)" \
+			--alpha "$$$$a" --file "$$$$file" --bitmap "$(BITMAP)" --raw "$(RAW)" && \
+		echo -n sha256= && sha256sum < "$$$$file" | \
+		tee "$$$$file.verify" || exit 1; \
 	done
-	cp "$$(SUMMARY_DEFAULT_$(1)).csv.verify" "$$(SUMMARY_$(1)).csv.verify"
+	cp "$$(call GET,SUMMARY_DEFAULT,$(1)).csv.verify" "$$(call GET,SUMMARY,$(1)).csv.verify"
 
 $$(SGB_$(1)).csv.verify: $(VALIDATESUMMARY) $(BITMAP) $(RAW) $$(SGB_$(1)).csv | $(OUT)
-	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
+	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
-		echo "Validating alpha-$$$$a hl-a $$(SFX_$(1))..."; \
-		( $(VALIDATESUMMARY) --tolerance 0.5 --model hl-a --compat "$(COMPAT)" \
-			--alpha "$$$$a" --file "$(OUT)/alpha-$$$$a/gbpairsummary-$$(SFX_$(1))-hl-a-full-$$$$a-$(COMPAT).csv" --bitmap "$(BITMAP)" --raw "$(RAW)" \
-			&& echo -n sha256= && sha256sum < "$(OUT)/alpha-$$$$a/gbpairsummary-$$(SFX_$(1))-hl-a-full-$$$$a-$(COMPAT).csv" ) \
-		| tee "$(OUT)/alpha-$$$$a/gbpairsummary-$$(SFX_$(1))-hl-a-full-$$$$a-$(COMPAT).csv.verify" || exit 1; \
+		echo "Validating alpha-$$$$a hl-a $$(call SFX,$(1))..."; \
+		file="$$(call GET,SGB_TPL,$(1))"; \
+		file="$$$${file//-=ALPHA=-/$$$$a}"; \
+		file="$$$${file//-=FORMAT=-/full}"; \
+		$(VALIDATESUMMARY) --tolerance 0.5 --model hl-a --compat "$(COMPAT)" \
+			--alpha "$$$$a" --file "$$$$file" --bitmap "$(BITMAP)" --raw "$(RAW)" && \
+		echo -n sha256= && sha256sum < "$$$$file" | \
+		tee "$$$$file.verify" || exit 1; \
 	done
-	cp "$$(SGB_DEFAULT_$(1)).csv.verify" "$$(SGB_$(1)).csv.verify"
+	cp "$$(call GET,SGB_DEFAULT,$(1)).csv.verify" "$$(call GET,SGB,$(1)).csv.verify"
 
 # sha256-only verifies use a single pattern rule (see below)
 # We keep them here for dependency wiring:
 # Verify rules - skip MEDIUM/LARGE when SKIP_SUMMARY_ML is not set
 $$(JOIN_VERIFY_$(1)):    $$(JOIN_$(1))
-	sha256sum "$$(JOIN_$(1))" | tee "$$@"
+	sha256sum "$$(call GET,JOIN,$(1))" | tee "$$@"
 
 $$(CPSLB_VERIFY_$(1)):  $$(CPSLB_$(1)).csv
-	sha256sum "$$(CPSLB_$(1)).csv" | tee "$$@"
+	sha256sum "$$(call GET,CPSLB,$(1)).csv" | tee "$$@"
 
 $$(CPS_SUMMARY_VERIFY_$(1)):  $$(CPS_SUMMARY_$(1)).csv
-	sha256sum "$$(CPS_SUMMARY_$(1)).csv" | tee "$$@"
+	sha256sum "$$(call GET,CPS_SUMMARY,$(1)).csv" | tee "$$@"
 
 $$(LAVG_VERIFY_$(1)):   $$(LAVG_$(1)).csv
-	sha256sum "$$(LAVG_$(1)).csv" | tee "$$@"
+	sha256sum "$$(call GET,LAVG,$(1)).csv" | tee "$$@"
 
 $$(LMIN_VERIFY_$(1)):   $$(LMIN_$(1)).csv
-	sha256sum "$$(LMIN_$(1)).csv" | tee "$$@"
+	sha256sum "$$(call GET,LMIN,$(1)).csv" | tee "$$@"
 
 $$(LMAX_VERIFY_$(1)):   $$(LMAX_$(1)).csv
-	sha256sum "$$(LMAX_$(1)).csv" | tee "$$@"
+	sha256sum "$$(call GET,LMAX,$(1)).csv" | tee "$$@"
 
 $$(LSAVG_VERIFY_$(1)):   $$(LSAVG_$(1)).csv
-	sha256sum "$$(LSAVG_$(1)).csv" | tee "$$@"
+	sha256sum "$$(call GET,LSAVG,$(1)).csv" | tee "$$@"
 
 $$(LSMIN_VERIFY_$(1)):   $$(LSMIN_$(1)).csv
-	sha256sum "$$(LSMIN_$(1)).csv" | tee "$$@"
+	sha256sum "$$(call GET,LSMIN,$(1)).csv" | tee "$$@"
 
 $$(LSMAX_VERIFY_$(1)):   $$(LSMAX_$(1)).csv
-	sha256sum "$$(LSMAX_$(1)).csv" | tee "$$@"
+	sha256sum "$$(call GET,LSMAX,$(1)).csv" | tee "$$@"
 
 # --- Cleaning
 
 clean-$$(SFX_$(1)): 
-	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(SFX_$(1))*-$(COMPAT).csv.{verify,sha256}
-	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(SFX_$(1))-$(COMPAT).csv.{verify,sha256}
-	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(SFX_$(1))-$(COMPAT).csv
-	@for a in $(ALPHAS); do \
-		dir="$(OUT)"/alpha-$$$$a;  \
-		[ -d "$$$$dir" ] || continue; \
-		$(RM) "$$$$dir"/*-$$(SFX_$(1))-*-$(COMPAT).csv.{verify,sha256}; \
-		$(RM) "$$$$dir"/*-$$(SFX_$(1))-$(COMPAT).csv.{verify,sha256}; \
-		$(RM) "$$$$dir"/lambda*-$$(SFX_$(1))-$(COMPAT).csv.{verify,sha256}; \
-		$(RM) "$$$$dir"/lambda*-$$(SFX_$(1))-*-$(COMPAT).csv.{verify,sha256}; \
-		$(RM) "$$$$dir"/*-$$(SFX_$(1))-*-$(COMPAT).csv; \
-		$(RM) "$$$$dir"/*-$$(SFX_$(1))-$(COMPAT).csv; \
-		$(RM) "$$$$dir"/lambda*-$$(SFX_$(1))-$(COMPAT).csv; \
-		$(RM) "$$$$dir"/lambda*-$$(SFX_$(1))-*-$(COMPAT).csv; \
-	done
+	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(call SFX,$(1))*-$(COMPAT).csv.{verify,sha256}
+	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(call SFX,$(1))-$(COMPAT).csv.{verify,sha256}
+	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(call SFX,$(1))-$(COMPAT).csv
+	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(call GET,CPS_SUMMARY_DEFAULT,$(1))-$(COMPAT).csv{,.verify,.sha256}
+	@for a in $(ALPHAS); do for dst in $(call GET,LAVG_TPL,$(1)) $(call GET,LMIN_TPL,$(1)) $(call GET,LMAX_TPL,$(1)) $(call GET,LSAVG_TPL,$(1)) $(call GET,LSMIN_TPL,$(1)) $(call GET,LSMAX_TPL,$(1)) $(call GET,CPSLB_TPL,$(1)); do \
+		$(RM) "$$$${dst//-=ALPHA=-/$$$$a}".csv{,.sha256}; \
+	done; done
+	@for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do for dst in $(call GET,SUMMARY_TPL,$(1)) $(call GET,SGB_TPL,$(1)); do \
+		dst="$$$${dst//-=ALPHA=-/$$$$a}"; \
+		dst="$$$${dst//-=FORMAT=-/$$$$fmt}"; \
+		$(RM) "$$$$dst.csv"{,.verify,.sha256}; \
+	done; done; done
 
 clobber-$$(SFX_$(1)): clean-$$(SFX_$(1))
-	@test ! -d "$(OUT)" || $(RM) "$(OUT)"/*-$$(SFX_$(1))*-$(COMPAT){,.partial}.csv $(RM) "$(OUT)"/*-$$(SFX_$(1))-$(COMPAT){,.partial}.csv "$$(CPS_SUMMARY_$(1)).csv" "$$(SUMMARY_$(1)).csv"
-	@for a in $(ALPHAS); do \
-		dir="$(OUT)"/alpha-$$$$a;  \
-		[ -d "$$$$dir" ] || continue; \
-		$(RM) "$$$$dir"/*-$$(SFX_$(1))-*-$(COMPAT){,.partial}.csv; \
-	done
+	for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do for dst in $(call GET,CPS_SUMMARY,$(1)) $(call GET,SUMMARY_TPL,$(1)) $(call GET,SGB_TPL,$(1)); do \
+		dst="$$$${dst//-=ALPHA=-/$$$$a}"; \
+		dst="$$$${dst//-=FORMAT=-/$$$$fmt}"; \
+		sources=($(2)); \
+		for suffix in $$(call SFX,$(1)A) $$(call SFX,$(1)B) $$(call SFX,$(1)C) $$(call SFX,$(1)D) $$(call SFX,$(1)E) $$(call SFX,$(1)F) ; do \
+			sources+=("$$$${dst/-$$(call SFX,$(1))-/-$$$$suffix-}.partial.csv") ; \
+		done; \
+		echo $(RM) "$$$${sources[@]}" "$$$$dst.csv"; \
+		$(RM) "$$$${sources[@]}" "$$$$dst.csv"; \
+	done; done; done
 
 touch-$$(SFX_$(1)): 
-	@test ! -d "$(OUT)" || \
-	for i in "$(OUT)"/*"-$$(SFX_$(1))-"*-"-$(COMPAT)"{,.partial}.csv "$$(CPS_SUMMARY_$(1)).csv" "$$(SUMMARY_$(1)).csv" ; do \
-		[ ! -r "$$$$i" ] || (set -x;touch "$$$$i") ; \
-	done
-	@for a in $(ALPHAS); do \
-		dir="$(OUT)/alpha-$$$$a" ;  \
-		[ ! -d "$$$$dir" ] || \
-		for i in "$$$$dir"/*"-$$(SFX_$(1))-"*"-$(COMPAT)"{,.partial}.csv ; do \
-			[ ! -r "$$$$i" ] || (set -x;touch "$$$$i") ; \
-		done ; \
-	done
+	@for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do for dst in $(call GET,CPS_SUMMARY_TPL,$(1)) $(call GET,SUMMARY_TPL,$(1)) $(call GET,SGB_TPL,$(1)); do \
+		dst="$$$${dst//-=ALPHA=-/$$$$a}"; \
+		dst="$$$${dst//-=FORMAT=-/$$$$fmt}"; \
+		sources=($(2)); \
+		for suffix in $$(call SFX,$(1)A) $$(call SFX,$(1)B) $$(call SFX,$(1)C) $$(call SFX,$(1)D) $$(call SFX,$(1)E) $$(call SFX,$(1)F) ; do \
+			sources+=("$$$${dst/-$$(call SFX,$(1))-/-$$$$suffix-}.partial.csv") ; \
+		done; \
+		$(touch) "$$$${sources[@]}" "$$$$dst.csv"; \
+	done; done; done
 
 .PHONY: clean-$$(SFX_$(1)) clobber-$$(SFX_$(1)) touch-$$(SFX_$(1))
 
@@ -529,16 +631,16 @@ endef
 $(foreach SZ,$(SIZES),$(eval $(call SIZE_TEMPLATE3,$(SZ))))
 
 # Fast summary counts via copy+append using
-# - SMALL: generate with header up to SMALLCOUNT
-# - MEDIUM: depend on SMALL; copy SMALL header, then append from SMALLCOUNT..MEDIUMCOUNT
-# - LARGE:  depend on MEDIUM; copy MEDIUM header, then append from MEDIUMCOUNT..LARGECOUNT
+# - SMALL: generate with header up to END_SMALL
+# - MEDIUM: depend on SMALL; copy SMALL header, then append from END_SMALL..END_MEDIUM
+# - LARGE:  depend on MEDIUM; copy MEDIUM header, then append from END_MEDIUM..END_LARGE
 # - If SKIP_SUMMARY_ML=1 and SIZE is MEDIUM/LARGE: DO NOT define a rule (read data/)
 
 # SMALL
 define PARTS_TEMPLATE
 
-CNT_$(1) := $(call GET,COUNT,$(1))
-CNT_$(2) := $(call GET,COUNT,$(2))
+END_$(1) := $(call GET,END,$(1))
+END_$(2) := $(call GET,END,$(2))
 START_$(1) := $(call GET,START,$(1))
 START_$(2) := $(call GET,START,$(2))
 SFX_$(1) := $(call GET,SUFFIX,$(1))
@@ -549,25 +651,18 @@ SUMTPL_$(1) := $(OUT)/alpha--=ALPHA=-/gbpairsummary-$$(SFX_$(1))-empirical--=FOR
 SUMTPL_$(2) := $(OUT)/alpha--=ALPHA=-/gbpairsummary-$$(SFX_$(2))-empirical--=FORMAT=---=ALPHA=--$(COMPAT)
 
 $$(CPSSUM_$(1)).partial.csv: $(SUMMARY_BIN) $(RAW) | $(OUT) 
-	echo "$(CPS_SUMMARY_SMALL_PARTS)"
-	echo "$$@"
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do mkdir -p "$(OUT)/alpha-$$a"; done
 	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=$(COMPAT) --model=empirical \
-	  --dec-n-start $$(START_$(1)) --dec-n-end $$(CNT_$(1)) \
-	  --prim-n-start $$(START_$(2)) --prim-n-end $$(CNT_$(2)) \
-	  --trace=primorial \
-	  --dec-out="$$(SUMTPL_$(1)).partial.csv" --prim-out="$$(SUMTPL_$(2)).partial.csv" \
-	  --dec-cps-summary="$$(CPSSUM_$(1)).partial.csv" --prim-cps-summary="$$(CPSSUM_$(2)).partial.csv" "$(RAW)"
+		--dec-n-start $$(call GET,START,$(1)) --dec-n-end $$(call GET,END,$(1)) \
+		--prim-n-start $$(call GET,START,$(2)) --prim-n-end $$(call GET,END,$(2)) \
+		--dec-out="$$(SUMTPL_$(1)).partial.csv" --prim-out="$$(SUMTPL_$(2)).partial.csv" \
+		--dec-cps-summary="$$(CPSSUM_$(1)).partial.csv" --prim-cps-summary="$$(CPSSUM_$(2)).partial.csv" \
+		--trace=primorial "$(RAW)"
 
 $$(CPSSUM_$(2)).partial.csv: $$(CPSSUM_$(1)).partial.csv
 	@true
 
-# CPS_SUMMARY_$(3)_PARTS += $$(CPSSUM_$(1)).partial.csv
-# CPS_SUMMARY_$(4)_PARTS += $$(CPSSUM_$(2)).partial.csv
-
-SUFFIX_$(3)_PARTS += $$(SFX_$(1))
-SUFFIX_$(4)_PARTS += $$(SFX_$(2))
 endef
 
 $(foreach PRT,$(SMALLPARTS),$(eval $(call SUMMARY_TEMPLATE,SMALL$(PRT))))
@@ -578,145 +673,123 @@ $(foreach PRT,$(SMALLPARTS),$(eval $(call SUMMARY_TEMPLATE,SPRIM$(PRT))))
 
 CPS_SUMMARY_SPRIM_PARTS := $(CPS_SUMMARY_SPRIMA).partial.csv $(CPS_SUMMARY_SPRIMB).partial.csv $(CPS_SUMMARY_SPRIMC).partial.csv $(CPS_SUMMARY_SPRIMD).partial.csv $(CPS_SUMMARY_SPRIME).partial.csv
 
-# Initialize CPS summary parts variables
-# CPS_SUMMARY_SMALL_PARTS :=
-# CPS_SUMMARY_SPRIM_PARTS :=
-SUFFIX_SMALL_PARTS := 
-SUFFIX_SPRIM_PARTS := 
-
 $(foreach PRT,$(SMALLPARTS),$(eval $(call PARTS_TEMPLATE,SMALL$(PRT),SPRIM$(PRT),SMALL,SPRIM)))
 
-$(SUMMARY_DEFAULT_SMALL).csv: $(CPS_SUMMARY_SMALLA).partial.csv $(CPS_SUMMARY_SMALLB).partial.csv $(CPS_SUMMARY_SMALLC).partial.csv $(CPS_SUMMARY_SMALLD).partial.csv $(CPS_SUMMARY_SMALLE).partial.csv
-	@chmod ugo+x ./bin/mergeCPSLowerBound.awk
-	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
-	for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do \
-		src="$(SUMMARY_TPL_SMALL)"; dst="$(SUMMARY_TPL_SMALL)"; \
-		src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
-		src="$${src//-=FORMAT=-/$$fmt}"; dst="$${dst//-=FORMAT=-/$$fmt}"; \
-		sources=(); \
-		for suffix in $(SUFFIX_SMALL_PARTS); do \
-			sources+=("$${src/$(SUFFIX_SMALL)/$$suffix}.partial.csv") ; \
-		done; \
-		if [ -n "$${sources[*]}" ]; then  \
-			if [ "cps" = "$$fmt" ]; then \
-				./bin/mergeCPSLowerBound.awk "$${sources[@]}" > "$$dst.csv" ; \
-			else \
-				(head -1 "$${sources[0]}";for s in "$${sources[@]}"; do tail -n +2 "$$s"; done) > "$$dst.csv"; \
-			fi; \
-		fi; \
-	done; done
-	@touch "$@"
+# SMALL
+.partial.csv:
 
-$(SUMMARY_DEFAULT_SPRIM).csv: $(CPS_SUMMARY_SPRIMA).partial.csv $(CPS_SUMMARY_SPRIMB).partial.csv $(CPS_SUMMARY_SPRIMC).partial.csv $(CPS_SUMMARY_SPRIMD).partial.csv $(CPS_SUMMARY_SPRIME).partial.csv
+.PHONY: .partial.csv
+
+define PARTS_TEMPLATE2
+
+$$(SUMMARY_DEFAULT_$(1)).csv: \
+        $$(CPS_SUMMARY_$(1)A).partial.csv $$(CPS_SUMMARY_$(1)B).partial.csv $$(CPS_SUMMARY_$(1)C).partial.csv $$(CPS_SUMMARY_$(1)D).partial.csv $$(CPS_SUMMARY_$(1)E).partial.csv $$(CPS_SUMMARY_$(1)F).partial.csv \
+        $$(CPS_SUMMARY_$(2)A).partial.csv $$(CPS_SUMMARY_$(2)B).partial.csv $$(CPS_SUMMARY_$(2)C).partial.csv $$(CPS_SUMMARY_$(2)D).partial.csv $$(CPS_SUMMARY_$(2)E).partial.csv $$(CPS_SUMMARY_$(2)F).partial.csv \
+        $$(CPS_SUMMARY_$(3)A).partial.csv $$(CPS_SUMMARY_$(3)B).partial.csv $$(CPS_SUMMARY_$(3)C).partial.csv $$(CPS_SUMMARY_$(3)D).partial.csv $$(CPS_SUMMARY_$(3)E).partial.csv $$(CPS_SUMMARY_$(3)F).partial.csv 
 	@chmod ugo+x ./bin/mergeCPSLowerBound.awk
-	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
-	for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do  \
-		src="$(SUMMARY_TPL_SPRIM)"; dst="$(SUMMARY_TPL_SPRIM)"; \
-		src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
-		src="$${src//-=FORMAT=-/$$fmt}"; dst="$${dst//-=FORMAT=-/$$fmt}"; \
+	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
+	for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do \
 		sources=(); \
-		for suffix in $(SUFFIX_SPRIM_PARTS); do \
-			sources+=("$${src/$(SUFFIX_SPRIM)/$$suffix}.partial.csv") ; \
+		if [ -n "$(3)" ]; then \
+			dst="$$(call GET,SUMMARY_TPL,$(3))"; \
+			dst="$$$${dst//-=ALPHA=-/$$$$a}"; \
+			dst="$$$${dst//-=FORMAT=-/$$$$fmt}"; \
+			for suffix in $$(call SFX,$(3)A) $$(call SFX,$(3)B) $$(call SFX,$(3)C) $$(call SFX,$(3)D) $$(call SFX,$(3)E) $$(call SFX,$(3)F) ; do \
+				sources+=("$$$${dst/-$$(call SFX,$(3))-/-$$$$suffix-}.partial.csv") ; \
+			done; \
+		fi; \
+		if [ -n "$(2)" ]; then \
+			dst="$$(call GET,SUMMARY_TPL,$(2))"; \
+			dst="$$$${dst//-=ALPHA=-/$$$$a}"; \
+			dst="$$$${dst//-=FORMAT=-/$$$$fmt}"; \
+			for suffix in $$(call SFX,$(2)A) $$(call SFX,$(2)B) $$(call SFX,$(2)C) $$(call SFX,$(2)D) $$(call SFX,$(2)E) $$(call SFX,$(2)F) ; do \
+				sources+=("$$$${dst/-$$(call SFX,$(2))-/-$$$$suffix-}.partial.csv") ; \
+			done; \
+		fi; \
+		dst="$$(call GET,SUMMARY_TPL,$(1))"; \
+		dst="$$$${dst//-=ALPHA=-/$$$$a}"; \
+		dst="$$$${dst//-=FORMAT=-/$$$$fmt}"; \
+		for suffix in $$(call SFX,$(1)A) $$(call SFX,$(1)B) $$(call SFX,$(1)C) $$(call SFX,$(1)D) $$(call SFX,$(1)E) $$(call SFX,$(1)F) ; do \
+			sources+=("$$$${dst/-$$(call SFX,$(1))-/-$$$$suffix-}.partial.csv") ; \
 		done; \
-		if [ -n "$${sources[*]}" ]; then \
-			if [ "cps" = "$$fmt" ]; then \
-				./bin/mergeCPSLowerBound.awk "$${sources[@]}" > "$$dst.csv" ; \
+		if [ -n "$$$${sources[*]}" ]; then  \
+			if [ "cps" = "$$$$fmt" ]; then \
+				./bin/mergeCPSLowerBound.awk "$$$${sources[@]}" > "$$$$dst.csv" ; \
 			else \
-				(head -1 "$${sources[0]}";for s in "$${sources[@]}"; do tail -n +2 "$$s"; done) > "$$dst.csv"; \
+				(head -1 "$$$${sources[0]}";for s in "$$$${sources[@]}"; do tail -n +2 "$$$$s"; done) > "$$$$dst.csv"; \
 			fi; \
 		fi; \
 	done; done
-	@touch "$@"
+	@touch "$$@"
+endef
+
+$(eval $(call PARTS_TEMPLATE2,SMALL,,))
 
 $(CPS_SUMMARY_SMALL).csv: $(SUMMARY_DEFAULT_SMALL).csv | $(MERGECPS)
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
 	$(MERGECPS) $(foreach a,$(CPS_SUMMARY_SMALL_PARTS),--input $(a)) --output "$@"
 
+$(eval $(call PARTS_TEMPLATE2,SPRIM,,))
+
 $(CPS_SUMMARY_SPRIM).csv: $(SUMMARY_DEFAULT_SPRIM).csv | $(MERGECPS)
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
 	$(MERGECPS) $(foreach a,$(CPS_SUMMARY_SPRIM_PARTS),--input $(a)) --output "$@"
 
-$(SUMMARY_DEFAULT_MEDIUM).partial.csv: $(SUMMARY_BIN) | $(OUT)
+# MEDIUM
+$(foreach PRT,$(MEDIUMPARTS),$(eval $(call SUMMARY_TEMPLATE,MEDIUM$(PRT))))
+
+CPS_SUMMARY_MEDIUM_PARTS := $(CPS_SUMMARY_MEDIUMA).partial.csv $(CPS_SUMMARY_MEDIUMB).partial.csv $(CPS_SUMMARY_MEDIUMC).partial.csv $(CPS_SUMMARY_MEDIUMD).partial.csv $(CPS_SUMMARY_MEDIUME).partial.csv
+
+$(foreach PRT,$(MEDIUMPARTS),$(eval $(call SUMMARY_TEMPLATE,MPRIM$(PRT))))
+
+CPS_SUMMARY_MPRIM_PARTS := $(CPS_SUMMARY_MPRIMA).partial.csv $(CPS_SUMMARY_MPRIMB).partial.csv $(CPS_SUMMARY_MPRIMC).partial.csv $(CPS_SUMMARY_MPRIMD).partial.csv $(CPS_SUMMARY_MPRIME).partial.csv
+
+$(foreach PRT,$(MEDIUMPARTS),$(eval $(call PARTS_TEMPLATE,MEDIUM$(PRT),MPRIM$(PRT),MEDIUM,MPRIM)))
+
+$(eval $(call PARTS_TEMPLATE2,MEDIUM,SMALL,))
+
+$(CPS_SUMMARY_MEDIUM).csv: $(CPS_SUMMARY_SMALL).csv $(SUMMARY_DEFAULT_MEDIUM).csv | $(MERGECPS)
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
-	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=$(COMPAT) --model=empirical \
-	  --dec-n-start $(SMALLCOUNT) --dec-n-end $(MEDIUMCOUNT) \
-	  --prim-n-start $(SPRIMCOUNT) --prim-n-end $(MPRIMCOUNT) \
-	  --append --trace=primorial \
-	  --dec-out="$(SUMMARY_TPL_MEDIUM).partial.csv" --prim-out="$(SUMMARY_TPL_MPRIM).partial.csv" \
-	  --dec-cps-summary="$(CPS_SUMMARY_MEDIUM).partial.csv" --prim-cps-summary="$(CPS_SUMMARY_MPRIM).partial.csv" \
-	  "$(RAW)"
-#	  --dec-cps-summary="$(CPS_SUMMARY_MEDIUM).csv" --prim-cps-summary="$(CPS_SUMMARY_MPRIM).csv" \
-#	  --dec-cps-summary-resume="$(CPS_SUMMARY_SMALL).csv" --prim-cps-summary-resume="$(CPS_SUMMARY_SPRIM).csv"
-#	  $(RAW)
+	$(MERGECPS) $(foreach a,$(CPS_SUMMARY_SMALL).csv $(CPS_SUMMARY_MEDIUM_PARTS),--input $(a)) --output "$@"
 
-$(CPS_SUMMARY_MEDIUM).csv: $(MERGECPS) $(SUMMARY_DEFAULT_MEDIUM).partial.csv $(SUMMARY_DEFAULT_SMALL).csv
-	$(MERGECPS) --input $(CPS_SUMMARY_SMALL).csv --input $(CPS_SUMMARY_MEDIUM).partial.csv --output $(CPS_SUMMARY_MEDIUM).csv
+$(eval $(call PARTS_TEMPLATE2,MPRIM,SPRIM,))
 
-$(CPS_SUMMARY_MPRIM).csv: $(MERGECPS) $(SUMMARY_DEFAULT_MEDIUM).partial.csv $(SUMMARY_DEFAULT_SMALL).csv
-	$(MERGECPS) --input $(CPS_SUMMARY_SPRIM).csv --input $(CPS_SUMMARY_MPRIM).partial.csv --output $(CPS_SUMMARY_MPRIM).csv
-
-$(SUMMARY_DEFAULT_MEDIUM).csv: $(SUMMARY_DEFAULT_SMALL).csv $(SUMMARY_DEFAULT_MEDIUM).partial.csv
+$(CPS_SUMMARY_MPRIM).csv: $(CPS_SUMMARY_SPRIM).csv $(SUMMARY_DEFAULT_MPRIM).csv | $(MERGECPS)
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
-	for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do \
-	  src="$(SUMMARY_TPL_SMALL)"; dst="$(SUMMARY_TPL_MEDIUM)"; \
-	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
-	  src="$${src//-=FORMAT=-/$$fmt}"; dst="$${dst//-=FORMAT=-/$$fmt}"; \
-	  if [ -r "$$dst.partial.csv" ]; then (cat "$$src.csv"; grep '^[0-9]' < "$$dst.partial.csv") > "$$dst.csv"; fi; \
-	done; done
+	$(MERGECPS) $(foreach a,$(CPS_SUMMARY_SPRIM).csv $(CPS_SUMMARY_MPRIM_PARTS),--input $(a)) --output "$@"
 
-$(SUMMARY_DEFAULT_MPRIM).csv: $(SUMMARY_DEFAULT_SMALL).csv $(SUMMARY_DEFAULT_MEDIUM).partial.csv
+# LARGE
+
+$(foreach PRT,$(LARGEPARTS),$(eval $(call SUMMARY_TEMPLATE,LARGE$(PRT))))
+
+CPS_SUMMARY_LARGE_PARTS := $(CPS_SUMMARY_LARGEA).partial.csv $(CPS_SUMMARY_LARGEB).partial.csv $(CPS_SUMMARY_LARGEC).partial.csv $(CPS_SUMMARY_LARGED).partial.csv $(CPS_SUMMARY_LARGEF).partial.csv
+
+$(foreach PRT,$(LARGEPARTS),$(eval $(call SUMMARY_TEMPLATE,LPRIM$(PRT))))
+
+CPS_SUMMARY_LPRIM_PARTS := $(CPS_SUMMARY_LPRIMA).partial.csv $(CPS_SUMMARY_LPRIMB).partial.csv $(CPS_SUMMARY_LPRIMC).partial.csv $(CPS_SUMMARY_LPRIMD).partial.csv $(CPS_SUMMARY_LPRIME).partial.csv
+
+$(foreach PRT,$(LARGEPARTS),$(eval $(call PARTS_TEMPLATE,LARGE$(PRT),LPRIM$(PRT),LARGE,LPRIM)))
+
+$(eval $(call PARTS_TEMPLATE2,LARGE,MEDIUM,SMALL))
+
+$(CPS_SUMMARY_LARGE).csv: $(CPS_SUMMARY_MEDIUM).csv $(SUMMARY_DEFAULT_LARGE).csv | $(MERGECPS)
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
-	for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do \
-	  src="$(SUMMARY_TPL_SPRIM)"; dst="$(SUMMARY_TPL_MPRIM)"; \
-	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
-	  src="$${src//-=FORMAT=-/$$fmt}"; dst="$${dst//-=FORMAT=-/$$fmt}"; \
-	  if [ -r "$$dst.partial.csv" ]; then (cat "$$src.csv"; grep '^[0-9]' < "$$dst.partial.csv") > "$$dst.csv"; fi; \
-	done; done
+	$(MERGECPS) $(foreach a,$(CPS_SUMMARY_MEDIUM).csv $(CPS_SUMMARY_LARGE_PARTS),--input $(a)) --output "$@"
 
-$(SUMMARY_DEFAULT_LARGE).partial.csv: $(SUMMARY_BIN) | $(OUT)
-	exit 1
-	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=$(COMPAT) --model=empirical \
-	  --dec-n-start $(MEDIUMCOUNT) --dec-n-end $(LARGECOUNT) \
-	  --prim-n-start $(MPRIMCOUNT) --prim-n-end $(LPRIMCOUNT) \
-	  --trace=primorial \
-	  --dec-out="$(SUMMARY_TPL_LARGE).partial.csv" --prim-out="$(SUMMARY_TPL_LPRIM).partial.csv" \
-	  --dec-cps-summary="$(CPS_SUMMARY_LARGE).partial.csv" --prim-cps-summary="$(CPS_SUMMARY_LPRIM).partial.csv" \
-	  "$(RAW)"
+$(eval $(call PARTS_TEMPLATE2,LPRIM,MPRIM,SPRIM))
 
-$(CPS_SUMMARY_LARGE).csv: $(MERGECPS) $(SUMMARY_DEFAULT_LARGE).partial.csv $(SUMMARY_DEFAULT_MEDIUM).csv
-	$(MERGECPS) --input $(CPS_SUMMARY_MEDIUM).csv --input $(CPS_SUMMARY_LARGE).partial.csv --output $(CPS_SUMMARY_LARGE).csv
-
-$(SUMMARY_DEFAULT_LARGE).csv: $(SUMMARY_DEFAULT_MEDIUM).csv $(SUMMARY_DEFAULT_LARGE).partial.csv
-	exit 1
+$(CPS_SUMMARY_LPRIM).csv: $(CPS_SUMMARY_MPRIM).csv $(SUMMARY_DEFAULT_LPRIM).csv | $(MERGECPS)
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
-	for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do \
-	  src="$(SUMMARY_TPL_MEDIUM)"; dst="$(SUMMARY_TPL_LARGE)"; \
-	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
-	  src="$${src//-=FORMAT=-/$$fmt}"; dst="$${dst//-=FORMAT=-/$$fmt}"; \
-	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
-	  if [ -r "$$dst.partial.csv" ]; then (cat "$$src.csv"; grep '^[0-9]' < "$$dst.partial.csv") > "$$dst.csv"; fi; \
-	done; done
+	$(MERGECPS) $(foreach a,$(CPS_SUMMARY_MPRIM).csv $(CPS_SUMMARY_LPRIM_PARTS),--input $(a)) --output "$@"
 
-$(SUMMARY_DEFAULT_LPRIM).csv: $(SUMMARY_DEFAULT_MPRIM).csv $(SUMMARY_DEFAULT_LPRIM).partial.csv
-	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
-	for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do \
-	  src="$(SUMMARY_TPL_MPRIM)"; dst="$(SUMMARY_TPL_LPRIM)"; \
-	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
-	  src="$${src//-=FORMAT=-/$$fmt}"; dst="$${dst//-=FORMAT=-/$$fmt}"; \
-	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
-	  if [ -r "$$dst.partial.csv" ]; then (cat "$$src.csv"; grep '^[0-9]' < "$$dst.partial.csv") > "$$dst.csv"; fi; \
-	done; done
-
-$(CPS_SUMMARY_LPRIM).csv: $(MERGECPS) $(SUMMARY_DEFAULT_LARGE).partial.csv $(SUMMARY_DEFAULT_MEDIUM).csv
-	$(MERGECPS) --input $(CPS_SUMMARY_MPRIM).csv --input $(CPS_SUMMARY_LPRIM).partial.csv --output $(CPS_SUMMARY_LPRIM).csv
 
 # Predicted HL-A pairs
 $(SGB_DEFAULT_SMALL).csv: $(SUMMARY_BIN) $(RAW) | $(OUT)
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do mkdir -p "$(OUT)/alpha-$$a"; done
 	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=$(COMPAT) --model=hl-a \
-	--dec-n-start $(SMALLSTART) --dec-n-end $(SMALLCOUNT) \
-	--prim-n-start $(SPRIMSTART) --prim-n-end $(SPRIMCOUNT) \
+	--dec-n-start $(START_SMALL) --dec-n-end $(END_SMALL) \
+	--prim-n-start $(START_SPRIM) --prim-n-end $(END_SPRIM) \
 	--trace=primorial \
 	--dec-out="$(SGB_TPL_SMALL).csv" --prim-out="$(SGB_TPL_SPRIM).csv" "$(RAW)"
 	@touch "$@"
@@ -728,8 +801,8 @@ $(SGB_DEFAULT_MEDIUM).partial.csv: $(SUMMARY_BIN) $(RAW) | $(OUT)
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do mkdir -p "$(OUT)/alpha-$$a"; done
 	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=$(COMPAT) --model=hl-a \
-	  --dec-n-start $(SMALLCOUNT) --dec-n-end $(MEDIUMCOUNT) \
-	  --prim-n-start $(SPRIMCOUNT) --prim-n-end $(MPRIMCOUNT) \
+	  --dec-n-start $(END_SMALL) --dec-n-end $(END_MEDIUM) \
+	  --prim-n-start $(END_SPRIM) --prim-n-end $(END_MPRIM) \
 	  --trace=primorial \
 	  --dec-out="$(SGB_TPL_MEDIUM).partial.csv" --prim-out="$(SGB_TPL_MPRIM).partial.csv" "$(RAW)"
 
@@ -758,29 +831,29 @@ $(SGB_DEFAULT_LARGE).partial.csv: $(SUMMARY_BIN) $(RAW) | $(OUT)
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do mkdir -p "$(OUT)/alpha-$$a"; done
 	./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=$(COMPAT) --model=hl-a \
-	  --dec-n-start $(MEDIUMCOUNT) --dec-n-end $(LARGECOUNT) \
-	  --prim-n-start $(MPRIMCOUNT) --prim-n-end $(LPRIMCOUNT) \
+	  --dec-n-start $(END_MEDIUM) --dec-n-end $(END_LARGE) \
+	  --prim-n-start $(END_MPRIM) --prim-n-end $(END_LPRIM) \
 	  --trace=primorial \
 	  --dec-out="$(SGB_TPL_LARGE).partial.csv" --prim-out="$(SGB_TPL_LPRIM).partial.csv" "$(RAW)"
 
 $(SGB_DEFAULT_LARGE).csv: $(SGB_DEFAULT_MEDIUM).csv $(SGB_DEFAULT_LARGE).partial.csv
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do for fmt in $(FORMATS_HL_A); do \
-	  src="$(SGB_TPL_MEDIUM)"; dst="$(SGB_TPL_LARGE)"; \
-	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
-	  src="$${src//-=FORMAT=-/$$fmt}"; dst="$${dst//-=FORMAT=-/$$fmt}"; \
-	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+		src="$(SGB_TPL_MEDIUM)"; dst="$(SGB_TPL_LARGE)"; \
+		src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
+		src="$${src//-=FORMAT=-/$$fmt}"; dst="$${dst//-=FORMAT=-/$$fmt}"; \
+		( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+		if [ -r "$$dst.partial.csv" ]; then (cat "$$src.csv"; tail -n +2 "$$dst.partial.csv") > "$$dst.csv"; fi; \
 	done; done
 
 $(SGB_DEFAULT_LPRIM).csv: $(SGB_DEFAULT_MPRIM).csv $(SGB_DEFAULT_LARGE).partial.csv
 	@set -Eeuo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do for fmt in $(FORMATS_HL_A); do \
-	  if [ -r "$$dst.partial.csv" ]; then (cat "$$src.csv"; tail -n +2 "$$dst.partial.csv") > "$$dst.csv"; fi; \
-	  src="$(SGB_TPL_MPRIM)"; dst="$(SGB_TPL_LPRIM)"; \
-	  src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
-	  src="$${src//-=FORMAT=-/$$fmt}"; dst="$${dst//-=FORMAT=-/$$fmt}"; \
-	  ( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
-	  if [ -r "$$dst.partial.csv" ]; then (cat "$$src.csv"; tail -n +2 "$$dst.partial.csv") > "$$dst.csv"; fi; \
+		src="$(SGB_TPL_MPRIM)"; dst="$(SGB_TPL_LPRIM)"; \
+		src="$${src//-=ALPHA=-/$$a}"; dst="$${dst//-=ALPHA=-/$$a}"; \
+		src="$${src//-=FORMAT=-/$$fmt}"; dst="$${dst//-=FORMAT=-/$$fmt}"; \
+		( dir="$$dst"; dir="$${dir%/*}"; [ -d "$$dir" ] || mkdir -p "$$dir" ) ; \
+		if [ -r "$$dst.partial.csv" ]; then (cat "$$src.csv"; tail -n +2 "$$dst.partial.csv") > "$$dst.csv"; fi; \
 	done; done
 
 # ---------- Generic sha256 rule ----------
@@ -964,12 +1037,11 @@ clobber: clean clobber-small clobber-medium clobber-large
 	$(RM) $(ALL_OUTPUTS)
 	$(MAKE) -C src clean
 
-clobber-small: clean-small clobber-$(SUFFIX_SMALL) clobber-$(SUFFIX_SPRIM)
-	for suffix in $(SUFFIX_SMALL_PARTS) $(SUFFIX_SPRIM_PARTS); do find output -name "*-$$suffix-*-$(COMPAT).partial.csv" -or -name "*-$$suffix-$(COMPAT).partial.csv" -delete; done
+clobber-small: clobber-$(SUFFIX_SMALL) clobber-$(SUFFIX_SPRIM)
 
-clobber-medium: clean-medium clobber-$(SUFFIX_MEDIUM) clobber-$(SUFFIX_MPRIM)
+clobber-medium: clobber-$(SUFFIX_MEDIUM) clobber-$(SUFFIX_MPRIM)
 
-clobber-large: clean-large clobber-$(SUFFIX_LARGE) clobber-$(SUFFIX_LPRIM)
+clobber-large: clobber-$(SUFFIX_LARGE) clobber-$(SUFFIX_LPRIM)
 
 touch: touch-small touch-medium touch-large
 	$(RM) $(ALL_OUTPUTS)
@@ -980,6 +1052,7 @@ touch-small: touch-$(SUFFIX_SMALL) touch-$(SUFFIX_SPRIM)
 touch-medium: touch-$(SUFFIX_MEDIUM) touch-$(SUFFIX_MPRIM)
 
 touch-large: touch-$(SUFFIX_LARGE) touch-$(SUFFIX_LPRIM)
+
 
 .PHONY: help
 help:
