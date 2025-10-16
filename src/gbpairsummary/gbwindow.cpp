@@ -78,8 +78,6 @@ void GBWindow::updateN5percent(std::uint64_t n,std::uint64_t delta,long double l
             return;
         }
         n_5percent = n;
-        firstDiff = (preMertens <= n);
-        firstDiffAsymp = (preMertensAsymp <= n);
     }
     if(nzeroStat && nzeroStat <= preMertens) {
         nzeroStat = 0;

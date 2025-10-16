@@ -33,8 +33,6 @@ public:
     std::uint64_t n_5percent = 0;
     std::uint64_t nzeroStat = 0;
     std::uint64_t nzeroStatAsymp = 0;
-    bool firstDiff = false;
-    bool firstDiffAsymp = false;
     long double etaStat = 0.0L;
     long double etaStatAsymp = 0.0L;
     long double hlCorrAvg = 1.0L;
@@ -82,10 +80,6 @@ public:
             preMertens = n;
             nzeroStat = prim.nstar = dec.nstar = 0;
             prim.deltaMertens = dec.deltaMertens = etaStat = 0.0L;
-            firstDiff = false;
-        }
-        else if (n < n_5percent || (dec.nstar < preMertens && prim.nstar < preMertens)) {
-            firstDiff = true;
         }
     }
 
@@ -94,10 +88,6 @@ public:
             preMertensAsymp = n;
             nzeroStatAsymp = prim.nstarAsymp = dec.nstarAsymp = 0;
             prim.deltaMertensAsymp = dec.deltaMertensAsymp = etaStatAsymp = 0.0L;
-            firstDiffAsymp = false;
-        }
-        else if (n < n_5percent || (dec.nstarAsymp < preMertensAsymp && prim.nstarAsymp < preMertensAsymp)) {
-            firstDiffAsymp = true;
         }
     }
 
@@ -108,10 +98,9 @@ public:
         std::uint64_t delta,
         long double cminus,
         long double cminusAsymp,
-        bool useHLCorr,
-        bool firstMin
+        bool useHLCorr
     ) {
-        dec.summary.aggregate(n,delta,cminus,cminusAsymp,useHLCorr,firstMin,firstDiff,firstDiffAsymp);
+        dec.summary.aggregate(n,delta,cminus,cminusAsymp,useHLCorr);
     }
     
     void prim_aggregate(
@@ -120,7 +109,7 @@ public:
         long double cminus,
         long double cminusAsymp
     ) {
-        prim.summary.aggregate(n,delta,cminus,cminusAsymp,false,false,firstDiff,firstDiffAsymp);
+        prim.summary.aggregate(n,delta,cminus,cminusAsymp,false);
     }
 
 private:

@@ -42,16 +42,40 @@ void GBLongIntervalSummary::outputCps(
     if(! interval.cps) {
         return;
     }
-    // trivial sorting of 3 values
-    // substituting a 0 for repeats
-    uint64_t a = n0, b = n2, c = n3;
-    if(b >= c) b = aToB(b,c);
+    // trivial sorting of 6 values
+    // substituting a 0 for repeats, so a bubble sort is sufficient to detect repeats
+    uint64_t a = n0First, b = n0Last, c = n2First, d = n2Last, e = n3First, f = n3Last;
+    // bubble sort first pass
     if(a >= b) a = aToB(a,b);
-    if(b >= c) c = aToB(b,c);
+    if(b >= c) b = aToB(b,c);
+    if(c >= d) c = aToB(c,d);
+    if(d >= e) d = aToB(d,e);
+    if(e >= f) e = aToB(e,f);
+
+    // bubble sort second pass
+    if(a >= b) a = aToB(a,b);
+    if(b >= c) b = aToB(b,c);
+    if(c >= d) c = aToB(c,d);
+    if(d >= e) d = aToB(d,e);
+    
+    // bubble sort third pass
+    if(a >= b) a = aToB(a,b);
+    if(b >= c) b = aToB(b,c);
+    if(c >= d) c = aToB(c,d);
+    
+    // bubble sort forth pass
+    if(a >= b) a = aToB(a,b);
+    if(b >= c) b = aToB(b,c);
+    
+    // bubble sort fifth  pass
+    if(a >= b) a = aToB(a,b);
     
     outputCpsLine(interval,a,alpha_n,decade,n_start,preMertens,preMertensAsymp);
     outputCpsLine(interval,b,alpha_n,decade,n_start,preMertens,preMertensAsymp);
     outputCpsLine(interval,c,alpha_n,decade,n_start,preMertens,preMertensAsymp);
+    outputCpsLine(interval,d,alpha_n,decade,n_start,preMertens,preMertensAsymp);
+    outputCpsLine(interval,e,alpha_n,decade,n_start,preMertens,preMertensAsymp);
+    outputCpsLine(interval,f,alpha_n,decade,n_start,preMertens,preMertensAsymp);
 }
 
 // "%.6Lg" is compact (no forced fixed/scientific); tweak precision if you like.
@@ -77,48 +101,97 @@ void GBLongIntervalSummary::outputCpsLine(
     if(n == 0 || ! interval.cps) {
         return;
     }
+    if(decade >= 0 && alpha_n == 0.5L && n == 19) {
+        // attepmt to reproduce the v0.1.5 output, which did not have a n0Last variable
+        return;
+    }
     double long deltaC = 0.0L;
     double long deltaCAsymp = 0.0L;
-    if(n == n0) {
-        deltaC = cMin - cminus_of_n0;
-        deltaCAsymp = cMin - cminusAsymp_of_n0;
+    if(n == n0First) {
+        deltaC = cMinFirst - cminus_of_n0First;
+        deltaCAsymp = cMinFirst - cminusAsymp_of_n0First;
         if(decade < 0) {
             std::fprintf(interval.cps,
                 "%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF,%s,%s,%0.12LF\n",
-                n0,cMin,cminus_of_n0,deltaC,
-                cminusAsymp_of_n0,deltaCAsymp,
+                n0First,cMinFirst,cminus_of_n0First,deltaC,
+                cminusAsymp_of_n0First,deltaCAsymp,
                 fmt_preMertens(preMertens,n_start).c_str(),fmt_preMertens(preMertensAsymp,n_start).c_str(),
                 alpha_n);
         }
         else {
             std::fprintf(interval.cps,
                 "%d,%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF\n",
-                decade,n0,cMin,cminus_of_n0,deltaC,
-                cminusAsymp_of_n0,deltaCAsymp
+                decade,n0First,cMinFirst,cminus_of_n0First,deltaC,
+                cminusAsymp_of_n0First,deltaCAsymp
             );
         }
     }
-    else if(n == n2) {
-        deltaC = c_of_n2 - cminus_of_n2;
-        deltaCAsymp = c_of_n2 - cminusAsymp_of_n2;
+    else if(n == n0Last) {
+        deltaC = cMinLast - cminus_of_n0Last;
+        deltaCAsymp = cMinLast - cminusAsymp_of_n0Last;
         if(decade < 0) {
             std::fprintf(interval.cps,
                 "%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF,%s,%s,%0.12LF\n",
-                n2,c_of_n2,cminus_of_n2,deltaC,
-                cminusAsymp_of_n2,deltaCAsymp,
+                n0Last,cMinLast,cminus_of_n0Last,deltaC,
+                cminusAsymp_of_n0Last,deltaCAsymp,
+                fmt_preMertens(preMertens,n_start).c_str(),fmt_preMertens(preMertensAsymp,n_start).c_str(),
+                alpha_n);
+        }
+        else {
+            std::fprintf(interval.cps,
+                "%d,%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF\n",
+                decade,n0Last,cMinLast,cminus_of_n0Last,deltaC,
+                cminusAsymp_of_n0Last,deltaCAsymp
+            );
+        }
+    }
+    else if(n == n2First) {
+        deltaC = c_of_n2First - cminus_of_n2First;
+        deltaCAsymp = c_of_n2First - cminusAsymp_of_n2First;
+        if(decade < 0) {
+            std::fprintf(interval.cps,
+                "%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF,%s,%s,%0.12LF\n",
+                n2First,c_of_n2First,cminus_of_n2First,deltaC,
+                cminusAsymp_of_n2First,deltaCAsymp,
                 fmt_preMertens(preMertens,n_start).c_str(),fmt_preMertens(preMertensAsymp,n_start).c_str(),
                 alpha_n
             );
         }
     }
-    else if(n == n3) {
-        deltaC = c_of_n3 - cminus_of_n3;
-        deltaCAsymp = c_of_n3 - cminusAsymp_of_n3;
+    else if(n == n2Last) {
+        deltaC = c_of_n2Last - cminus_of_n2Last;
+        deltaCAsymp = c_of_n2Last - cminusAsymp_of_n2Last;
         if(decade < 0) {
             std::fprintf(interval.cps,
                 "%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF,%s,%s,%0.12LF\n",
-                n3,c_of_n3,cminus_of_n3,deltaC,
-                cminusAsymp_of_n3,deltaCAsymp,
+                n2Last,c_of_n2Last,cminus_of_n2Last,deltaC,
+                cminusAsymp_of_n2Last,deltaCAsymp,
+                fmt_preMertens(preMertens,n_start).c_str(),fmt_preMertens(preMertensAsymp,n_start).c_str(),
+                alpha_n
+            );
+        }
+    }
+    else if(n == n3First) {
+        deltaC = c_of_n3First - cminus_of_n3First;
+        deltaCAsymp = c_of_n3First - cminusAsymp_of_n3First;
+        if(decade < 0) {
+            std::fprintf(interval.cps,
+                "%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF,%s,%s,%0.12LF\n",
+                n3First,c_of_n3First,cminus_of_n3First,deltaC,
+                cminusAsymp_of_n3First,deltaCAsymp,
+                fmt_preMertens(preMertens,n_start).c_str(),fmt_preMertens(preMertensAsymp,n_start).c_str(),
+                alpha_n
+            );
+        }
+    }
+    else if(n == n3Last) {
+        deltaC = c_of_n3Last - cminus_of_n3Last;
+        deltaCAsymp = c_of_n3Last - cminusAsymp_of_n3Last;
+        if(decade < 0) {
+            std::fprintf(interval.cps,
+                "%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF,%s,%s,%0.12LF\n",
+                n3Last,c_of_n3Last,cminus_of_n3Last,deltaC,
+                cminusAsymp_of_n3Last,deltaCAsymp,
                 fmt_preMertens(preMertens,n_start).c_str(),fmt_preMertens(preMertensAsymp,n_start).c_str(),
                 alpha_n
             );
@@ -141,7 +214,7 @@ void GBLongIntervalSummary::outputCpsLine(
     }
     else if(interval.nstarAsymp <= preMertensAsymp && n > preMertensAsymp) {
         interval.nstarAsymp = n;
-        interval.deltaMertensAsymp = deltaC;
+        interval.deltaMertensAsymp = deltaCAsymp;
     }
 }
 

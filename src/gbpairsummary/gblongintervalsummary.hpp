@@ -35,34 +35,56 @@ public:
     bool useHLCorrInst = false;
     long double pairCount = 0.0L;
     long double c_of_n = 0.0L;
-    long double pairCountMin = 0.0L;
-    long double pairCountMax = 0.0L;
-    long double cMin = 0.0L;
-    long double cminus_of_n0 = 0.0L;
-    long double cminusAsymp_of_n0 = 0.0L;
-    long double cMax = 0.0L;
+    long double pairCountMinFirst = 0.0L;
+    long double pairCountMinLast = 0.0L;
+    long double pairCountMaxFirst = 0.0L;
+    long double pairCountMaxLast = 0.0L;
+    long double cMinFirst = 0.0L;
+    long double cMinLast = 0.0L;
+    long double cminus_of_n0First = 0.0L;
+    long double cminusAsymp_of_n0First = 0.0L;
+    long double cminus_of_n0Last = 0.0L;
+    long double cminusAsymp_of_n0Last = 0.0L;
+    long double cMaxFirst = 0.0L;
+    long double cMaxLast = 0.0L;
     long double pairCountTotal = 0.0L;
     long double pairCountTotalNorm = 0.0L;
     long double pairCountAvg = 0.0L;
-    long double c_of_n2 = 0.0L;
-    long double cminus_of_n2 = 0.0L;
-    long double cminusAsymp_of_n2 = 0.0L;
-    long double c_of_n3 = 0.0L;
-    long double cminus_of_n3 = 0.0L;
-    long double cminusAsymp_of_n3 = 0.0L;
+    long double c_of_n2First = 0.0L;
+    long double c_of_n2Last = 0.0L;
+    long double cminus_of_n2First = 0.0L;
+    long double cminus_of_n2Last = 0.0L;
+    long double cminusAsymp_of_n2First = 0.0L;
+    long double cminusAsymp_of_n2Last = 0.0L;
+    long double c_of_n3First = 0.0L;
+    long double c_of_n3Last = 0.0L;
+    long double cminus_of_n3First = 0.0L;
+    long double cminus_of_n3Last = 0.0L;
+    long double cminusAsymp_of_n3First = 0.0L;
+    long double cminusAsymp_of_n3Last = 0.0L;
     long double cAvg = 0.0L;
     long double hlCorrAvg = 1.0L;
 
-    std::uint64_t minAt = 0;
-    std::uint64_t n0 = 0;
-    std::uint64_t minAtDelta = 0;
-    std::uint64_t delta_of_n0 = 0;
-    std::uint64_t maxAt = 0;
-    std::uint64_t n1 = 0;
-    std::uint64_t maxAtDelta = 0;
-    std::uint64_t delta_of_n1 = 0;
-    std::uint64_t n2 = 0;
-    std::uint64_t n3 = 0;
+    std::uint64_t minAtFirst = 0;
+    std::uint64_t minAtLast = 0;
+    std::uint64_t n0First = 0;
+    std::uint64_t n0Last = 0;
+    std::uint64_t minAtDeltaFirst = 0;
+    std::uint64_t minAtDeltaLast = 0;
+    std::uint64_t delta_of_n0First = 0;
+    std::uint64_t delta_of_n0Last = 0;
+    std::uint64_t maxAtFirst = 0;
+    std::uint64_t maxAtLast = 0;
+    std::uint64_t n1First = 0;
+    std::uint64_t n1Last = 0;
+    std::uint64_t maxAtDeltaFirst = 0;
+    std::uint64_t maxAtDeltaLast = 0;
+    std::uint64_t delta_of_n1First = 0;
+    std::uint64_t delta_of_n1Last = 0;
+    std::uint64_t n2First = 0;
+    std::uint64_t n2Last = 0;
+    std::uint64_t n3First = 0;
+    std::uint64_t n3Last = 0;
 
     void reset() {
         *this = GBLongIntervalSummary();
@@ -73,10 +95,7 @@ public:
         std::uint64_t delta,
         long double cminus,
         long double cminusAsymp,
-        bool useHLCorr,
-        bool firstMin,
-        bool firstDiff,
-        bool firstDiffAsymp
+        bool useHLCorr
     ) {
         if (useHLCorrInst && useHLCorr && hlCorrAvg != 0.0L) {
             pairCountTotal     += pairCount     / hlCorrAvg;
@@ -87,39 +106,73 @@ public:
             pairCountTotalNorm += c_of_n;
         }
 
-        if (pairCount > pairCountMax || !maxAt) {
-            pairCountMax = pairCount;
-            maxAtDelta   = delta;
-            maxAt        = n;
+        if (pairCount >= pairCountMaxLast || !maxAtLast) {
+            if (pairCount > pairCountMaxFirst || !maxAtFirst) {
+                pairCountMaxFirst = pairCount;
+                maxAtDeltaFirst   = delta;
+                maxAtFirst        = n;
+            }
+            pairCountMaxLast = pairCount;
+            maxAtDeltaLast   = delta;
+            maxAtLast        = n;
         }
-        if ((firstMin?(pairCount < pairCountMin):(pairCount <= pairCountMin)) || !minAt) {
-            pairCountMin = pairCount;
-            minAtDelta   = delta;
-            minAt        = n;
+        if (pairCount <= pairCountMinLast || !minAtLast) {
+            if (pairCount < pairCountMinFirst || !minAtFirst) {
+                pairCountMinFirst = pairCount;
+                minAtDeltaFirst   = delta;
+                minAtFirst        = n;
+            }
+            pairCountMinLast = pairCount;
+            minAtDeltaLast   = delta;
+            minAtLast        = n;
         }
-        if (c_of_n > cMax || !n1) {
-            cMax = c_of_n;
-            delta_of_n1   = delta;
-            n1 = n;
+        if (c_of_n >= cMaxLast || !n1Last) {
+            if (c_of_n > cMaxFirst || !n1First) {
+                cMaxFirst = c_of_n;
+                delta_of_n1First = delta;
+                n1First = n;
+            }
+            cMaxLast = c_of_n;
+            delta_of_n1Last = delta;
+            n1Last = n;
         }
-        if ((firstMin?(c_of_n < cMin):(c_of_n <= cMin)) || !n0) {
-            cMin = c_of_n;
-            cminus_of_n0 = cminus;
-            cminusAsymp_of_n0 = cminusAsymp;
-            delta_of_n0   = delta;
-            n0        = n;
+        if (c_of_n <= cMinLast || !n0Last) {
+            if(c_of_n < cMinFirst || !n0First) {
+                cMinFirst = c_of_n;
+                n0First = n;
+                delta_of_n0First = delta;
+                cminus_of_n0First = cminus;
+                cminusAsymp_of_n0First = cminusAsymp;
+            }
+            cMinLast = c_of_n;
+            cminus_of_n0Last = cminus;
+            cminusAsymp_of_n0Last = cminusAsymp;
+            delta_of_n0Last   = delta;
+            n0Last        = n;
         }
-        if ((firstDiff?(c_of_n-cminus < c_of_n2-cminus_of_n2 ):(c_of_n-cminus <= c_of_n2-cminus_of_n2 )) || !n2) {
-            c_of_n2 = c_of_n;
-            cminus_of_n2 = cminus;
-            cminusAsymp_of_n2 = cminusAsymp;
-            n2 = n;
+        if (c_of_n-cminus <= c_of_n2Last-cminus_of_n2Last || !n2Last) {
+            if (c_of_n-cminus < c_of_n2First-cminus_of_n2First || !n2First) {
+                c_of_n2First = c_of_n;
+                cminus_of_n2First = cminus;
+                cminusAsymp_of_n2First = cminusAsymp;
+                n2First = n;
+            }
+            c_of_n2Last = c_of_n;
+            cminus_of_n2Last = cminus;
+            cminusAsymp_of_n2Last = cminusAsymp;
+            n2Last = n;
         }
-        if ((firstDiffAsymp?(c_of_n-cminusAsymp < c_of_n3-cminusAsymp_of_n3 ): (c_of_n-cminusAsymp <= c_of_n3-cminusAsymp_of_n3 )) || !n3) {
-            c_of_n3 = c_of_n;
-            cminus_of_n3 = cminus;
-            cminusAsymp_of_n3 = cminusAsymp;
-            n3 = n;
+        if (c_of_n-cminusAsymp <= c_of_n3Last-cminusAsymp_of_n3Last  || !n3Last) {
+            if (c_of_n-cminusAsymp < c_of_n3First-cminusAsymp_of_n3First  || !n3First) {
+                c_of_n3First = c_of_n;
+                cminus_of_n3First = cminus;
+                cminusAsymp_of_n3First = cminusAsymp;
+                n3First = n;
+            }
+            c_of_n3Last = c_of_n;
+            cminus_of_n3Last = cminus;
+            cminusAsymp_of_n3Last = cminusAsymp;
+            n3Last = n;
         }
     }
 
@@ -138,10 +191,14 @@ public:
         hlCorrAvg = 0.5L*(evenState.eval(n_geom_even,delta_even)+oddState.eval(n_geom_odd,delta_odd));
         pairCountAvg     *= hlCorrAvg;
         cAvg *= hlCorrAvg;
-        pairCountMin     *= minState.eval(minAt, minAtDelta);
-        pairCountMax     *= maxState.eval(maxAt, maxAtDelta);
-        cMin *= minNormState.eval(n0,delta_of_n0);
-        cMax *= maxNormState.eval(n1,delta_of_n1);
+        pairCountMinFirst *= minState.eval(minAtFirst, minAtDeltaFirst);
+        pairCountMinLast *= minState.eval(minAtLast, minAtDeltaLast);
+        pairCountMaxFirst *= maxState.eval(maxAtFirst, maxAtDeltaFirst);
+        pairCountMaxLast *= maxState.eval(maxAtLast, maxAtDeltaLast);
+        cMinFirst *= minNormState.eval(n0First,delta_of_n0First);
+        cMinLast *= minNormState.eval(n0Last,delta_of_n0Last);
+        cMaxFirst *= maxNormState.eval(n1First,delta_of_n1First); 
+        cMaxLast *= maxNormState.eval(n1Last,delta_of_n1Last); 
     }
 
     void outputCps(

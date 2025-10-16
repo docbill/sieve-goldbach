@@ -89,9 +89,8 @@ private:
         long double cminusAsymp
     ) {
         if(window.is_dec_active() && n >= decAgg.left && n < decAgg.right ) {
-            const bool firstMin = (compat_ver == CompatVer::V015);
             const bool useHLCorr = (n == 4 && compat_ver == CompatVer::V015);
-            window.dec_aggregate(n, delta, cminus, cminusAsymp, useHLCorr, firstMin);
+            window.dec_aggregate(n, delta, cminus, cminusAsymp, useHLCorr);
         }
         if(window.is_prim_active()&& n >= primAgg.left && n < primAgg.right ) {
             window.prim_aggregate(n, delta, cminus, cminusAsymp);
