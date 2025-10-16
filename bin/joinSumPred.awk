@@ -18,7 +18,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # Usage:
-#   awk -f joinSumPred.awk pairrangesummary-100M.csv pairrange2sgbll-100M.csv > joined.csv
+#   awk -f joinSumPred.awk -v alpha=0.5 pairrangesummary-100M.csv pairrange2sgbll-100M.csv > joined.csv
 #
 # File 1 (pairrangesummary) columns:
 #   v0.1.5: 1: DECADE, 6: n_0, 7: C_min, 8: n_1, 9: C_max, 10: n_geom, 12: C_avg
@@ -31,6 +31,16 @@
 
 BEGIN {
     FS=","; OFS=","
+    
+    # Twin prime constant (C₂) times 4 for theoretical Hardy-Littlewood baseline
+    TWIN_PRIME_CONST_4 = 2.6406472634
+    
+    # Alpha parameter (should be passed via -v alpha=VALUE)
+    # Default to 0.5 if not provided
+    if (alpha == "") {
+        alpha = 0.5
+        print "WARNING: alpha not provided, defaulting to 0.5" > "/dev/stderr"
+    }
     
     # Global column variables
     col_label = 0
@@ -52,6 +62,14 @@ BEGIN {
 }
 
 function trim(s){ sub(/^[ \t\r]+/,"",s); sub(/[ \t\r]+$/,"",s); return s }
+
+function ceil(x) {
+    if (x == int(x)) {
+        return x
+    } else {
+        return int(x) + (x > 0 ? 1 : 0)
+    }
+}
 
 # Detect format version based on header
 function detect_format(header) {
@@ -142,12 +160,12 @@ FNR==1 {
     if(col_label2 == 3) {
         print "START","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
-            "n_geom","C_avg","Cpred_avg"
+            "n_geom","C_avg","Cpred_avg","Align","CpredAlign"
     }
     else {
         print "DECADE","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
-            "n_geom","C_avg","Cpred_avg"
+            "n_geom","C_avg","Cpred_avg","Align","CpredAlign"
 
     }
     next
@@ -186,8 +204,33 @@ FNR==1 {
     # Use stored label for output (preserves scientific notation)
     output_label = sum_label[key]
     
-    print output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
+    # Calculate alignment correction terms
+    # Align = 2.0 * sqrt(n0p) / (log log n0p)^2  (asymptotic approximation)
+    # CpredAlign = Cpred_min - Align * ln^2(n0p) / (alpha * n0p)
+    # (clamped to 0.0 if negative, as negative values are not meaningful)
+    #
+    # Note: This asymptotic form slightly overestimates the minimum, which is expected
+    # since it was derived using C_* but applied to Cpred_min. The discrete primorial
+    # formulations (largest p where p# <= threshold, or smallest p where p# > threshold)
+    # converge to this asymptotic form for large n.
+    n0_val = sum_n0[key]
+    cpmin_val = cpmin
+    
+    # Guard against n0p too small for log(log(n0p))
+    if (n0p < 3.0) {
+        align = 0.0
+        cpred_align = cpmin_val
+    } else {
+        log_n0p = log(n0p)
+        loglog_n0p = log(log_n0p)
+        align = 2.0 * sqrt(n0p) / (loglog_n0p * loglog_n0p)
+        cpred_align = cpmin_val - align * (log_n0p * log_n0p) / (alpha * n0p)
+        if (cpred_align < 0.0) cpred_align = 0.0
+    }
+    
+    printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%.6f,%.6f\n",
+        output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
         sum_n1[key], sum_cmax[key], n1p, cpmax,
-        sum_ng[key], sum_cavg[key], cpavg
+        sum_ng[key], sum_cavg[key], cpavg, align, cpred_align
 }
 

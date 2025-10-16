@@ -440,7 +440,7 @@ $$(SGB_$(1)).csv: $$(SGB_DEFAULT_$(1)).csv
 # 	chmod ugo+x ./bin/joinSumPred.awk
 # 	./bin/joinSumPred.awk "$$(call GET,SUMMARY,$(1)).csv" "$$(call GET,SGB,$(1)).csv" > "$$@"
 
-$$(JOIN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $(SGB_DEFAULT_$(1)).csv
+$$(JOIN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $(SGB_DEFAULT_$(1)).csv bin/joinSumPred.awk
 	@chmod ugo+x ./bin/joinSumPred.awk
 	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
@@ -451,7 +451,7 @@ $$(JOIN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $(SGB_DEFAULT_$(1)).csv
 		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
 		dst="$$(call GET,JOIN_TPL,$(1))"; \
 		dst="$$$${dst//-=ALPHA=-/$$$$a}"; \
-		./bin/joinSumPred.awk "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$dst.csv"; \
+		./bin/joinSumPred.awk -v alpha=$$$$a "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$dst.csv"; \
 	done
 
 $$(JOIN_$(1)).csv: $$(JOIN_DEFAULT_$(1)).csv

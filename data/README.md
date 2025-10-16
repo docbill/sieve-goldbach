@@ -49,8 +49,12 @@ This folder contains previously generated output for certifications and verifica
  | pairrangejoin-100M.csv           | v0.1.5 | edc0d2d66b50812363eff208a779beed249af8af15404f58633c7cf9460dd881 | hlCorr corrections for max and avg
  | pairrangejoin-10M.csv            | v0.1.1 | 98cc984183cdfa70662b5fdaf131f059adf0ee9985e3212a28e8e81ee77e2222 | Initial Commit
  | pairrangejoin-10M.csv            | v0.1.5 | ac7fd3d6998421af79302c9d340b2e68e32425a8c01eb965b99c7d8a6462bff9 | hlCorr corrections for max and avg
+ | pairrangejoin-10M.csv            | v0.1.5 | 74b5efa6cc64fc0042246a53ed73d74ce29f55403471cad59ad1ae341ff8aa1a | Added Align, CpredAlign columns
  | pairrangejoin-1M.csv             | v0.1.1 | 2b891757d184970165e291ce3847aa669ea41edd7e7cfc1176a5d0405cb505f4 | Initial Commit
  | pairrangejoin-1M.csv             | v0.1.5 | 06c7ec6814a37d5f2ad2cbc3889c6d02c2403da60f01b71cbd2cea48dc3e58c5 | hlCorr corrections for max and avg
+ | pairrangejoin-1M.csv             | v0.1.5 | d64a5ccf0f622035d62ec56a67f42de85af91754f4c6aa8b29c7b2fd7f172d33 | Added Align, CpredAlign columns
+ | pairrangejoin-17PR2-v0.1.5.csv   | v0.1.5 | 0d5ec23afd144fb23be3c55cf5c768546b93c23273b7aadc1756e3c0f2ad32e9 | Added Align, CpredAlign columns
+ | pairrangejoin-19PR-v0.1.5.csv    | v0.1.5 | bad3d7a34c6efad134d4e45dc420d8b9091f5c544bb5b147d40d84db8d9fa44e | Added Align, CpredAlign columns
  | gbpairs-10000.csv.cert           | v0.1.1 | 03d1e7757d2b60f6fc3a991fb0f6c98c26368438ffb1e510a6caa6f1d631013a | Initial Commit
  | primes-200M.bitmap.cert          | v0.1.1 | e69b14254b96de6dcb4c91e7da2af35da0b616d2f72b311caa9ebbfaee3b5e0c | Initial Commit
  | primes-200M.raw.cert             | v0.1.1 | bd95f94b0010008b7e3e0d355a806ffd77ca6ba884da99aab489c03f202800dd | Initial Commit
