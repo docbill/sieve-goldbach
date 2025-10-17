@@ -63,12 +63,32 @@ BEGIN {
 
 function trim(s){ sub(/^[ \t\r]+/,"",s); sub(/[ \t\r]+$/,"",s); return s }
 
-function ceil(x) {
-    if (x == int(x)) {
-        return x
-    } else {
-        return int(x) + (x > 0 ? 1 : 0)
+function R(n) {
+    if(n >= 3234846615 ) {
+        return 214708725
     }
+    else if(n >= 111546435) {
+        return 7952175
+    }
+    else if(n >= 4849845) {
+        return 378675
+    }
+    else if(n >= 255255 ) {
+        return 22275
+    }
+    else if(n >= 15015) {
+        return 1485 
+    }
+    else if(n >= 1155 ) {
+        return 135 
+    }
+    else if(n >= 105 ) {
+        return 15
+    }
+    else if(n >= 15 ) {
+        return 3
+    }
+    return 1;
 }
 
 # Detect format version based on header
@@ -215,18 +235,19 @@ FNR==1 {
     # converge to this asymptotic form for large n.
     n0_val = sum_n0[key]
     cpmin_val = cpmin
-    
+
+    align = 2* R(sqrt(2*n0p)) 
+    log_n0p = (n0p >= 2.72 ? log(n0p) : 1.0)
+    cpred_align = 2.6406472634;
     # Guard against n0p too small for log(log(n0p))
-    if (n0p < 3.0) {
-        align = 0.0
-        cpred_align = cpmin_val
-    } else {
-        log_n0p = log(n0p)
+    if (log_n0p > 1.0) {
         loglog_n0p = log(log_n0p)
         align = 2.0 * sqrt(n0p) / (loglog_n0p * loglog_n0p)
-        cpred_align = cpmin_val - align * (log_n0p * log_n0p) / (alpha * n0p)
-        if (cpred_align < 0.0) cpred_align = 0.0
+        cpred_align = cpmin_val;
     }
+    # cpred_align = ((cpmin_val > 2.6406472634)?2.6406472634:cpmin_val) - align * (log_n0p * log_n0p) / (alpha * n0p)
+    cpred_align -= align * (log_n0p * log_n0p) / (alpha * n0p)
+    if (cpred_align < 0.0) cpred_align = 0.0
     
     printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%.6f,%.6f\n",
         output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
