@@ -246,7 +246,7 @@ LAST_BACKUP_FILE := $(shell \
 
 $(BACKUP_FILE):
 	@mkdir -p "$(BACKUP_DIR)"
-	@find "$(OUT)" -name \*.partial.csv -print0|xargs -0 tar cvvfj "$(BACKUP_FILE)"
+	@find "$(OUT)" -name \*$(COMPAT).partial.csv -print0|xargs -0 tar cvvfj "$(BACKUP_FILE)"
 	@echo "Created \"$(BACKUP_FILE)\""
 	test -z "$(LAST_BACKUP_FILE)" || if ( cmp "$(LAST_BACKUP_FILE)" "$(BACKUP_FILE)" ); then $(RM) "$(LAST_BACKUP_FILE)" ; fi
 
@@ -345,6 +345,7 @@ CPSLB_$(1)                := $(OUT)/$$(CPSLB_FILE_$(1))
 # Alpha-specific lambda files
 LAVG_FILE_$(1)            := lambdaavg-$$(SFX_$(1))-$(COMPAT)
 LMIN_FILE_$(1)            := lambdamin-$$(SFX_$(1))-$(COMPAT)
+LALIGN_FILE_$(1)          := lambdaalign-$$(SFX_$(1))-$(COMPAT)
 LMAX_FILE_$(1)            := lambdamax-$$(SFX_$(1))-$(COMPAT)
 LSAVG_FILE_$(1)           := lambdastatsavg-$$(SFX_$(1))-$(COMPAT)
 LSMIN_FILE_$(1)           := lambdastatsmin-$$(SFX_$(1))-$(COMPAT)
@@ -352,6 +353,7 @@ LSMAX_FILE_$(1)           := lambdastatsmax-$$(SFX_$(1))-$(COMPAT)
 
 LAVG_TPL_FILE_$(1)       := lambdaavg-$$(SFX_$(1))--=ALPHA=--$(COMPAT)
 LMIN_TPL_FILE_$(1)       := lambdamin-$$(SFX_$(1))--=ALPHA=--$(COMPAT)
+LALIGN_TPL_FILE_$(1)     := lambdaalign-$$(SFX_$(1))--=ALPHA=--$(COMPAT)
 LMAX_TPL_FILE_$(1)       := lambdamax-$$(SFX_$(1))--=ALPHA=--$(COMPAT)
 LSAVG_TPL_FILE_$(1)      := lambdastatsavg-$$(SFX_$(1))--=ALPHA=--$(COMPAT)
 LSMIN_TPL_FILE_$(1)      := lambdastatsmin-$$(SFX_$(1))--=ALPHA=--$(COMPAT)
@@ -359,6 +361,7 @@ LSMAX_TPL_FILE_$(1)      := lambdastatsmax-$$(SFX_$(1))--=ALPHA=--$(COMPAT)
 
 LAVG_DEFAULT_FILE_$(1)   := lambdaavg-$$(SFX_$(1))-$(ALPHA_DEFAULT)-$(COMPAT)
 LMIN_DEFAULT_FILE_$(1)   := lambdamin-$$(SFX_$(1))-$(ALPHA_DEFAULT)-$(COMPAT)
+LALIGN_DEFAULT_FILE_$(1) := lambdaalign-$$(SFX_$(1))-$(ALPHA_DEFAULT)-$(COMPAT)
 LMAX_DEFAULT_FILE_$(1)   := lambdamax-$$(SFX_$(1))-$(ALPHA_DEFAULT)-$(COMPAT)
 LSAVG_DEFAULT_FILE_$(1)  := lambdastatsavg-$$(SFX_$(1))-$(ALPHA_DEFAULT)-$(COMPAT)
 LSMIN_DEFAULT_FILE_$(1)  := lambdastatsmin-$$(SFX_$(1))-$(ALPHA_DEFAULT)-$(COMPAT)
@@ -366,6 +369,7 @@ LSMAX_DEFAULT_FILE_$(1)  := lambdastatsmax-$$(SFX_$(1))-$(ALPHA_DEFAULT)-$(COMPA
 
 LAVG_$(1)     := $(OUT)/$$(LAVG_FILE_$(1))
 LMIN_$(1)     := $(OUT)/$$(LMIN_FILE_$(1))
+LALIGN_$(1)   := $(OUT)/$$(LALIGN_FILE_$(1))
 LMAX_$(1)     := $(OUT)/$$(LMAX_FILE_$(1))
 LSAVG_$(1)     := $(OUT)/$$(LSAVG_FILE_$(1))
 LSMIN_$(1)     := $(OUT)/$$(LSMIN_FILE_$(1))
@@ -376,6 +380,8 @@ LAVG_TPL_$(1)        := $(OUT)/alpha--=ALPHA=-/$$(LAVG_TPL_FILE_$(1))
 LAVG_DEFAULT_$(1)    := $(OUT)/alpha-$(ALPHA_DEFAULT)/$$(LAVG_DEFAULT_FILE_$(1))
 LMIN_TPL_$(1)        := $(OUT)/alpha--=ALPHA=-/$$(LMIN_TPL_FILE_$(1))
 LMIN_DEFAULT_$(1)        := $(OUT)/alpha-$(ALPHA_DEFAULT)/$$(LMIN_DEFAULT_FILE_$(1))
+LALIGN_TPL_$(1)      := $(OUT)/alpha--=ALPHA=-/$$(LALIGN_TPL_FILE_$(1))
+LALIGN_DEFAULT_$(1)      := $(OUT)/alpha-$(ALPHA_DEFAULT)/$$(LALIGN_DEFAULT_FILE_$(1))
 LMAX_TPL_$(1)        := $(OUT)/alpha--=ALPHA=-/$$(LMAX_TPL_FILE_$(1))
 LMAX_DEFAULT_$(1)        := $(OUT)/alpha-$(ALPHA_DEFAULT)/$$(LMAX_DEFAULT_FILE_$(1))
 LSAVG_TPL_$(1)       := $(OUT)/alpha--=ALPHA=-/$$(LSAVG_TPL_FILE_$(1))
@@ -387,7 +393,7 @@ LSMAX_DEFAULT_$(1)       := $(OUT)/alpha-$(ALPHA_DEFAULT)/$$(LSMAX_DEFAULT_FILE_
 
 OUTPUT_$(1)   := $$(SGB_$(1)).csv $$(SGB_DEFAULT_$(1)).csv $$(SUMMARY_$(1)).csv $$(SUMMARY_DEFAULT_$(1)).csv \
 	$$(JOIN_$(1)).csv $$(CPSLB_$(1)).csv \
-	$$(LAVG_$(1)).csv $$(LMIN_$(1)).csv $$(LMAX_$(1)).csv \
+	$$(LAVG_$(1)).csv $$(LMIN_$(1)).csv $$(LALIGN_$(1)).csv $$(LMAX_$(1)).csv \
 	$$(LSAVG_$(1)).csv $$(LSMIN_$(1)).csv $$(LSMAX_$(1)).csv
 
 # Verifies (sha256 or tool-specific)
@@ -396,6 +402,7 @@ CPSLB_VERIFY_$(1)    := $$(CPSLB_$(1)).csv.sha256
 CPS_SUMMARY_VERIFY_$(1)  := $$(CPS_SUMMARY_$(1)).csv.sha256
 LAVG_VERIFY_$(1)     := $$(LAVG_$(1)).csv.sha256
 LMIN_VERIFY_$(1)     := $$(LMIN_$(1)).csv.sha256
+LALIGN_VERIFY_$(1)   := $$(LALIGN_$(1)).csv.sha256
 LMAX_VERIFY_$(1)     := $$(LMAX_$(1)).csv.sha256
 LSAVG_VERIFY_$(1)     := $$(LSAVG_$(1)).csv.sha256
 LSMIN_VERIFY_$(1)     := $$(LSMIN_$(1)).csv.sha256
@@ -408,6 +415,7 @@ JOIN_GOLD_$(1)    := $(DATA)/$$(JOIN_FILE_$(1)).csv.sha256
 CPSLB_GOLD_$(1)   := $(DATA)/$$(CPSLB_FILE_$(1)).csv.sha256
 LAVG_GOLD_$(1)    := $(DATA)/$$(LAVG_FILE_$(1)).csv.sha256
 LMIN_GOLD_$(1)    := $(DATA)/$$(LMIN_FILE_$(1)).csv.sha256
+LALIGN_GOLD_$(1)  := $(DATA)/$$(LALIGN_FILE_$(1)).csv.sha256
 LMAX_GOLD_$(1)    := $(DATA)/$$(LMAX_FILE_$(1)).csv.sha256
 LSAVG_GOLD_$(1)    := $(DATA)/$$(LSAVG_FILE_$(1)).csv.sha256
 LSMIN_GOLD_$(1)    := $(DATA)/$$(LSMIN_FILE_$(1)).csv.sha256
@@ -499,6 +507,25 @@ $$(LMIN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv
 	done
 
 $$(LMIN_$(1)).csv: $$(LMIN_DEFAULT_$(1)).csv
+	cp "$$<" "$$@"
+	@touch "$$@"
+
+$$(LALIGN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv bin/compareAlign.awk
+	@chmod ugo+x ./bin/compareAlign.awk
+	# Generate lambda align files for all alphas
+	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
+	for a in $(ALPHAS); do \
+		summary_src="$$(call GET,SUMMARY_TPL,$(1))"; sgb_src="$$(call GET,SGB_TPL,$(1))"; \
+		summary_src="$$$${summary_src//-=ALPHA=-/$$$$a}"; sgb_src="$$$${sgb_src//-=ALPHA=-/$$$$a}"; \
+		summary_src="$$$${summary_src//-=FORMAT=-/full}"; sgb_src="$$$${sgb_src//-=FORMAT=-/full}"; \
+		[ -r "$$$$summary_src.csv" ] || (echo "Failed to find $$$$summary_src.csv" >&2; exit 1) ; \
+		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
+		lalign_dst="$$(call GET,LALIGN_TPL,$(1))"; \
+		lalign_dst="$$$${lalign_dst//-=ALPHA=-/$$$$a}"; \
+		./bin/compareAlign.awk -v alpha=$$$$a "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lalign_dst.csv"; \
+	done
+
+$$(LALIGN_$(1)).csv: $$(LALIGN_DEFAULT_$(1)).csv
 	cp "$$<" "$$@"
 	@touch "$$@"
 
@@ -620,6 +647,9 @@ $$(LAVG_VERIFY_$(1)):   $$(LAVG_$(1)).csv
 $$(LMIN_VERIFY_$(1)):   $$(LMIN_$(1)).csv
 	sha256sum "$$(call GET,LMIN,$(1)).csv" | tee "$$@"
 
+$$(LALIGN_VERIFY_$(1)): $$(LALIGN_$(1)).csv
+	sha256sum "$$(call GET,LALIGN,$(1)).csv" | tee "$$@"
+
 $$(LMAX_VERIFY_$(1)):   $$(LMAX_$(1)).csv
 	sha256sum "$$(call GET,LMAX,$(1)).csv" | tee "$$@"
 
@@ -661,7 +691,7 @@ clobber-$$(SFX_$(1)): clean-$$(SFX_$(1))
 	done; done; done
 
 touch-$$(SFX_$(1)): 
-	@for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do for dst in $(call GET,CPS_SUMMARY_TPL,$(1)) $(call GET,SUMMARY_TPL,$(1)) $(call GET,SGB_TPL,$(1)); do \
+	for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do for dst in $(call GET,CPS_SUMMARY_TPL,$(1)) $(call GET,SUMMARY_TPL,$(1)) $(call GET,SGB_TPL,$(1)); do \
 		dst="$$$${dst//-=ALPHA=-/$$$$a}"; \
 		dst="$$$${dst//-=FORMAT=-/$$$$fmt}"; \
 		sources=($(2)); \
@@ -986,32 +1016,32 @@ $(GBP_VERIFY): $(CERTIFYGBPAIRS) $(GBP) $(BITMAP) | $(OUT)
 certify: $(BITMAP_VERIFY) $(RAW_VERIFY) $(GBP_VERIFY) \
 	$(SGB_SMALL).csv.verify \
 	$(SUMMARY_SMALL).csv.verify $(JOIN_VERIFY_SMALL) $(CPSLB_VERIFY_SMALL) $(CPS_SUMMARY_VERIFY_SMALL) \
-	$(LAVG_VERIFY_SMALL) $(LMIN_VERIFY_SMALL) $(LMAX_VERIFY_SMALL) \
+	$(LAVG_VERIFY_SMALL) $(LMIN_VERIFY_SMALL) $(LALIGN_VERIFY_SMALL) $(LMAX_VERIFY_SMALL) \
         $(LSAVG_VERIFY_SMALL) $(LSMIN_VERIFY_SMALL) $(LSMAX_VERIFY_SMALL) \
 	$(SGB_SPRIM).csv.verify \
 	$(SUMMARY_SPRIM).csv.verify $(JOIN_VERIFY_SPRIM) $(CPSLB_VERIFY_SPRIM) $(CPS_SUMMARY_VERIFY_SPRIM) \
-	$(LAVG_VERIFY_SPRIM) $(LMIN_VERIFY_SPRIM) $(LMAX_VERIFY_SPRIM) \
+	$(LAVG_VERIFY_SPRIM) $(LMIN_VERIFY_SPRIM) $(LALIGN_VERIFY_SPRIM) $(LMAX_VERIFY_SPRIM) \
         $(LSAVG_VERIFY_SPRIM) $(LSMIN_VERIFY_SPRIM) $(LSMAX_VERIFY_SPRIM)
 
 certify-medium: \
 	$(SGB_MEDIUM).csv.verify $(SUMMARY_MEDIUM).csv.verify \
 	$(JOIN_VERIFY_MEDIUM) $(CPSLB_VERIFY_MEDIUM) $(CPS_SUMMARY_VERIFY_MEDIUM) \
-	$(LAVG_VERIFY_MEDIUM) $(LMIN_VERIFY_MEDIUM) $(LMAX_VERIFY_MEDIUM) \
+	$(LAVG_VERIFY_MEDIUM) $(LMIN_VERIFY_MEDIUM) $(LALIGN_VERIFY_MEDIUM) $(LMAX_VERIFY_MEDIUM) \
 	$(LSAVG_VERIFY_MEDIUM) $(LSMIN_VERIFY_MEDIUM) $(LSMAX_VERIFY_MEDIUM) \
 	$(SGB_MPRIM).csv.verify $(SUMMARY_MPRIM).csv.verify \
 	$(JOIN_VERIFY_MPRIM) $(CPSLB_VERIFY_MPRIM) $(CPS_SUMMARY_VERIFY_MPRIM) \
-	$(LAVG_VERIFY_MPRIM) $(LMIN_VERIFY_MPRIM) $(LMAX_VERIFY_MPRIM) \
+	$(LAVG_VERIFY_MPRIM) $(LMIN_VERIFY_MPRIM) $(LALIGN_VERIFY_MPRIM) $(LMAX_VERIFY_MPRIM) \
 	$(LSAVG_VERIFY_MPRIM) $(LSMIN_VERIFY_MPRIM) $(LSMAX_VERIFY_MPRIM) \
 	certify
 
 certify-large: \
 	$(SGB_LARGE).csv.verify $(SUMMARY_LARGE).csv.verify \
 	$(JOIN_VERIFY_LARGE) $(CPSLB_VERIFY_LARGE) $(CPS_SUMMARY_VERIFY_LARGE) \
-	$(LAVG_VERIFY_LARGE) $(LMIN_VERIFY_LARGE) $(LMAX_VERIFY_LARGE) \
+	$(LAVG_VERIFY_LARGE) $(LMIN_VERIFY_LARGE) $(LALIGN_VERIFY_LARGE) $(LMAX_VERIFY_LARGE) \
 	$(LSAVG_VERIFY_LARGE) $(LSMIN_VERIFY_LARGE) $(LSMAX_VERIFY_LARGE) \
 	$(SGB_LPRIM).csv.verify $(SUMMARY_LPRIM).csv.verify \
 	$(JOIN_VERIFY_LPRIM) $(CPSLB_VERIFY_LPRIM) $(CPS_SUMMARY_VERIFY_LPRIM) \
-	$(LAVG_VERIFY_LPRIM) $(LMIN_VERIFY_LPRIM) $(LMAX_VERIFY_LPRIM) \
+	$(LAVG_VERIFY_LPRIM) $(LMIN_VERIFY_LPRIM) $(LALIGN_VERIFY_LPRIM) $(LMAX_VERIFY_LPRIM) \
 	$(LSAVG_VERIFY_LPRIM) $(LSMIN_VERIFY_LPRIM) $(LSMAX_VERIFY_LPRIM) \
 	certify-medium
 
@@ -1029,6 +1059,7 @@ verify: certify
 	@cmp "$(CPSLB_VERIFY_SMALL)"   "$(CPSLB_GOLD_SMALL)" && echo "Validated $(CPSLB_SMALL).csv"
 	@cmp "$(LAVG_VERIFY_SMALL)"    "$(LAVG_GOLD_SMALL)" && echo "Validated $(LAVG_SMALL).csv"
 	@cmp "$(LMIN_VERIFY_SMALL)"    "$(LMIN_GOLD_SMALL)" && echo "Validated $(LMIN_SMALL).csv"
+	@cmp "$(LALIGN_VERIFY_SMALL)"  "$(LALIGN_GOLD_SMALL)" && echo "Validated $(LALIGN_SMALL).csv"
 	@cmp "$(LMAX_VERIFY_SMALL)"    "$(LMAX_GOLD_SMALL)" && echo "Validated $(LMAX_SMALL).csv"
 	@cmp "$(LSAVG_VERIFY_SMALL)"    "$(LSAVG_GOLD_SMALL)" && echo "Validated $(LSAVG_SMALL).csv"
 	@cmp "$(LSMIN_VERIFY_SMALL)"    "$(LSMIN_GOLD_SMALL)" && echo "Validated $(LSMIN_SMALL).csv"
@@ -1040,6 +1071,7 @@ verify: certify
 	@cmp "$(CPSLB_VERIFY_SPRIM)"   "$(CPSLB_GOLD_SPRIM)" && echo "Validated $(CPSLB_SPRIM).csv"
 	@cmp "$(LAVG_VERIFY_SPRIM)"    "$(LAVG_GOLD_SPRIM)" && echo "Validated $(LAVG_SPRIM).csv"
 	@cmp "$(LMIN_VERIFY_SPRIM)"    "$(LMIN_GOLD_SPRIM)" && echo "Validated $(LMIN_SPRIM).csv"
+	@cmp "$(LALIGN_VERIFY_SPRIM)"  "$(LALIGN_GOLD_SPRIM)" && echo "Validated $(LALIGN_SPRIM).csv"
 	@cmp "$(LMAX_VERIFY_SPRIM)"    "$(LMAX_GOLD_SPRIM)" && echo "Validated $(LMAX_SPRIM).csv"
 	@cmp "$(LSAVG_VERIFY_SPRIM)"    "$(LSAVG_GOLD_SPRIM)" && echo "Validated $(LSAVG_SPRIM).csv"
 	@cmp "$(LSMIN_VERIFY_SPRIM)"    "$(LSMIN_GOLD_SPRIM)" && echo "Validated $(LSMIN_SPRIM).csv"
@@ -1056,6 +1088,7 @@ $(OUT)/verify-medium-$(COMPAT).stamp: certify-medium verify
 	@cmp "$(CPSLB_VERIFY_MEDIUM)"   "$(CPSLB_GOLD_MEDIUM)" && echo "Validated $(CPSLB_MEDIUM).csv"
 	@cmp "$(LAVG_VERIFY_MEDIUM)"    "$(LAVG_GOLD_MEDIUM)" && echo "Validated $(LAVG_MEDIUM).csv"
 	@cmp "$(LMIN_VERIFY_MEDIUM)"    "$(LMIN_GOLD_MEDIUM)" && echo "Validated $(LMIN_MEDIUM).csv"
+	@cmp "$(LALIGN_VERIFY_MEDIUM)"  "$(LALIGN_GOLD_MEDIUM)" && echo "Validated $(LALIGN_MEDIUM).csv"
 	@cmp "$(LMAX_VERIFY_MEDIUM)"    "$(LMAX_GOLD_MEDIUM)" && echo "Validated $(LMAX_MEDIUM).csv"
 	@cmp "$(LSAVG_VERIFY_MEDIUM)"    "$(LSAVG_GOLD_MEDIUM)" && echo "Validated $(LSAVG_MEDIUM).csv"
 	@cmp "$(LSMIN_VERIFY_MEDIUM)"    "$(LSMIN_GOLD_MEDIUM)" && echo "Validated $(LSMIN_MEDIUM).csv"
@@ -1066,6 +1099,7 @@ $(OUT)/verify-medium-$(COMPAT).stamp: certify-medium verify
 	@cmp "$(CPSLB_VERIFY_MPRIM)"   "$(CPSLB_GOLD_MPRIM)" && echo "Validated $(CPSLB_MPRIM).csv"
 	@cmp "$(LAVG_VERIFY_MPRIM)"    "$(LAVG_GOLD_MPRIM)" && echo "Validated $(LAVG_MPRIM).csv"
 	@cmp "$(LMIN_VERIFY_MPRIM)"    "$(LMIN_GOLD_MPRIM)" && echo "Validated $(LMIN_MPRIM).csv"
+	@cmp "$(LALIGN_VERIFY_MPRIM)"  "$(LALIGN_GOLD_MPRIM)" && echo "Validated $(LALIGN_MPRIM).csv"
 	@cmp "$(LMAX_VERIFY_MPRIM)"    "$(LMAX_GOLD_MPRIM)" && echo "Validated $(LMAX_MPRIM).csv"
 	@cmp "$(LSAVG_VERIFY_MPRIM)"    "$(LSAVG_GOLD_MPRIM)" && echo "Validated $(LSAVG_MPRIM).csv"
 	@cmp "$(LSMIN_VERIFY_MPRIM)"    "$(LSMIN_GOLD_MPRIM)" && echo "Validated $(LSMIN_MPRIM).csv"
@@ -1083,6 +1117,7 @@ $(OUT)/verify-large-$(COMPAT).stamp: certify-large verify-medium
 	@cmp "$(CPSLB_VERIFY_LARGE)"   "$(CPSLB_GOLD_LARGE)" && echo "Validated $(CPSLB_LARGE).csv"
 	@cmp "$(LAVG_VERIFY_LARGE)"    "$(LAVG_GOLD_LARGE)" && echo "Validated $(LAVG_LARGE).csv"
 	@cmp "$(LMIN_VERIFY_LARGE)"    "$(LMIN_GOLD_LARGE)" && echo "Validated $(LMIN_LARGE).csv"
+	@cmp "$(LALIGN_VERIFY_LARGE)"  "$(LALIGN_GOLD_LARGE)" && echo "Validated $(LALIGN_LARGE).csv"
 	@cmp "$(LMAX_VERIFY_LARGE)"    "$(LMAX_GOLD_LARGE)" && echo "Validated $(LMAX_LARGE).csv"
 	@cmp "$(LSAVG_VERIFY_LARGE)"    "$(LSAVG_GOLD_LARGE)" && echo "Validated $(LSAVG_LARGE).csv"
 	@cmp "$(LSMIN_VERIFY_LARGE)"    "$(LSMIN_GOLD_LARGE)" && echo "Validated $(LSMIN_LARGE).csv"
@@ -1093,6 +1128,7 @@ $(OUT)/verify-large-$(COMPAT).stamp: certify-large verify-medium
 	@cmp "$(CPSLB_VERIFY_LPRIM)"   "$(CPSLB_GOLD_LPRIM)" && echo "Validated $(CPSLB_LPRIM).csv"
 	@cmp "$(LAVG_VERIFY_LPRIM)"    "$(LAVG_GOLD_LPRIM)" && echo "Validated $(LAVG_LPRIM).csv"
 	@cmp "$(LMIN_VERIFY_LPRIM)"    "$(LMIN_GOLD_LPRIM)" && echo "Validated $(LMIN_LPRIM).csv"
+	@cmp "$(LALIGN_VERIFY_LPRIM)"  "$(LALIGN_GOLD_LPRIM)" && echo "Validated $(LALIGN_LPRIM).csv"
 	@cmp "$(LMAX_VERIFY_LPRIM)"    "$(LMAX_GOLD_LPRIM)" && echo "Validated $(LMAX_LPRIM).csv"
 	@cmp "$(LSAVG_VERIFY_LPRIM)"    "$(LSAVG_GOLD_LPRIM)" && echo "Validated $(LSAVG_LPRIM).csv"
 	@cmp "$(LSMIN_VERIFY_LPRIM)"    "$(LSMIN_GOLD_LPRIM)" && echo "Validated $(LSMIN_LPRIM).csv"

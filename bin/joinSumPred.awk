@@ -91,6 +91,11 @@ function R(n) {
     return 1;
 }
 
+function eulerCapAlpha(n,alpha) {
+    value = 1.0+(0.5-sqrt(2.0*n+0.25))/n;
+    return (value < alpha)?value:alpha
+}
+
 # Detect format version based on header
 function detect_format(header) {
     if (index(header, "FIRST") > 0) {
@@ -246,7 +251,7 @@ FNR==1 {
         cpred_align = cpmin_val;
     }
     # cpred_align = ((cpmin_val > 2.6406472634)?2.6406472634:cpmin_val) - align * (log_n0p * log_n0p) / (alpha * n0p)
-    cpred_align -= align * (log_n0p * log_n0p) / (alpha * n0p)
+    cpred_align -= align * (log_n0p * log_n0p) / (eulerCapAlpha(n0p,alpha) * n0p)
     if (cpred_align < 0.0) cpred_align = 0.0
     
     printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%.6f,%.6f\n",
