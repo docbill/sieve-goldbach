@@ -6,6 +6,7 @@ This folder contains previously generated output for certifications and verifica
  | cpslowerbound-100M.csv           | v0.1.1 | cbe02965fcbd76e2506c83a8895eb9dad6ec31eb7ae2dfac665705a7eec5f9a3 | Initial Commit
  | cpslowerbound-10M.csv            | v0.1.1 | 16972abf292340ef1c23404225cf6f8165789bf464450cb8702f7efc992f5474 | Initial Commit
  | cpslowerbound-1M.csv             | v0.1.1 | 56d06bdc236b0a4632b215ceac19bee1eb0fce0b712f25214c2fea2daae3b5d1 | Initial Commit
+ | Initial Commit
  | lambdaavg-100M.csv               | v0.1.1 | 997e6c3067245d5fbd940dbb8b6f85ba1d4087cbc2b041fbb23d50c11f40751b | Initial Commit
  | lambdaavg-100M.csv               | v0.1.5 | 7a73799304ba9bc3eb5c9fcd358fcd23c07233d1269abc72f66ac2122d10e025 | hlCorr correction for first decade avg
  | lambdaavg-10M.csv                | v0.1.1 | 4846d0f33335cfa03853012bbe7a8af7c8e15ede71488ed4c648d2c6edfd97dd | Initial Commit
@@ -47,6 +48,7 @@ This folder contains previously generated output for certifications and verifica
  | pairrangesummary-100M-v0.1.5.csv | v0.1.1 | 3a16d08ad8db322932340f152ccca19fce6a562148746fa4cd619b3e23464e79 | Initial Commit
  | pairrangejoin-100M.csv           | v0.1.1 | 5640afd8a0d7b292fc0637a1d395c927629d0b354eac27c3623976479b7e310e | Initial Commit
  | pairrangejoin-100M.csv           | v0.1.5 | edc0d2d66b50812363eff208a779beed249af8af15404f58633c7cf9460dd881 | hlCorr corrections for max and avg
+ | pairrangejoin-100M.csv           | v0.1.5 | 52c7826cea77a62e2197f2749ea61ab5c2e650819c14583e74939a8ac7aec557 | Added Align, CpredAlign columns
  | pairrangejoin-10M.csv            | v0.1.1 | 98cc984183cdfa70662b5fdaf131f059adf0ee9985e3212a28e8e81ee77e2222 | Initial Commit
  | pairrangejoin-10M.csv            | v0.1.5 | ac7fd3d6998421af79302c9d340b2e68e32425a8c01eb965b99c7d8a6462bff9 | hlCorr corrections for max and avg
  | pairrangejoin-10M.csv            | v0.1.5 | 74b5efa6cc64fc0042246a53ed73d74ce29f55403471cad59ad1ae341ff8aa1a | Added Align, CpredAlign columns
