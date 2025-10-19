@@ -45,6 +45,117 @@ static inline void vfprintf_both(FILE* a, FILE* b, const char* fmt, va_list ap) 
     }
 }
 
+// r_eff = r            if p_next | center (no new leverage)
+// r_eff = r * (p_next - 2)^s   with s = (w mod q_next) / q_next  otherwise
+static inline long double expose_next(
+    long double w,
+    long double r,        // current ∏(p-2) over aligner primes
+    bool next_aligns,       // true if next prime does NOT divide the center
+    long double p_next,
+    long double q_next
+) {
+    if (!next_aligns) {
+        return (r == 1.0L)? 0.0L : r;
+    }
+    long double s = fmodl(w, q_next);
+    if (s < 0) {
+        s += q_next;
+    }
+    s /= q_next;                                     // s in [0,1)
+    return r * powl(p_next - 2.0L, s);
+}
+
+static inline long double effective_small_prime_deficit(const std::uint64_t n, const long double w)
+{
+    // n should reflect small-prime divisibility of the center.
+    if (n < 3ULL || n % 3ULL == 0ULL) {
+        return 0.0L;
+    }
+
+    std::uint64_t r = 1ULL;  // accumulate ∏(p-2) only when p ∤ center
+
+    // ---- up to p=5 ----
+    bool aligns_next = (n % 5ULL) != 0ULL;
+    if (w < 15.0L) {
+        return expose_next(w, r, aligns_next, 5.0L, 15.0L);
+    }
+    if (aligns_next) {
+        r *= 3ULL;
+    }
+
+    // ---- up to p=7 ----
+    aligns_next = (n % 7ULL) != 0ULL;
+    if (w < 105.0L) {
+        return expose_next(w, r, aligns_next, 7.0L, 105.0L);
+    }
+    if (aligns_next) {
+        r *= 5ULL;
+    }
+
+    // ---- up to p=11 ----
+    aligns_next = (n % 11ULL) != 0ULL;
+    if (w < 1155.0L) {
+        return expose_next(w, r, aligns_next, 11.0L, 1155.0L);
+    }
+    if (aligns_next) {
+        r *= 9ULL;
+    }
+
+    // ---- up to p=13 ----
+    aligns_next = (n % 13ULL) != 0ULL;
+    if (w < 15015.0L) {
+        return expose_next(w, r, aligns_next, 13.0L, 15015.0L);
+    }
+    if (aligns_next) {
+        r *= 11ULL;
+    }
+
+    // ---- up to p=17 ----
+    aligns_next = (n % 17ULL) != 0ULL;
+    if (w < 255255.0L) {
+        return expose_next(w, r, aligns_next, 17.0L, 255255.0L);
+    }
+    if (aligns_next) {
+        r *= 15ULL;
+    }
+
+    // ---- up to p=19 ----
+    aligns_next = (n % 19ULL) != 0ULL;
+    if (w < 4849845.0L) {
+        return expose_next(w, r, aligns_next, 19.0L, 4849845.0L);
+    }
+    if (aligns_next) {
+        r *= 17ULL;
+    }
+
+    // ---- up to p=23 ----
+    aligns_next = (n % 23ULL) != 0ULL;
+    if (w < 111546435.0L) {
+        return expose_next(w, r, aligns_next, 23.0L, 111546435.0L);
+    }
+    if (aligns_next) {
+        r *= 21ULL;
+    }
+
+    // ---- up to p=29 ----
+    aligns_next = (n % 29ULL) != 0ULL;
+    if (w < 3234846615.0L) {
+        return expose_next(w, r, aligns_next, 29.0L, 3234846615.0L);
+    }
+    if (aligns_next) {
+        r *= 27ULL;
+    }
+
+    // ---- up to p=31 ----
+    aligns_next = (n % 31ULL) != 0ULL;
+    if (w < 100280245065.0L) {
+        return expose_next(w, r, aligns_next, 31.0L, 100280245065.0L);
+    }
+
+    // beyond 31, just return r * 29.0L
+    return (aligns_next) ? (r * 29.0L) : (long double)r;
+}
+
 static inline void fprintf_both(FILE* a, FILE* b, const char* fmt, ...) {
     va_list ap; va_start(ap, fmt);
     vfprintf_both(a, b, fmt, ap);
@@ -68,7 +179,7 @@ static void printHeaderFull(FILE *out1,FILE *out2,bool useLegacy,Model model) {
                 :"DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr\n")
             :(model == Model::Empirical
                 ?"FIRST,LAST,START,minAt,G(minAt),maxAt,G(maxAt),n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg\n"
-                :"FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg\n"),
+                :"FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_align,C_align\n"),
         out1, out2);
 }
 
@@ -84,7 +195,7 @@ static void printHeaderNorm(FILE *out1,FILE *out2,Model model) {
     fputs_both(
         (model == Model::Empirical
             ?"FIRST,LAST,START,n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg\n"
-            :"FIRST,LAST,START,n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,Cpred_avg\n"),
+            :"FIRST,LAST,START,n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,Cpred_avg,n_align,C_align\n"),
         out1, out2);
 }
 
@@ -167,7 +278,7 @@ void GBRange::calcAverage(GBWindow &w,GBLongInterval &interval, GBAggregate &agg
         const std::uint64_t n_geom_even  = (compat_ver == CompatVer::V015 ? (1ULL + n_geom_odd) : maxPrefEven(agg.n_geom,agg.left));
         const std::uint64_t delta_even = w.computeDelta(n_geom_even);
         summary.applyHLCorr(n_geom_even, delta_even, n_geom_odd, delta_odd,
-            agg.evenCalc, agg.oddCalc, agg.minCalc, agg.maxCalc, agg.minNormCalc, agg.maxNormCalc );
+            agg.evenCalc, agg.oddCalc, agg.minCalc, agg.maxCalc, agg.minNormCalc, agg.maxNormCalc, agg.alignNormCalc );
     }
 }
 
@@ -177,10 +288,24 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
     }
     GBLongIntervalSummary &summary = interval.summary;
     if(! useLegacy) {
+        if (model == Model::Empirical) {
+            fprintf_both(interval.out,interval.trace,
+                "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf\n",
+                agg.left, agg.right -1,
+                agg.label.c_str(),
+                summary.minAtLast, summary.pairCountMinLast,
+                summary.maxAtFirst, summary.pairCountMaxFirst,
+                summary.n0Last, summary.cMinLast,
+                summary.n1First, summary.cMaxFirst,
+                agg.n_geom,
+                summary.pairCountAvg,
+                summary.cAvg
+            );
+            return;
+        }
         fprintf_both(interval.out,interval.trace,
-            (model == Model::Empirical)
-                ? "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf\n"
-                : "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf\n",
+            "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64
+                ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf,%" PRIu64 ",%.6Lf\n",
             agg.left, agg.right -1,
             agg.label.c_str(),
             summary.minAtLast, summary.pairCountMinLast,
@@ -189,7 +314,9 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
             summary.n1First, summary.cMaxFirst,
             agg.n_geom,
             summary.pairCountAvg,
-            summary.cAvg
+            summary.cAvg,
+            summary.nAlignLast,
+            summary.cAlignLast
         );
         return;
     }
@@ -241,17 +368,28 @@ void GBRange::outputRaw(GBAggregate &agg,GBLongInterval &interval) {
 void GBRange::outputNorm(GBAggregate &agg,GBLongInterval &interval) {
     if(interval.norm) {
         GBLongIntervalSummary &summary = interval.summary;
-        std::fprintf(interval.norm,
-            (model == Model::Empirical)
-                ? "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf\n"
-                : "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf\n",
-            agg.left, agg.right -1,
-            agg.label.c_str(),
-            summary.n0First, summary.cMinFirst,
-            summary.n1Last, summary.cMaxLast,
-            agg.n_geom,
-            summary.cAvg
-        );
+        if (model == Model::Empirical) {
+            std::fprintf(interval.norm,
+                "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf\n",
+                agg.left, agg.right -1,
+                agg.label.c_str(),
+                summary.n0First, summary.cMinFirst,
+                summary.n1Last, summary.cMaxLast,
+                agg.n_geom,
+                summary.cAvg );
+        }
+        else {
+            std::fprintf(interval.norm,
+                "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf,%" PRIu64 ",%.3Lf\n",
+                agg.left, agg.right -1,
+                agg.label.c_str(),
+                summary.n0First, summary.cMinFirst,
+                summary.n1Last, summary.cMaxLast,
+                agg.n_geom,
+                summary.cAvg,
+                summary.nAlignLast,
+                summary.cAlignLast );
+        }
     }
 }
 
@@ -499,14 +637,17 @@ int GBRange::addRow(
 
         prim_summary.hlCorrAvg = dec_summary.hlCorrAvg = 1.0L;
         long double hlCorrAvg = 0.0L;
+        long double pairCountAlign = 2.0L*effective_small_prime_deficit(n, sqrtl(2.0L*(long double)n));
         if(w.is_prim_active()) {
             if(primAgg.minor < 5) {
                 prim_summary.useHLCorrInst = 1;
                 prim_summary.hlCorrAvg = hlCorrAvg = hlCorr(n,delta);
                 prim_summary.c_of_n = twoSGB*hlCorrAvg;
+                prim_summary.pairCountAlign = pairCountAlign*hlCorrAvg;
             }
             else {
                 prim_summary.c_of_n = twoSGB;
+                prim_summary.pairCountAlign = pairCountAlign;
             }
             if (pc) {
                 prim_summary.pairCount  = (norm > 0.5L) ? (prim_summary.c_of_n / deltaL) : 1.0L;
@@ -514,6 +655,7 @@ int GBRange::addRow(
             } else if (norm > 0.0L) {
                 prim_summary.pairCount = prim_summary.c_of_n / norm;
             }
+            prim_summary.cAlign = (prim_summary.c_of_n > prim_summary.pairCountAlign * norm) ? (prim_summary.c_of_n - prim_summary.pairCountAlign * norm) : 0.0L;
         }
         if(w.is_dec_active()) {
             if (decAgg.base < 10) {
@@ -523,9 +665,11 @@ int GBRange::addRow(
                 } 
                 dec_summary.hlCorrAvg = hlCorrAvg;
                 dec_summary.c_of_n = twoSGB*hlCorrAvg;
+                dec_summary.pairCountAlign = pairCountAlign*hlCorrAvg;
             }
             else {
                 dec_summary.c_of_n = twoSGB;
+                dec_summary.pairCountAlign = pairCountAlign;
             }
             if (pc) {
                 dec_summary.pairCount  = (norm > 0.5L) ? (dec_summary.c_of_n / deltaL) : 1.0L;
@@ -533,6 +677,7 @@ int GBRange::addRow(
             } else if (norm > 0.0L) {
                 dec_summary.pairCount = dec_summary.c_of_n / norm;
             }
+            dec_summary.cAlign = (dec_summary.c_of_n > dec_summary.pairCountAlign * norm) ? (dec_summary.c_of_n - dec_summary.pairCountAlign * norm) : 0.0L;
         }
     }
     aggregate(w, n, delta, w.calcCminus(n,delta,logNlogN), w.calcCminusAsymp(logN));

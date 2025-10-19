@@ -34,11 +34,17 @@ class GBLongIntervalSummary {
 public:
     bool useHLCorrInst = false;
     long double pairCount = 0.0L;
+    long double pairCountAlign = 0.0L;
+    long double cAlign = 0.0L;
     long double c_of_n = 0.0L;
     long double pairCountMinFirst = 0.0L;
     long double pairCountMinLast = 0.0L;
     long double pairCountMaxFirst = 0.0L;
     long double pairCountMaxLast = 0.0L;
+    long double cAlignFirst = 0.0L;
+    long double cAlignLast = 0.0L;
+    long double cAlignDeltaFirst = 0.0L;
+    long double cAlignDeltaLast = 0.0L;
     long double cMinFirst = 0.0L;
     long double cMinLast = 0.0L;
     long double cminus_of_n0First = 0.0L;
@@ -85,6 +91,8 @@ public:
     std::uint64_t n2Last = 0;
     std::uint64_t n3First = 0;
     std::uint64_t n3Last = 0;
+    std::uint64_t nAlignFirst = 0.0L;
+    std::uint64_t nAlignLast = 0.0L;
 
     void reset() {
         *this = GBLongIntervalSummary();
@@ -174,6 +182,16 @@ public:
             cminusAsymp_of_n3Last = cminusAsymp;
             n3Last = n;
         }
+        if (cAlign <= cAlignLast  || !nAlignLast) {
+            if (cAlign < cAlignFirst  || !nAlignFirst) {
+                cAlignFirst = cAlign;
+                cAlignDeltaFirst = delta;
+                nAlignFirst = n;
+            }
+            cAlignLast = cAlign;
+            cAlignDeltaLast = delta;
+            nAlignLast = n;
+        }
     }
 
     void applyHLCorr(
@@ -186,7 +204,8 @@ public:
         HLCorrState &minState,
         HLCorrState &maxState,
         HLCorrState &minNormState,
-        HLCorrState &maxNormState
+        HLCorrState &maxNormState,
+        HLCorrState &alignNormState
     ) {
         hlCorrAvg = 0.5L*(evenState.eval(n_geom_even,delta_even)+oddState.eval(n_geom_odd,delta_odd));
         pairCountAvg     *= hlCorrAvg;
@@ -199,6 +218,8 @@ public:
         cMinLast *= minNormState.eval(n0Last,delta_of_n0Last);
         cMaxFirst *= maxNormState.eval(n1First,delta_of_n1First); 
         cMaxLast *= maxNormState.eval(n1Last,delta_of_n1Last); 
+        cAlignFirst *= alignNormState.eval(nAlignFirst,cAlignDeltaFirst); 
+        cAlignLast *= alignNormState.eval(nAlignLast,cAlignDeltaLast); 
     }
 
     void outputCps(
