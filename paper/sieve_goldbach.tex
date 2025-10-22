@@ -31,7 +31,15 @@
 \usepackage{mathtools}
 \usepackage{siunitx}
 \usepackage{pgfplots}
+\pgfplotsset{compat=1.18} % or at least 1.11+
+\pgfplotsset{set layers} % enables axis background/foreground layers
+\usepgfplotslibrary{fillbetween} % <-- this is the key line
+\usetikzlibrary{fillbetween}
 \usepackage{pgfplotstable}
+\usepackage{xparse}
+\usepackage[section]{placeins} % floats can't cross section boundaries
+\usepackage{etoolbox}
+
 \pgfplotsset{compat=1.18}
 \pgfplotstableset{empty cells with={nan}} % treat empty CSV cells as NaN
 
@@ -90,6 +98,9 @@
 \theoremstyle{break}
 \newtheorem{definition}{Definition}
 
+\theoremstyle{break}
+\newtheorem{hypothesis}{Hypothesis}
+
 \theoremstyle{inline}
 \newtheorem*{note}{Note}
 
@@ -113,19 +124,70 @@
 \newcommand{\xLambdaAvgLimit}{3.2\cdot 10^{-4}} % Decade 8, LambdaAvg2ndAbsAvg value
 
 % tiny tags
+\newcommand{\talign}{{\scriptscriptstyle\mathrm{align}}}
 \newcommand{\tavg}{{\scriptscriptstyle\mathrm{avg}}}
+\newcommand{\tbound}{{\scriptscriptstyle\mathrm{bound}}}
 \newcommand{\tpairs}{{\scriptscriptstyle\mathrm{pairs}}}
 \newcommand{\tsem}{{\scriptscriptstyle\mathrm{sem}}}
 \newcommand{\twin}{{\scriptscriptstyle\mathrm{win}}}
 \newcommand{\tref}{{\scriptscriptstyle\mathrm{ref}}}
 \newcommand{\tana}{{\scriptscriptstyle\mathrm{analytical}}}
 
-% measured vs predicted
-\newcommand{\Cmeas}{C}              % measured (exact)
-\newcommand{\Cpred}{\mathring{C}}   % predicted/model, robust (no double-^ issue)
-\newcommand{\Cminus}{\mathring{C}_{-}}   % predicted/model, robust (no double-^ issue)
-\newcommand{\Nmeas}{n}              % measured (exact)
-\newcommand{\Npred}{\mathring{n}}   % predicted/model, robust (no double-^ issue)
+% --- Bin markers (centralized so you can swap styles later) ---
+\newcommand{\PrimTag}{\scriptscriptstyle{\#}}     % primorial marker
+\newcommand{\DecTag}{\scriptscriptstyle{D}}       % decimal marker
+
+% --- Base (unchanged) ---
+\newcommand{\Cmeas}{C}
+\newcommand{\Cpred}{\mathring{C}}
+\newcommand{\Cminus}{\mathring{C}_{-}}
+\newcommand{\Nmeas}{n}
+\newcommand{\Npred}{\mathring{n}}
+
+% ---------- Measured (subscript first, then superscript with marker) ----------
+\NewDocumentCommand{\NmeasDec}{e{^_}}{%
+  \Nmeas%
+  \IfValueT{#2}{_{#2}}%
+  ^{\DecTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\NmeasPrim}{e{^_}}{%
+  \Nmeas%
+  \IfValueT{#2}{_{#2}}%
+  ^{\PrimTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\CmeasDec}{e{^_}}{%
+  \Cmeas%
+  \IfValueT{#2}{_{#2}}%
+  ^{\DecTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\CmeasPrim}{e{^_}}{%
+  \Cmeas%
+  \IfValueT{#2}{_{#2}}%
+  ^{\PrimTag\IfValueT{#1}{\,#1}}%
+}
+
+% ---------- Predicted (same pattern) ----------
+\NewDocumentCommand{\NpredDec}{e{^_}}{%
+  \mathring{n}%
+  \IfValueT{#2}{_{#2}}%
+  ^{\DecTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\NpredPrim}{e{^_}}{%
+  \mathring{n}%
+  \IfValueT{#2}{_{#2}}%
+  ^{\PrimTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\CpredDec}{e{^_}}{%
+  \mathring{C}%
+  \IfValueT{#2}{_{#2}}%
+  ^{\DecTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\CpredPrim}{e{^_}}{%
+  \mathring{C}%
+  \IfValueT{#2}{_{#2}}%
+  ^{\PrimTag\IfValueT{#1}{\,#1}}%
+}
+
 \newcommand{\Ssem}{\mathcal{S}_\tsem}
 \newcommand{\SGB}{\mathcal{S}_{\scriptscriptstyle\mathrm{GB}}}
 \newcommand{\Bwin}{\mathcal{B}_\twin}
@@ -147,13 +209,19 @@
 % optional compact args
 \newcommand{\NI}{(n;I)}
 
+% Generic block machinery
+\newcommand{\Bgeom}[2]{\left\lfloor \sqrt{#1\,(#2-1)}\right\rceil} % nearest integer to sqrt(ab-a)
+% Euler-cap macro (roman font, works in text and math)
+\newcommand{\Ecap}{\mathrm{Ecap}}
+
 % \FigLambdaAbsSignSplit{csv}{xcol}{ycol}{title}
 \newcommand{\FigLambdaAbsSignSplit}[6]{%
   \begingroup
   \edef\CSVPATH{\detokenize{#1}}%
-  \pgfplotstableread[col sep=comma]{\CSVPATH}\datatable
+  \pgfplotstableread[col sep=comma,trim cells]{\CSVPATH}\datatable
   \begin{tikzpicture}
   \begin{axis}[
+    xmin=10,
     width=\textwidth, height=0.62\textwidth,
     xmode=log, ymode=log,
     xlabel={#4 (log scale)}, ylabel={#5 (log scale)},
@@ -228,6 +296,7 @@ In summary, contributions are: (i) a certified sieve-theoretic lower bound with 
 
 \section{Introduction}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Motivation}
 The Goldbach Conjecture, the Twin Prime Conjecture, and Polignac’s Conjecture each address the distribution of prime pairs in different settings.  
 A natural generalization emerges from considering these problems together: along suitable arithmetic or algebraic paths in the \( (n,m) \)-grid, prime pairs appear with a density consistent with the heuristic \( \#\mathcal{S}_N / \log^2 N \).  
@@ -255,6 +324,7 @@ Conjecture~\ref{conj:gppd} motivates the windowed sieve setup only; no theorem, 
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Contributions and Reduction Overview.}
 To begin, the certified bounds, the large-scale validation of the heuristic baseline, the window-scalability results, the structure of extrema, and the final conditional reduction to short-interval equidistribution, contributions are summarized.
 
@@ -325,6 +395,7 @@ Use of the singular series and the \(  \frac{n}{log^2 n} \) scale follows the cl
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Readers’ Guide}
 Section~\ref{sec:framework} sets up the sieve-heuristic framework: the quadratic form \(Q(n,m)\), the window \(M(n)\), and the HL-A baseline and normalizations used throughout. 
 Section~\ref{sec:stats} presents the computational study up to \(2n<2\cdot 10^8\), including decade-wise deviations and the primorial plateaus.
@@ -374,6 +445,27 @@ A convenient \emph{reference sieve product} that captures the idealized effect o
 eliminating two residue classes per odd semi-prime candidate \( Q_m \) in the absence of any
 alignment or discretization artefacts, and is defined as follows:
 
+\begin{definition}[Euler-cap limit and admissible window parameter]
+For a given central value \(n\), define the \emph{Euler cap} by
+\begin{equation}\label{eq:euler_cap}
+\Ecap(n)\ :=\ \frac{(2n+1) - \sqrt{8n+1}}{2n}.
+\end{equation}
+The Euler cap quantifies the fractional portion of a symmetric window
+\([n-M,n+M]\) for which both factors \((n-m)\) and \((n+m)\) remain positive
+and distinct.  Beyond this limit, the correspondence between prime pairs
+\((n-m),(n+m)\) and their semiprime product \((n-m)(n+m)\) no longer holds.
+
+For any window parameter \(\alpha\in(0,1]\), we therefore define
+\begin{equation}
+M\ :=\ \bigl\lfloor\,\min\bigl(\alpha,\Ecap(n)\bigr)\,n\,\bigr\rfloor.
+\end{equation}
+The choice \(\alpha=\Ecap(n)\) gives the maximal window allowed by the Euler-cap constraint,
+while for practical computations we fix \(\alpha\le1\).
+Since \(\Ecap(n)\to1\) as \(n\to\infty\),
+the case \(\alpha=1\) is fully admissible asymptotically
+and can be used safely in tabulated results.
+\end{definition}
+
 \begin{definition}[Reference Sieve Product]
 \label{def:Bref}
 Let \( \mathcal{P} \) denote the set of odd primes up to some bound \( y \).
@@ -421,17 +513,68 @@ Defining the measured (pairs-scale) constant:
 \(\Cmeas^{(\mathrm{sem})}(n;I):=\frac{\log^2 n}{M}N_M(2n;I)\) with
 \(\Cmeas=2\,\Cmeas^{(\mathrm{sem})}\).)
 
-For a decimal block \(B_{d,k}=[d\cdot10^k,(d+1)\cdot10^k)\),
+\smallskip
+\noindent
+For \textbf{decimal-based binning}, each block is defined as
 \begin{equation}
-\Nmeas_0:=\arg\min_{n\in B_{d,k}}\Cmeas(n;I),\qquad
-\Nmeas_1:=\arg\max_{n\in B_{d,k}}\Cmeas(n;I),
+B_{d,k}=[d\cdot10^k,(d+1)\cdot10^k),
+\qquad 1\le d\le 9,\ k\in\mathbb{Z}.
+\end{equation}
+Within each block,
+\begin{equation}
+\NmeasDec_0:=\arg\min_{n\in B_{d,k}}\Cmeas(n;I),\qquad
+\NmeasDec_1:=\arg\max_{n\in B_{d,k}}\Cmeas(n;I),
 \end{equation}
 \begin{equation}
-\Cmeas_{\min}(d,k):=\Cmeas(\Nmeas_0;I),\quad
-\Cmeas_{\max}(d,k):=\Cmeas(\Nmeas_1;I),\quad
-\Cmeas_{\tavg}(d,k):=\frac{1}{\#B_{d,k}}\sum_{n\in B_{d,k}}\Cmeas(n;I).
+\CmeasDec_{\min}(d,k):=\Cmeas(\NmeasDec_0;I),\quad
+\CmeasDec_{\max}(d,k):=\Cmeas(\NmeasDec_1;I),\quad
+\CmeasDec_{\tavg}(d,k):=\frac{1}{\card{B_{d,k}}}\sum_{n\in B_{d,k}}\Cmeas(n;I).
+\end{equation}
+
+\smallskip
+\noindent
+For \textbf{primorial-based binning}, we treat small values separately:
+for \(n<15\), bins are singletons \([k,k+1)\), \(k=1,\dots,14\); 
+for \(15\le n<30\), a single block \([15,30)\) is used.
+
+For \(n\ge30\), let \(p<q\) be consecutive primes with corresponding primorials \(p\#\) and \(q\#\).
+Each primorial plateau \([p\#,q\#)\) is partitioned into bins of width
+\[
+w_p := \max\!\Bigl(15,\frac{p\#}{2p}\Bigr), \qquad
+L_p := q\# - p\#, \qquad
+K_p := \Bigl\lceil \frac{L_p}{w_p} \Bigr\rceil .
+\]
+Define nodes
+\[
+a_j := p\# + \min(j\,w_p,\,L_p), \qquad j=0,1,\dots,K_p ,
+\]
+so that \(a_0=p\#\) and \(a_{K_p}=q\#\).
+The indexed primorial bins are
+\begin{equation}
+B_{j,p\#} := [\,a_j,\ a_{j+1}\,), \qquad j=0,1,\dots,K_p-1,
+\end{equation}
+forming consecutive intervals of width \(w_p\), with the final bin truncated so that its right endpoint is exactly \(q\#\).
+
+Within each primorial bin \(B_{j,p\#}\),
+\begin{equation}
+\NmeasPrim_0:=\arg\min_{n\in B_{j,p\#}}\Cmeas(n;I),\qquad
+\NmeasPrim_1:=\arg\max_{n\in B_{j,p\#}}\Cmeas(n;I),
+\end{equation}
+\begin{equation}
+\CmeasPrim_{\min}(j,p\#):=\Cmeas(\NmeasPrim_0;I),\quad
+\CmeasPrim_{\max}(j,p\#):=\Cmeas(\NmeasPrim_1;I),\quad
+\CmeasPrim_{\tavg}(j,p\#):=\frac{1}{\card{B_{j,p\#}}}\sum_{n\in B_{j,p\#}}\Cmeas(n;I).
 \end{equation}
 \end{definition}
+
+\begin{remark}
+Both binning schemes provide a consistent means of defining long-interval aggregates,
+which are the only scales on which \(\Cmeas\) is statistically meaningful.
+Primorial-based binning produces smoother results and fewer boundary artifacts,
+and is therefore preferred for analytical plots.
+Decimal-based binning, using one significant digit per block,
+is better suited for comprehensive tabulation owing to its smaller and more uniform number of rows.
+\end{remark}
 
 The \( \Bref \) provides a convenient measure of the probability of a single semiprime reduction.  Crucially, it establishes a baseline for the expected number of semiprimes for a given value \( n \).  Accordingly, \( C_\star \) and related expressions are defined as follows:
 
@@ -480,46 +623,82 @@ so that \(C_\star(n;I)\to \betacal(I)\,S_{\mathrm{GB}}(2n)\) as \(n\to\infty\) w
 Next the \( C_\star \) function is applied in the definitions, providing a clean way to define predicted values consistent with the empirically measured ones.
 
 \begin{definition}[HL-A Normalized Predictions (Goldbach, Pairs)]
-The windowed log effect is absorbed into the prediction via a Hardy-Littlewood circle correction factor:
+The windowed logarithmic effect is absorbed into the prediction via a Hardy--Littlewood circle correction factor:
 \begin{equation}
-\HLCorr(n;I)\ :=\ \frac{\log^2 n}{\lvert \Ipar\rvert}\,
+\HLCorr(n;I)
+\;:=\;
+\frac{\log^2 n}{\card{\Ipar}}\,
 \sum_{m\in \Ipar}\frac{1}{\log(n-m)\,\log(n+m)}\,,
 \end{equation}
-for \(n\) and \(I\) such that \(n\pm m\ge 3\) for all \(m\in\Ipar\).
+for all \(n\) and \(I\) such that \(n\pm m\ge3\) for all \(m\in\Ipar\).
 
-Fix a window \(I\subset\mathbb Z\setminus\{0\}\) with \(M:=\lvert\Ipar\rvert\).
-Let \(C_\star(n;I)\) be the per-term HL-normalized constant (unordered scale).
-Define the \emph{predicted (pairs-scale) constant} by
+Fix a window \(I\subset\mathbb{Z}\setminus\{0\}\) with \(M:=\card{\Ipar}\).
+Let \(C_\star(n;I)\) denote the per-term HL-normalized constant (unordered scale),
+and define the \emph{predicted (pairs-scale) constant}
 \begin{equation}
-\Cpred(n;I)\ :=\ 2\,C_\star(n;I)\,\HLCorr(n;I).
+\Cpred(n;I) \;:=\; 2\,C_\star(n;I)\,\HLCorr(n;I).
 \end{equation}
 
-For decimal blocks
+\medskip
+\noindent
+\textbf{Block formulation.}
+For any finite block \(B=[a,b)\subset\mathbb{N}\) with \(\card{B}\ge1\), define extremizers
+(by \(C_\star\), equivalently by \(\Cpred/\HLCorr\)):
 \begin{equation}
-B_{d,k}:=\big[d\cdot10^k,\,(d+1)\cdot10^k\big),\qquad d\in\{1,\dots,9\},\ k\in\mathbb N,
+\Npred_0(B) := \arg\min_{n\in B} \frac{\Cpred(n;I)}{\HLCorr(n;I)},\qquad
+\Npred_1(B) := \arg\max_{n\in B} \frac{\Cpred(n;I)}{\HLCorr(n;I)}.
 \end{equation}
-select extremizers by \(C_\star\) (equivalently by \(\Cpred/\HLCorr\)):
+Then set
 \begin{equation}
-\begin{aligned}
-\Npred_0 &:= \arg\min_{n\in B_{d,k}} \frac{\Cpred(n;I)}{\HLCorr(n;I)}, \\
-\Npred_1 &:= \arg\max_{n\in B_{d,k}} \frac{\Cpred(n;I)}{\HLCorr(n;I)},
-\end{aligned}
-\qquad
-\begin{aligned}
-\Cpred_{\min}(d,k) &:= \Cpred(\Npred_0;I),\\
-\Cpred_{\max}(d,k) &:= \Cpred(\Npred_1;I).
-\end{aligned}
+\Cpred_{\min}(B):=\Cpred\bigl(\Npred_0(B);I\bigr),\qquad
+\Cpred_{\max}(B):=\Cpred\bigl(\Npred_1(B);I\bigr),
 \end{equation}
-
-For the block average, approximate the slowly varying \(\HLCorr\) by a two-point
-proxy at the geometric center:
+and approximate the block average by a two-point proxy of the slowly varying \(\HLCorr\):
 \begin{equation}
-\Cpred_{\tavg}(d,k)
+\Cpred_{\tavg}(B)
 \;:=\;
-\frac{\HLCorr(\Ngeom;I)+\HLCorr(\Ngeom+1;I)}{2\,\card{B_{d,k}}}
-\sum_{n\in B_{d,k}} \frac{\Cpred(n;I)}{\HLCorr(n;I)},
+\frac{\HLCorr(\Ngeom;I)+\HLCorr(\Ngeom+1;I)}{2\,\card{B}}
+\sum_{n\in B}\frac{\Cpred(n;I)}{\HLCorr(n;I)},
+\qquad
+\Ngeom:=\Bgeom{a}{b}.
 \end{equation}
-where \(\Ngeom\) is the nearest integer (optionally: nearest \emph{odd} integer) to \(10^k\sqrt{d(d+1)}\).
+(Optionally, \(\Ngeom\) may be restricted to the nearest \emph{odd} integer.)
+
+\medskip
+\noindent
+\textbf{Specialization to primorial blocks.}
+Without loss of generality, we take blocks aligned to consecutive primorial plateaus.
+For \(p<q\) consecutive primes, let \(p\#,q\#\) be the corresponding primorials.
+Define the bin width and count
+\[
+w_p := \max\!\Bigl(15,\frac{p\#}{2p}\Bigr), \qquad
+L_p := q\# - p\#, \qquad
+K_p := \Bigl\lceil \frac{L_p}{w_p} \Bigr\rceil,
+\]
+and nodes \(a_j := p\# + \min(j\,w_p,L_p)\), \(j=0,1,\dots,K_p\),
+so that \(a_0=p\#\) and \(a_{K_p}=q\#\).
+The indexed primorial blocks are
+\begin{equation}
+B_{j,p\#}:=[a_j,a_{j+1}), \qquad j=0,1,\dots,K_p-1.
+\end{equation}
+For each block \(B_{j,p\#}\),
+\begin{equation}
+\NpredPrim_0 := \Npred_0(B_{j,p\#}),\qquad
+\NpredPrim_1 := \Npred_1(B_{j,p\#}),
+\end{equation}
+\begin{equation}
+\CpredPrim_{\min}(j,p\#):=\Cpred_{\min}(B_{j,p\#}),\quad
+\CpredPrim_{\max}(j,p\#):=\Cpred_{\max}(B_{j,p\#}),\quad
+\CpredPrim_{\tavg}(j,p\#):=\Cpred_{\tavg}(B_{j,p\#}).
+\end{equation}
+
+\begin{remark}
+This structure generalizes naturally to any block family.
+Primorial-based blocks are preferred, as they align with multiplicative symmetries
+and minimize boundary artifacts.
+Decimal blocks \(B_{d,k}=[d\!\cdot\!10^k,(d+1)\!\cdot\!10^k)\)
+may still be used for tabular summaries where fewer rows are desirable.
+\end{remark}
 \end{definition}
 
 \begin{remark}
@@ -589,6 +768,205 @@ constant as the \( (1-\tfrac{2}{p}) \) baseline. Since the analysis is conducted
 pairs scale with \(S_{\mathrm{GB}}\), then the two viewpoints agree.
 \end{remark}
 
+\subsection{Alignment Correction (with partial exposure of the next prime)}
+
+The Hardy–Littlewood Conjecture~A is a model designed to capture
+point-wise averages.  When applied to predict minima, the values are
+typically overestimated, and the predicted convergence to the mean is
+too rapid.  The Chinese Remainder Theorem (CRT) offers a means to
+estimate how large a deviation from the Hardy–Littlewood minimum might
+be possible through phase alignment of the small primes.
+
+The difficulty is that the CRT applies to \emph{prefiltered}
+candidates—integers already reduced modulo the small primes.  Over a
+full interval one must reintroduce the averaging over those filters,
+and in doing so loses knowledge of the maximal deviation produced by
+alignment.  To avoid this dilemma, we apply the CRT on a \emph{short}
+interval of length \( \sqrt{n} \).  This length is large enough to
+include a full period of the small primes, yet short enough that it is
+plausible for the entire set of surviving candidates to be eliminated
+through a coincidental alignment of residues.
+
+Let \(Q(n)\) denote the largest odd primorial (product of odd primes)
+whose period fits into twice the window, and let \(p_{\text{next}}(n)\) be
+the next odd prime:
+\begin{equation}
+Q(n) =  \prod_{3\le p<y(n)} p,
+\qquad
+Q(n)\le \sqrt{2n} < Q(n)\,p_{\text{next}}(n).
+\end{equation}
+The “base” small-prime alignment budget cancels
+\begin{equation}
+R_{0}(n) = \prod_{3\le p<y(n)}\!(p-2).
+\end{equation}
+For heuristic convenience one may use the smooth proxy
+\begin{equation}
+R_{0}(n) \approx \frac{Q(n)}{\log y(n)}
+ \asymp  \frac{\sqrt{n}}{\bigl(\log!\log n\bigr)^{2}},
+\end{equation}
+valid at the level of orders of magnitude for \(Q(n)\approx\sqrt{2n}\).
+
+Although \(Q(n)\) is the last \emph{full} period inside the window, the
+window still covers a fraction of the next period of length
+\(Q(n),p_{\text{next}}(n)\).  Writing
+\begin{equation}
+s(n) = \frac{\sqrt{2n}}{Q(n)\,p_{\text{next}}(n)} \in (0,1),
+\end{equation}
+the alignment leverage contributed by the next prime is well modeled by
+a fractional factor
+\begin{equation}
+\bigl(p_{\text{next}}(n)-2\bigr)^{\,s(n)} = \exp\Bigl(s(n)\,\log\!\bigl(p_{\text{next}}(n)-2\bigr)\Bigr).
+\end{equation}
+There is \emph{no} extra leverage from this next prime when it divides
+the center \(n\), so we set the factor to \(1\) in that case.  Thus the
+effective alignment budget becomes
+
+\begin{equation}
+R_{\text{eff}}(n) = R_{0}(n) \times
+\begin{cases}
+\bigl(p_{\text{next}}(n)-2\bigr)^{s(n)}, & \text{if } p_{\text{next}}(n)\nmid n,\\[4pt]
+1, & \text{if } p_{\text{next}}(n)\mid n.
+\end{cases}
+\end{equation}
+
+Empirically this “partial credit” improves agreement by roughly an order
+of magnitude compared to using \(R_{0}(n)\) alone, while remaining
+consistent with the discrete tenting picture (the factor interpolates
+between adjacent certainty steps).
+
+The fundamental assumption is that a cancelled subinterval can, on occasion,
+lie entirely within the observation window, producing a potential—but not
+necessarily realized—minimum.  A factor of two is included to account for
+ordered pairs.  To prevent the appearance of negative values, the alignment
+correction is applied as a lower envelope bounded below by zero:
+\begin{equation}
+\Cpred_{\min}^{\talign}(I) = \min_{n\in I} \max\!\Biggl( 0,\Cpred(n) - \frac{2\,\log^{2}\! n} {\alpha\,\sqrt{n}\bigl(\log\!\log n\bigr)^{2}} \times \Psi(n) \Biggr),
+\label{eq:Cpred_align}
+\end{equation}
+where the partial-exposure multiplier \(\Psi(n)\) encodes the next-prime logic:
+\begin{equation}
+\Psi(n) = 
+\begin{cases}
+\exp\!\Bigl(s(n)\,\log\!\bigl(p_{\text{next}}(n)-2\bigr)\Bigr), 
+& \text{if } p_{\text{next}}(n)\nmid n,\\[4pt]
+1, 
+& \text{if } p_{\text{next}}(n)\mid n.
+\end{cases}
+\end{equation}
+(Equivalently, \(\Psi(n)\in[1,p_{\text{next}}(n)-2)\) with the upper
+bound unattained because \(s(n)!<!1).\)
+
+For heuristic analysis the smooth proxy \(R_{0}(n)\) multiplied by
+\(\Psi(n)\) is more useful than the exact discrete product: the discrete
+step function captures only cases where a full next-period remainder is
+known to exist, whereas the proxy describes the regime in which such an
+alignment may or may not occur—and does so in a way that closely tracks
+empirical minima without overstating the effect.
+
+Because the location of a potential cancellation within the observation window is unknown, the Hardy–Littlewood circle correction maybe applied in several ways to normalize the alignment term.  One may take the maximum circle correction that occurs anywhere within the window, the minimum correction, or simply reuse the same correction already applied to the window itself:
+\begin{equation}
+\Phi_{\max}(I)=\max_{n\in I}\HLCorr(n,\delta(n)),\qquad
+\Phi_{\min}(I)=\min_{n\in I}\HLCorr(n,\delta(n)),\qquad
+\Phi_{\twin}(n)=\HLCorr(n,\delta(n)).
+\end{equation}
+Since \( \HLCorr(\cdot,\cdot)\ge1 \) and varies slowly with \( n \),
+these choices satisfy
+\( \Phi_{\min}(I)\le\Phi_{\twin}(n)\le\Phi_{\max}(I) \).
+Multiplying the alignment term by \( \Phi \) gives a normalized
+subtraction
+\begin{equation}
+A_{\Phi}(n) = \frac{2\,\log^{2}! n} {\alpha\,\sqrt{n}\,\bigl(\log\!\log n\bigr)^{2}}\,\Psi(n)\,\Phi,
+\end{equation}
+where \( \Psi(n) \) encodes the partial exposure of the next prime
+as described above.
+For rigorous lower–bound certification it is most conservative to use
+the maximal correction \( \Phi_{\max}(I) \), which ensures that no
+underestimation of the true minimum can occur.
+For empirical comparisons, however, the window correction
+\( \Phi_{\twin}(n) \) provides the best agreement with the measured data,
+at the cost of occasionally overestimating the minimum.
+Finally, the minimal correction \( \Phi_{\min}(I) \) serves as a useful
+reference for testing sensitivity to the choice of normalization.
+
+With these choices, the lower-envelope formula
+\eqref{eq:Cpred_align} becomes, for a selected \(\Phi\),
+\begin{equation}
+  \Cpred_{\min}^{\talign,\Phi}(I) = \min_{n\in I} \max\!\Bigl(0,\;\Cpred(n)\;-\;A_{\Phi}(n)\Bigr),
+\end{equation}
+making explicit the trade–off between conservative certification
+\(\Phi_{\max}\) and empirical fidelity \(\Phi_{\twin}\).
+
+\subsection{Working Hypotheses}
+
+The alignment framework introduced above relies on several hypotheses
+that are consistent with both the analytic reasoning and the observed
+data.  These are presented here explicitly to distinguish what is
+\emph{assumed} from what is \emph{derived}.
+
+\begin{hypothesis}[Short-Interval Alignment Hypothesis]
+Within a short interval of length~\( \sqrt{n} \), the residues of small
+primes can occasionally align in such a way that all surviving candidates
+of the Hardy--Littlewood sieve are cancelled.  This phenomenon defines
+a possible, though not guaranteed, local minimum of
+\( \Cmeas(n) \).
+\end{hypothesis}
+
+\begin{remark}[Short-Interval Hypothesis Conflict]
+At first glance the alignment correction appears to conflict with the 
+short-interval Bombieri-Vinogradov equidistribution hypothesis 
+(Sec.~\ref{sec:SI-BV}.  The alignment term grows faster than
+the expected number of candidate pairs, providing a mechanism that
+could in principle allow infinitely many short intervals devoid of
+Goldbach pairs.  This is the same paradox that arises if the complete
+CRT is applied to the full interval.  However, nothing in this argument
+precludes an additional damping mechanism that limits such effects at
+large~\(n\).  Simple statistical reasoning may show that the required
+alignments become exponentially rare, rendering their contribution
+negligible.  Thus, while the success of the alignment correction makes
+the short-interval hypotheses appear less secure, any empirical
+agreement should be interpreted as heuristic rather than conclusive.
+\end{remark}
+
+\begin{hypothesis}[Partial-Exposure Hypothesis]
+The leverage of the next prime beyond the last full odd primorial
+contributes fractionally according to the portion of its period
+contained in the window:
+\begin{equation}
+  \Psi(n) = \exp\!\Bigl(s(n)\,\log\!\bigl(p_{\text{next}}(n)-2\bigr)\Bigr),
+  \qquad
+  s(n) = \frac{\sqrt{2n}}{Q(n)\,p_{\text{next}}(n)}.
+\end{equation}
+If \(p_{\text{next}}\mid n\), this leverage is null, \(\Psi(n)=1\).
+\end{hypothesis}
+
+\begin{hypothesis}[Lower-Envelope Hypothesis]
+The minimal expected number of Goldbach-compatible pairs in any finite
+window is given by a lower envelope
+\begin{equation}
+  \Cpred_{\min}^{\talign}(I)
+  = \min_{n\in I}
+    \max\!\Bigl(
+      0,\;
+      \Cpred(n)
+      - \frac{2\,\log^{2}\!n}
+             {\alpha\,\sqrt{n}\,(\log\!\log n)^{2}}
+      \Psi(n)
+    \Bigr),
+\end{equation}
+where \( \alpha \) controls the observation window.
+\end{hypothesis}
+
+\begin{remark}
+The empirical evidence presented in Section~\ref{sec:results}
+supports these hypotheses within one order of magnitude across the
+verified range.  The alignment hypothesis explains the observed
+over-prediction of Hardy--Littlewood minima and the apparent tenting
+structure near primorial boundaries, while the partial-exposure
+hypothesis reduces residuals by approximately an additional order of
+magnitude.  Each hypothesis remains falsifiable by direct computation
+at larger~\( n \).
+\end{remark}
+
 \begin{remark}[Scope and Validation]
 The constructions and normalizations above (e.g.\ \( C_\star \), \( \Cpred \), \( \betacal \))
 are heuristic and conditioned on the Hardy-Littlewood Conjecture~A and the usual
@@ -609,6 +987,7 @@ The Hardy-Littlewood Conjecture A (HL-A) is adopted as a modelling assumption fo
 
 To the author’s knowledge, there is no precedent for a systematic in-window statistical analysis of HL-A.  Previous computational efforts (e.g.~\cite{OliveiraESilva2014}) numerically confirmed all even integers up to their computational limit in a global window, while analytic studies examined distributions of primes in short intervals \cite{MontgomerySoundararajan2004,GranvilleSoundararajan2007}.  The present work provides the first statistical locking-down of HL-A within analysis windows, analogous to how earlier computations statistically locked down Goldbach itself.  The rigorous sieve bounds are established independent of this analysis.
 
+\preto\subsection{\FloatBarrier}
 \subsection{Modelling Assumption}
 Assumption (HL-A, windowed form). For admissible windows \( I \)  with \( \lvert I \rvert = o(n) \):
 
@@ -626,80 +1005,294 @@ Although nearly a century old, HL-A remains the most reliable parameter-free bas
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Data Collection}
 
-For stability, Goldbach pairs \( (n-m, n+m) \) are measured and analyzed with \( m \in [-M,M] \setminus{0} \), where \( M=\lfloor \frac{n}{2} \rfloor \). This symmetric range was chosen for numerical stability and predictability, but the framework applies equally to other ranges.
+For numerical stability, Goldbach pairs \( (n-m,\,n+m) \) are evaluated over
+a symmetric range \( m \in [-M,\,M]\setminus\{0\} \), where
+\begin{equation}
+  M = \bigl\lfloor \min\!\bigl(\alpha,\Ecap(n)\bigr)\,n \bigr\rfloor,
+\end{equation}
+and the scaling parameter \( \alpha \) takes values
+\( 2^{k/8} \) for \( k \in [0,80] \).
+The Euler cap \( \Ecap(n) \), defined in~\eqref{eq:euler_cap},
+represents the upper bound on \( m/n \) for which both the
+Hardy–Littlewood circle correction and the semiprime–to–prime pair
+equivalence remain valid.
+The symmetric formulation improves numerical conditioning and ensures
+predictable convergence, although the same framework is equally
+applicable to asymmetric or alternative interval choices.
 
-The programs used to generate primes and sieve the data were written in C and AWK, and executed on an Intel i5 processor in a 2015 laptop normally used as a home server.  Full analysis requires several weeks, but partial results are available in minutes.  The source code is released under GPL-3.0-or-later, and the manuscript under CC-BY-4.0.  All source code and certified datasets are permanently archived on Zenodo~\cite{Riemers2025SieveGoldbach}.
+The programs used to generate primes and sieve the data were written in
+C, C++, and AWK, and executed on an Intel i5 processor in a 2015 laptop
+serving as a home server.  The full computation of Goldbach pairs up to
+\( n = 23\# / 2 \) requires approximately one week using multiple
+parallel processes, while partial results and predicted values can be
+produced within minutes.  All \( \alpha \)-values are computed within a
+single process.  The source code is released under GPL-3.0-or-later, and
+the manuscript under CC-BY-4.0.  All source code and certified datasets
+are permanently archived on Zenodo~\cite{Riemers2025SieveGoldbach}.
 
-The measured variables \( \Nmeas_0, \Nmeas_1, \Cmeas_{\min}, \Cmeas_{\max}, \Cmeas_{\tavg} \) are defined in Definition~\ref{semiprime-survivors}. Appendix Table~\ref{tab:raw-stats} provides raw (unnormalized) data for verification. The reported minima of zero pairs for \( n=7,11,43 \) result from the exclusion of certain pairs, such as \( (7,7) \), \( (3,19) \), and \( (7,79) \), by the chosen window; they do not contradict Goldbach's Conjecture.
+The measured variables
+\( \Nmeas_0, \Nmeas_1, \Cmeas_{\min}, \Cmeas_{\max}, \Cmeas_{\tavg} \)
+are defined in Definition~\ref{semiprime-survivors}.
+Appendix Table~\ref{tab:raw-stats} provides representative
+unnormalized decade data for \( \alpha = 0.5 \), sufficient for
+independent verification of the results.
+The reported minima of zero pairs for \( n = 7, 11, \) and \( 43 \)
+arise from the exclusion of specific pairs such as \( (7,7) \),
+\( (3,19) \), and \( (7,79) \) by the chosen window and therefore do not
+contradict Goldbach's Conjecture.
 
-Predicted values can be computed in under ten minutes, but counting all Goldbach pairs up to \( n=10^8 \) required several weeks. Figure~\ref{fig:Cminmaxavg} shows scatter plots of measured values versus HL-A prediction lines.
+Figures~\ref{fig:CminmaxavgPrim1},~\ref{fig:CminmaxavgPrim}, and
+\ref{fig:CminmaxavgPrim015625} present the measured values compared to
+the HL-A prediction lines for \( \alpha = 1, 0.5, \) and \( 0.015625 \),
+respectively.
 
-\pgfplotstableread[col sep=comma, trim cells]{pairrangejoin-100M.csv}\pairdata
+\pgfplotstableread[col sep=comma, trim cells]{pairrangejoin-23PR.5-1-v0.2.0.csv}\pairdata
 
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}
+
+\pgfplotsset{every axis/.append style={title style={at={(0.98,0.97)},anchor=north east}}}
+
 \begin{axis}[
+  title={\(\,\alpha=1\)},
   width=\textwidth, height=0.62\textwidth,
   xmode=log,
   xlabel={\(n\) (log scale)},
   ylabel={\(C\) values},
+  xmin=10,
+  xmax=2e8,
+  ymin=0,
+  ymax=14,
   grid=both, tick align=outside,
   legend style={at={(0.5,1.05)}, anchor=south, legend columns=-1},
   unbounded coords=discard, filter discard warning=false,
+  set layers,
+  axis on top=false,  % so the band stays behind gridlines
 ]
 
-% --- Scatter: measured points ---
-% C_min vs n_0
-\addplot+[
-  only marks, mark=*, mark size=1.4pt, draw=blue!60!black, fill=blue!60!black
-] table[x={n_0}, y={C_min}] {\pairdata};
-\addlegendentry{\( \Cmeas_{\min} \) vs \( n_0 \) }
+% ----- styles -----
+\pgfplotsset{
+  myband/.style   ={fill=orange!50, fill opacity=0.30, draw=none, on layer=axis background},
+  mypred/.style   ={no markers, thick, dotted},
+  myavg/.style    ={no markers, semithick, color=black!70},
+  mydots/.style   ={only marks, mark=*, mark size=0.7pt, opacity=0.30},
+  guide/.style    ={gray!45, very thin, on layer=axis foreground}, % draw on top
+}
 
-% C_avg vs n_geom
-\addplot+[
-  only marks, mark=*, mark size=1.2pt, draw=green!80!black,
-  mark options={fill=green!80!black, draw=black!80!black}
-] table[x={n_geom}, y={C_avg}] {\pairdata};
-\addlegendentry{\( \Cmeas_{\tavg} \) vs \( \Ngeom \)}
+% ----- band (draw first) -----
+\addplot[name path=Cminpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_0}, y={C_min}] {\pairdata};
+\addplot[name path=Cmaxpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_1}, y={C_max}] {\pairdata};
+\addplot[myband, forget plot] fill between[of=Cminpath and Cmaxpath];
 
-% C_max vs n_1
-\addplot+[
-  only marks, mark=*, mark size=1.2pt, draw=red!80!black,
-  mark options={fill=red!80!black, draw=black!80!black}
-] table[x={n_1}, y={C_max}] {\pairdata};
-\addlegendentry{\( \Cmeas_{\max} \) vs \( n_1 \)}
+% ----- main lines (legend entries) -----
+\addplot[myavg]
+  table[x={n_geom}, y={C_avg}] {\pairdata};
+\addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
 
-% --- Lines: predicted curves ---
-% Cpred_min vs Npred_0
-\addplot+[
-  no markers, thick, dashed, mark size=1.2pt, draw=blue!80!black,
-  mark options={fill=blue!80!black, draw=black!80!black}
-] table[x={Npred_0}, y={Cpred_min}] {\pairdata};
-\addlegendentry{\( \Cpred_{\min} \) vs \( \Npred_0 \)}
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={Npred_0}, y={CpredBound}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
 
-% Cpred_avg vs n_geom
-\addplot+[
-  no markers, thick, dashed, color=green!50!black
-] table[x={n_geom}, y={Cpred_avg}] {\pairdata};
-\addlegendentry{\( \Cpred_{\tavg} \) vs \(\Ngeom\)}
+\addplot[mypred, thick, brown!70!black, dashed, sharp plot]
+  table[x={Npred_0}, y={CpredAlign}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\talign} \)}
 
-% Cpred_max vs n_1
-\addplot+[
-  no markers, thick, dashed, color=red!80!black
-] table[x={n_1}, y={Cpred_max}] {\pairdata};
-\addlegendentry{\( \Cpred_{\max} \) vs \( \Npred_1 \)}
+\addplot[mypred, thick, blue!70!black, dashed, sharp plot]
+  table[x={Npred_0}, y={Cpred_min}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min} \)}
+
+\addplot[mypred, thick, green!50!black, dashed, sharp plot]
+  table[x={n_geom}, y={Cpred_avg}] {\pairdata};
+\addlegendentry{\( \Cpred_{\tavg} \)}
+
+\addplot[mypred, red!70!black, sharp plot]
+  table[x={n_1}, y={Cpred_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max} \)}
+
+% style
+\pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
+
+% draw them last, and don't add to legend
+\foreach \x in {15,105,1155,15015,255255,4849845,111546435}{
+  \addplot[primorial, forget plot] coordinates {(\x,0) (\x,14)};
+}
 
 \end{axis}
 \end{tikzpicture}
-\caption{Scatter plots of \( \Cmeas_{\min} \), \( \Cmeas_{\max} \), and \( \Cmeas_{\tavg} \) versus \( n \) with HL-A prediction lines.   \emph{Maxima.} The prominent peaks occur at \(n\) whose odd part is a (multiple of a) primorial, in agreement with Proposition~\ref{prop:primorial-plateau}.}
-\label{fig:Cminmaxavg}
+\caption{Scatter plots of \( \Cmeas_{\min} \), \( \Cmeas_{\max} \), and \( \Cmeas_{\tavg} \) versus \( n \) with HL-A prediction lines for \( \alpha = 1 \).   \emph{Maxima.} The prominent peaks occur at \(n\) whose odd part is a (multiple of a) primorial, in agreement with Proposition~\ref{prop:primorial-plateau}.    The \( \Cpred_{\min}^{\talign} \) curve represents the maximum amount of cancellation that can result from small primes from CRT.}
+\label{fig:CminmaxavgPrim1}
+\end{figure}
+
+\pgfplotstableread[col sep=comma, trim cells]{pairrangejoin-23PR.5-0.5-v0.2.0.csv}\pairdata
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\pgfplotsset{every axis/.append style={title style={at={(0.98,0.97)},anchor=north east}}}
+
+\begin{axis}[
+  title={\(\,\alpha=0.5\)},
+  width=\textwidth, height=0.62\textwidth,
+  xmode=log,
+  xlabel={\(n\) (log scale)},
+  ylabel={\(C\) values},
+  xmin=10,
+  xmax=2e8,
+  ymin=0,
+  ymax=14,
+  grid=both, tick align=outside,
+  legend style={at={(0.5,1.05)}, anchor=south, legend columns=-1},
+  unbounded coords=discard, filter discard warning=false,
+  set layers,
+  axis on top=false,  % so the band stays behind gridlines
+]
+
+% ----- styles -----
+\pgfplotsset{
+  myband/.style   ={fill=orange!50, fill opacity=0.30, draw=none, on layer=axis background},
+  mypred/.style   ={no markers, thick, dotted},
+  myavg/.style    ={no markers, semithick, color=black!70},
+  mydots/.style   ={only marks, mark=*, mark size=0.7pt, opacity=0.30},
+  guide/.style    ={gray!45, very thin, on layer=axis foreground}, % draw on top
+}
+
+% ----- band (draw first) -----
+\addplot[name path=Cminpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_0}, y={C_min}] {\pairdata};
+\addplot[name path=Cmaxpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_1}, y={C_max}] {\pairdata};
+\addplot[myband, forget plot] fill between[of=Cminpath and Cmaxpath];
+
+% ----- main lines (legend entries) -----
+\addplot[myavg]
+  table[x={n_geom}, y={C_avg}] {\pairdata};
+\addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={Npred_0}, y={CpredBound}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
+
+\addplot[mypred, thick, brown!70!black, dashed, sharp plot]
+  table[x={Npred_0}, y={CpredAlign}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\talign} \)}
+
+\addplot[mypred, thick, blue!70!black, dashed, sharp plot]
+  table[x={Npred_0}, y={Cpred_min}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min} \)}
+
+\addplot[mypred, thick, green!50!black, dashed, sharp plot]
+  table[x={n_geom}, y={Cpred_avg}] {\pairdata};
+\addlegendentry{\( \Cpred_{\tavg} \)}
+
+\addplot[mypred, red!70!black, sharp plot]
+  table[x={n_1}, y={Cpred_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max} \)}
+
+% style
+\pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
+
+% draw them last, and don't add to legend
+\foreach \x in {15,105,1155,15015,255255,4849845,111546435}{
+  \addplot[primorial, forget plot] coordinates {(\x,0) (\x,14)};
+}
+
+
+\end{axis}
+\end{tikzpicture}
+\caption{Scatter plots of \( \Cmeas_{\min} \), \( \Cmeas_{\max} \), and \( \Cmeas_{\tavg} \) versus \( n \) with HL-A prediction lines for \( \alpha = 0.5 \).   \emph{Maxima.} The prominent peaks occur at \(n\) whose odd part is a (multiple of a) primorial, in agreement with Proposition~\ref{prop:primorial-plateau}.    The \( \Cpred_{\min}^{\talign} \) curve represents the maximum amount of cancellation that can result from small primes from CRT.}
+\label{fig:CminmaxavgPrim}
+\end{figure}
+
+\pgfplotstableread[col sep=comma, trim cells]{pairrangejoin-23PR.5-0.015625-v0.2.0.csv}\pairdata
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+
+\pgfplotsset{every axis/.append style={title style={at={(0.98,0.97)},anchor=north east}}}
+
+\begin{axis}[
+  title={\(\,\alpha=0.015625\)},
+  width=\textwidth, height=0.62\textwidth,
+  xmode=log,
+  xlabel={\(n\) (log scale)},
+  ylabel={\(C\) values},
+  xmin=10,
+  xmax=2e8,
+  ymin=0,
+  ymax=15,
+  grid=both, tick align=outside,
+  legend style={at={(0.5,1.05)}, anchor=south, legend columns=-1},
+  unbounded coords=discard, filter discard warning=false,
+  set layers,
+  axis on top=false,  % so the band stays behind gridlines
+]
+
+% ----- styles -----
+\pgfplotsset{
+  myband/.style   ={fill=orange!50, fill opacity=0.30, draw=none, on layer=axis background},
+  mypred/.style   ={no markers, thick, dotted},
+  myavg/.style    ={no markers, semithick, color=black!70},
+  mydots/.style   ={only marks, mark=*, mark size=0.7pt, opacity=0.30},
+  guide/.style    ={gray!45, very thin, on layer=axis foreground}, % draw on top
+}
+
+% ----- band (draw first) -----
+\addplot[name path=Cminpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_0}, y={C_min}] {\pairdata};
+\addplot[name path=Cmaxpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_1}, y={C_max}] {\pairdata};
+\addplot[myband, forget plot] fill between[of=Cminpath and Cmaxpath];
+
+% ----- main lines (legend entries) -----
+\addplot[myavg]
+  table[x={n_geom}, y={C_avg}] {\pairdata};
+\addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={Npred_0}, y={CpredBound}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
+
+\addplot[mypred, thick, brown!70!black, dashed, sharp plot]
+  table[x={Npred_0}, y={CpredAlign}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\talign} \)}
+
+\addplot[mypred, thick, blue!70!black, dashed, sharp plot]
+  table[x={Npred_0}, y={Cpred_min}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min} \)}
+
+\addplot[mypred, thick, green!50!black, dashed, sharp plot]
+  table[x={n_geom}, y={Cpred_avg}] {\pairdata};
+\addlegendentry{\( \Cpred_{\tavg} \)}
+
+\addplot[mypred, red!70!black, sharp plot]
+  table[x={n_1}, y={Cpred_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max} \)}
+
+% style
+\pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
+
+% draw them last, and don't add to legend
+\foreach \x in {15,105,1155,15015,255255,4849845,111546435}{
+  \addplot[primorial, forget plot] coordinates {(\x,0) (\x,14)};
+}
+
+
+\end{axis}
+\end{tikzpicture}
+\caption{Scatter plots of \( \Cmeas_{\min} \), \( \Cmeas_{\max} \), and \( \Cmeas_{\tavg} \) versus \( n \) with HL-A prediction lines for \( \alpha = 0.015625 \).   \emph{Maxima.} The prominent peaks occur at \(n\) whose odd part is a (multiple of a) primorial, in agreement with Proposition~\ref{prop:primorial-plateau}.    The \( \Cpred_{\min}^{\talign} \) curve represents the maximum amount of cancellation that can result from small primes from CRT.}
+\label{fig:CminmaxavgPrim015625}
 \end{figure}
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{\(\Cmeas_{\tavg}\) Analysis}
 
 Recall from Definition~\ref{def:lambda} that
@@ -712,9 +1305,29 @@ Under HL-A, measured and predicted averages are heuristically expected to conver
 
 \begin{figure}[h]
   \centering
-  \FigLambdaAbsSignSplit{lambdaavg-100M.csv}{n_geom}{Lambda_avg}{\( \Ngeom \)}{\( \lvert \Lambda_{\tavg} \rvert \)}{\( |\Lambda_{\tavg}| \) vs \( \Ngeom \) }
-  \caption{Scatter plot of \( \lvert \Lambda_{\tavg} \rvert \) versus \( \Ngeom \) on a log-log scale.}
-  \label{fig:lambda-avg}
+  \FigLambdaAbsSignSplit{lambdaavg-23PR.5-1-v0.2.0.csv}{n_geom}{Lambda_avg}
+    {\( \Ngeom \)}{\( \lvert \Lambda_{\tavg} \rvert \)}
+    {\( \vert \Lambda_{\tavg} \rvert \) vs \( \Ngeom \)}
+  \caption{Scatter plot of \( \lvert \Lambda_{\tavg} \rvert \) versus \( \Ngeom \) for \( \alpha=1 \) on a log-log scale.}
+  \label{fig:lambda-avg-prim1}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \FigLambdaAbsSignSplit{lambdaavg-23PR.5-0.5-v0.2.0.csv}{n_geom}{Lambda_avg}
+    {\( \Ngeom \)}{\( \lvert \Lambda_{\tavg} \rvert \)}
+    {\( \vert \Lambda_{\tavg} \rvert \) vs \( \Ngeom \)}
+  \caption{Scatter plot of \( \lvert \Lambda_{\tavg} \rvert \) versus \( \Ngeom \) for \( \alpha=0.5 \) on a log-log scale.}
+  \label{fig:lambda-avg-prim}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \FigLambdaAbsSignSplit{lambdaavg-23PR.5-0.015625-v0.2.0.csv}{n_geom}{Lambda_avg}
+    {\( \Ngeom \)}{\( \lvert \Lambda_{\tavg} \rvert \)}
+    {\( \vert \Lambda_{\tavg} \rvert \) vs \( \Ngeom \)}
+  \caption{Scatter plot of \( \lvert \Lambda_{\tavg} \rvert \) versus \( \Ngeom \) for \( \alpha=0.015625 \) on a log-log scale.}
+  \label{fig:lambda-avg-prim015625}
 \end{figure}
 
 \needspace{10\baselineskip}
@@ -777,6 +1390,7 @@ Dec. &
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{\( \Cmeas_{\min} \) Analysis}
 
 Recall from Definition~\ref{def:lambda}:
@@ -785,13 +1399,56 @@ Recall from Definition~\ref{def:lambda}:
 \Lambda_{\min}(B)\; := \;\log\frac{\Cmeas_{\min}(B)}{\Cpred_{\min}(B)}.
 \end{equation}
 
-Under HL-A, predictions and measurements converge to the same limit. For very large \( n \), minima should approach \( 2C_2 \), where \( C_2 \) is the twin prime constant. Figure~\ref{fig:lambda-min} shows \( \Lambda_{\min} \to 0 \) as \( n \)  grows.
+Under HL-A, predictions and measurements converge to the same limit. For very large \( n \), minima should approach \( 2C_2 \), where \( C_2 \) is the twin prime constant. Figure~\ref{fig:lambda-minprim} shows \( \Lambda_{\min} \to 0 \) as \( n \)  grows.
 
 \begin{figure}[h]
   \centering
-  \FigLambdaAbsSignSplit{lambdamin-100M.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min} \rvert \)}{\( |\Lambda_{\min}| \) vs \( n_0 \) }
-  \caption{Scatter plot of \( \lvert \Lambda_{\min} \rvert \) versus \( n_0 \) on a log-log scale.}
-  \label{fig:lambda-min}
+  \FigLambdaAbsSignSplit{lambdamin-23PR.5-1-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min} \rvert \)}{\( |\Lambda_{\min}| \) vs \( n_0 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\min} \rvert \) versus \( n_0 \) for \( \alpha=1 \) on a log-log scale.}
+  \label{fig:lambda-minprim1}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \FigLambdaAbsSignSplit{lambdaalign-23PR.5-1-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min}^{\talign} \rvert \)}{\( |\Lambda_{\min}^{\talign}| \) vs \( n_0 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\min}^{\talign} \rvert \) versus \( n_0 \) for \( \alpha=1 \) on a log-log scale.}
+  \label{fig:lambda-alignprim1}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \FigLambdaAbsSignSplit{lambdabound-23PR.5-1-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min}^{\text{bound}} \rvert \)}{\( |\Lambda_{\min}^{\text{bound}}| \) vs \( n_0 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\min}^{\text{bound}} \rvert \) versus \( n_0 \) for \( \alpha=1 \) on a log-log scale.}
+  \label{fig:lambda-boundprim1}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \FigLambdaAbsSignSplit{lambdamin-23PR.5-0.5-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min} \rvert \)}{\( |\Lambda_{\min}| \) vs \( n_0 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\min} \rvert \) versus \( n_0 \) for \( \alpha=0.5 \) on a log-log scale.}
+  \label{fig:lambda-minprim}
+\end{figure}
+
+% \begin{figure}[h]
+ % \centering
+ % \FigLambdaAbsSignSplit{lambdamin-23PR.5-0.015625-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min} \rvert \)}{\( |\Lambda_{\min}| \) vs \( n_0 \) }
+  %\caption{Scatter plot of \( \lvert \Lambda_{\min} \rvert \) versus \( n_0 \) for \( \alpha=0.015625 \) on a log-log scale.}
+  %\label{fig:lambda-minprim015625}
+%\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \FigLambdaAbsSignSplit{lambdaalign-23PR.5-0.5-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min}^{\talign} \rvert \)}{\( |\Lambda_{\min}^{\talign}| \) vs \( n_0 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\min}^{\talign} \rvert \) versus \( n_0 \) for \( \alpha=0.5 \) on a log-log scale.}
+  \label{fig:lambda-alignprim}
+\end{figure}
+
+
+\begin{figure}[h]
+  \centering
+  \FigLambdaAbsSignSplit{lambdabound-23PR.5-0.5-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min}^{\text{bound}} \rvert \)}{\( |\Lambda_{\min}^{\text{bound}}| \) vs \( n_0 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\min}^{\text{bound}} \rvert \) versus \( n_0 \) for \( \alpha=0.5 \) on a log-log scale.}
+  \label{fig:lambda-boundprim}
 \end{figure}
 
 Table~\ref{tab:lambda_min_summary} confirms per-decade convergence. In the 7th decade, the second-largest \( \lvert \Lambda_{\min} \rvert \) is \( \xSecondLambdaMinLimit \), so HL-A agrees with observed data at that tolerance for \( n \ge 10^8 \).
@@ -854,6 +1511,7 @@ Dec. &
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{\( \Cmeas_{\max} \) Analysis}
 
 Recall from Definition~\ref{def:lambda}:
@@ -876,9 +1534,23 @@ Each primorial step corresponds to introducing a new Euler factor \( \frac{(p-1)
 
 \begin{figure}[h]
   \centering
-  \FigLambdaAbsSignSplit{lambdamax-100M.csv}{n_1}{Lambda_max}{\( n_1 \)}{\( \lvert \Lambda_{\max} \rvert \)}{\( |\Lambda_{\max}| \) vs \( n_1 \) }
-  \caption{Scatter plot of \( \lvert \Lambda_{\max} \rvert \) versus \( n_1 \) on a log-log scale.}
-  \label{fig:lambda-max}
+  \FigLambdaAbsSignSplit{lambdamax-23PR.5-1-v0.2.0.csv}{n_1}{Lambda_max}{\( n_1 \)}{\( \lvert \Lambda_{\max} \rvert \)}{\( |\Lambda_{\max}| \) vs \( n_1 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\max} \rvert \) versus \( n_1 \) for \( \alpha = 1 \) on a log-log scale.}
+  \label{fig:lambda-maxprim1}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \FigLambdaAbsSignSplit{lambdamax-23PR.5-0.5-v0.2.0.csv}{n_1}{Lambda_max}{\( n_1 \)}{\( \lvert \Lambda_{\max} \rvert \)}{\( |\Lambda_{\max}| \) vs \( n_1 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\max} \rvert \) versus \( n_1 \) for \( \alpha = 0.5 \) on a log-log scale.}
+  \label{fig:lambda-maxprim}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \FigLambdaAbsSignSplit{lambdamax-23PR.5-0.015625-v0.2.0.csv}{n_1}{Lambda_max}{\( n_1 \)}{\( \lvert \Lambda_{\max} \rvert \)}{\( |\Lambda_{\max}| \) vs \( n_1 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\max} \rvert \) versus \( n_1 \) for \( \alpha = 0.015625 \) on a log-log scale.}
+  \label{fig:lambda-maxprim015625}
 \end{figure}
 
 Table~\ref{tab:lambda_max_summary} shows decreasing per-decade values, again confirming convergence. In the 7th decade, the second-largest \( \lvert  \Lambda_{\max} \rvert \) is \( \xSecondLambdaMaxLimit \), supporting HL-A agreement at that level for \( n \ge 10^8 \).
@@ -947,6 +1619,7 @@ Because the singular series ignores exponents and the prime \(2\), many nearby m
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Primorial plateaus and HL-A}\label{sec:primorial-prop}
 
 \begin{equation}\label{eq:half-primorial}
@@ -1002,6 +1675,7 @@ Across a fixed scale the factor \(2n/\log^2(2n)\) varies slowly, while \(\mathfr
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Conclusion on Analysis}
 
 The sieve framework was tested against HL-A for all \( n<10^8 \) . The measured values \( \Cmeas_{\min},\Cmeas_{\max},\Cmeas_{\tavg} \) asymptotically approach predictions:
@@ -1016,6 +1690,7 @@ This is not a proof, but is a statistically robust conclusion: HL-A accurately m
 
 \section{Sieve-Theoretic Goldbach}\label{sec:sgb}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Sieve reduction on \( Q(n,m) \)}\label{sec:reduction}
 \begin{lemma}[Analytic Lower Bound via Certified Shifted Products]
 \label{lem:analytic-lower-bound-reduction}
@@ -1040,6 +1715,7 @@ and similarly for \( q \). Multiplying the two intervals and expanding the error
 which is explicit and decreases in both \( p \) and \( q \).
 \end{proof}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Main Theorem (certified lower bound)}\label{sec:main-thm}
 \begin{theorem}[Goldbach Pairs and a Double-Euler Product Sieve Bound]
 \label{thm:main}
@@ -1393,6 +2069,7 @@ In our dataset, \(\nasymstar=\xNasymStar\).
 Specializing to \(\alpha_0=\tfrac12\) above, Lemma~\ref{lem:alpha-rescale} gives the same certified lower bound for every \(\alpha\in(0,\tfrac12]\) with the natural right-edge cutoff \(\sqrt{n+\alpha n}\). 
 By monotonicity in the window, Corollary~\ref{cor:alpha-superset} further implies \(\mathcal{G}(n;\alpha n)\ge \mathcal{G}(n;\tfrac12 n)\) for all \(\alpha\in[\tfrac12,1)\).
 
+\preto\subsection{\FloatBarrier}
 \subsection{Conclusion}\label{sec:conclusion}
 This author established an explicit, certified sieve-theoretic lower bound for (windowed) Goldbach counts by applying an Eratosthenes-type sieve directly to the quadratic form \(Q(n,m)=(n-m)(n+m)\). The bound is given as a product of conservative per-prime Euler factors and holds uniformly for large \(n\) while the sieve cutoff \(z\) remains below the prime-forcing threshold \(n^{\frac{1}{2}}\), so the classical parity obstruction does not arise.
 
@@ -1403,6 +2080,7 @@ Taken together, these approaches give a precise reduction: to push the sieve to 
 Unconditionally, the paper contributes (i) a rigorous lower bound with explicit constants, free of tail and binning artefacts; (ii) a reproducible computation to the stated limit; and (iii) a clear reduction of the remaining analytic task to a standard short-interval distribution problem—specifically, SI--BV\(_\theta\) with \( \theta > \tfrac12 \) —which is strictly weaker than assuming the full Hardy-Littlewood asymptotic formula.
 The available data strongly support the predicted main term, and the remaining hypothesis is sharply circumscribed.
 
+\preto\subsection{\FloatBarrier}
 \subsection{Conditional Corollary (short-interval equidistribution)}\label{sec:SI-BV}
 \begin{corollary}[Unconditional Reduction; Conditional Consequence Under Short-Interval Equidistribution]
 \label{cor:SI-BV}
@@ -1636,6 +2314,7 @@ Conjecture~\ref{conj:uniform-C} motivates the windowed sieve setup only; no theo
 
 \section{Certified Enclosures for Euler Products}\label{app:enclosures}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Mertens Product Enclosure}\label{app:mertens}
 
 \begin{lemma}[Explicit Mertens Enclosure~\cite{RosserSchoenfeld1962, Dusart2010}]\label{lem:explicit-mertens}
@@ -1656,6 +2335,7 @@ E_M(x) := \frac{1}{20\log^3 x}+\max\!\left\{\frac{316}{\log^4 x},\ \frac{3}{16\l
 \end{equation}
 \end{lemma}
 
+\preto\subsection{\FloatBarrier}
 \subsection{\(C_2\) Tail Bound}\label{app:C2-tail}
 \begin{lemma}[Certified Tail for \( C_2 \)]\label{lem:C2-tail}
 For all \( x\ge 3 \),
@@ -1676,6 +2356,7 @@ which is explicit and strictly decreasing for \( x\ge x_0 \).
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Shifted Product Enclosure}\label{app:shifted-product}
 
 \begin{lemma}[Certified Enclosure for the Shifted Product]\label{lem:shifted-enclosure}
@@ -1743,6 +2424,7 @@ The monotonicity of \(E_M,T\) makes \(\varepsilon_P\) strictly decreasing as wel
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Application to the Lower Bound Product}
 Let
 \begin{equation}
