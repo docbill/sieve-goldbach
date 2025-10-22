@@ -25,6 +25,7 @@
 #include <memory>
 
 #include "gbwindow.hpp"
+#include "hlcorrstate.hpp"
 #include "gbdecade.hpp"
 #include "gbprimorial.hpp"
 
@@ -80,6 +81,7 @@ private:
     std::uint64_t* primeArray = nullptr;
     const std::uint64_t* primeArrayEndend  = nullptr;
     std::size_t    primeArrayEndlen  = 0;
+    HLCorrState primState, decState; 
 
     void aggregate(
         GBWindow &window,

@@ -31,7 +31,7 @@ public:
     void reset();
 
     // Product over odd primes p with p^2 <= n: PROD (p-2)/(p-1)
-    long double eval(std::uint64_t n) {
+    long double operator()(std::uint64_t n) {
         if (n < n_left) {
             reset();
         }

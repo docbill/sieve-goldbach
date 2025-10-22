@@ -1,5 +1,5 @@
 #!/usr/bin/awk -f
-# jointSumPred - joins summary and HL-A prediction files for plotting
+# jointSumPred - joins summary and HLA full output files for plotting
 # Copyright (C) 2025 Bill C. Riemers
 # 
 # This program is free software: you can redistribute it and/or modify
@@ -18,29 +18,23 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # Usage:
-#   awk -f joinSumPred.awk -v alpha=0.5 pairrangesummary-100M.csv pairrange2sgbll-100M.csv > joined.csv
+#   awk -f joinSumPred.awk pairrangesummary-100M.csv pairrange2sgbll-full-100M.csv > joined.csv
 #
 # File 1 (pairrangesummary) columns:
 #   v0.1.5: 1: DECADE, 6: n_0, 7: C_min, 8: n_1, 9: C_max, 10: n_geom, 12: C_avg
 #   v0.2.0: 1: FIRST, 8: n_0, 9: C_min(n_0), 10: n_1, 11: C_max(n_1), 12: n_geom, 14: C_avg
-# File 2 (pairrange2sgbll) columns:
+# File 2 (HLA full output) columns:
 #   v0.1.5: 1: DECADE, 6: n_0(pred), 7: Cpred_min, 8: n_1(pred), 9: Cpred_max, 10: N_geom, 12: Cpred_avg
-#   v0.2.0: 1: FIRST, 8: n_0(pred), 9: Cpred_min, 10: n_1(pred), 11: Cpred_max, 12: N_geom, 14: Cpred_avg
+#   v0.2.0: 1: FIRST, 8: n_0(pred), 9: Cpred_min, 10: n_1(pred), 11: Cpred_max, 12: N_geom, 14: Cpred_avg, 16: n_align, 17: C_align
 #
 # Join key: (DECADE, n_geom/N_geom)
+# Uses actual alignment values from HLA full output instead of computing approximate values
 
 BEGIN {
     FS=","; OFS=","
     
     # Twin prime constant (C₂) times 4 for theoretical Hardy-Littlewood baseline
     TWIN_PRIME_CONST_4 = 2.6406472634
-    
-    # Alpha parameter (should be passed via -v alpha=VALUE)
-    # Default to 0.5 if not provided
-    if (alpha == "") {
-        alpha = 0.5
-        print "WARNING: alpha not provided, defaulting to 0.5" > "/dev/stderr"
-    }
     
     # Global column variables
     col_label = 0
@@ -51,7 +45,7 @@ BEGIN {
     col_ngeom = 0
     col_cavg = 0
     
-    # Second file column variables
+    # Second file column variables (HLA full output)
     col_label2 = 0
     col_n0_2 = 0
     col_cmin_2 = 0
@@ -59,6 +53,10 @@ BEGIN {
     col_cmax_2 = 0
     col_ngeom_2 = 0
     col_cavg_2 = 0
+    col_nalign = 0
+    col_calign = 0
+    col_ncbound = 0
+    col_ccbound = 0
 }
 
 function trim(s){ sub(/^[ \t\r]+/,"",s); sub(/[ \t\r]+$/,"",s); return s }
@@ -91,10 +89,7 @@ function R(n) {
     return 1;
 }
 
-function eulerCapAlpha(n,alpha) {
-    value = 1.0+(0.5-sqrt(2.0*n+0.25))/n;
-    return (value < alpha)?value:alpha
-}
+# No longer needed - we use actual alignment values from HLA full output
 
 # Detect format version based on header
 function detect_format(header) {
@@ -160,12 +155,13 @@ FNR==NR {
     next
 }
 
-# ---- Pass 2: read pairrange2sgbll (file2), emit join ----
+# ---- Pass 2: read HLA full output (file2), emit join ----
 FNR==1 {
     
     # Detect format from second file header and set columns
     format = detect_format($0)
     if (format == "v0.2.0") {
+        # HLA v0.2.0 format: FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_alignMax,c_alignMax,n_alignMin,c_alignMin
         col_label2 = 3
         col_n0_2 = 8
         col_cmin_2 = 9
@@ -173,7 +169,12 @@ FNR==1 {
         col_cmax_2 = 11
         col_ngeom_2 = 12
         col_cavg_2 = 14
+        col_nalign = 17
+        col_calign = 18
+        col_ncbound = 19
+        col_ccbound = 20
     } else {
+        # v0.1.5 format: DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr
         col_label2 = 1
         col_n0_2 = 6
         col_cmin_2 = 7
@@ -181,16 +182,20 @@ FNR==1 {
         col_cmax_2 = 9
         col_ngeom_2 = 10
         col_cavg_2 = 12
+        col_nalign = 0
+        col_calign = 0
+        col_ncbound = 0
+        col_ccbound = 0
     }
     if(col_label2 == 3) {
         print "START","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
-            "n_geom","C_avg","Cpred_avg","Align","CpredAlign"
+            "n_geom","C_avg","Cpred_avg","Align","CpredAlign","CpredBound"
     }
     else {
         print "DECADE","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
-            "n_geom","C_avg","Cpred_avg","Align","CpredAlign"
+            "n_geom","C_avg","Cpred_avg","Align","CpredAlign","CpredBound"
 
     }
     next
@@ -207,6 +212,10 @@ FNR==1 {
     cpmax  = trim($col_cmax_2)
     ngeomp = trim($col_ngeom_2)     # N_geom in file2
     cpavg  = trim($col_cavg_2)
+    n_align = (col_nalign > 0) ? trim($col_nalign) + 0 : 0
+    c_align = (col_calign > 0) ? trim($col_calign) + 0 : 0
+    n_cbound = (col_ncbound > 0) ? trim($col_ncbound) + 0 : 0
+    c_cbound = (col_ccbound > 0) ? trim($col_ccbound) + 0 : 0
     
     # For v0.2.0 files, use n_geom as the key (it's unique)
     # For v0.1.5 files, use label + n_geom as the key
@@ -229,34 +238,41 @@ FNR==1 {
     # Use stored label for output (preserves scientific notation)
     output_label = sum_label[key]
     
-    # Calculate alignment correction terms
-    # Align = 2.0 * sqrt(n0p) / (log log n0p)^2  (asymptotic approximation)
-    # CpredAlign = Cpred_min - Align * ln^2(n0p) / (alpha * n0p)
-    # (clamped to 0.0 if negative, as negative values are not meaningful)
-    #
-    # Note: This asymptotic form slightly overestimates the minimum, which is expected
-    # since it was derived using C_* but applied to Cpred_min. The discrete primorial
-    # formulations (largest p where p# <= threshold, or smallest p where p# > threshold)
-    # converge to this asymptotic form for large n.
-    n0_val = sum_n0[key]
-    cpmin_val = cpmin
+    # Use actual alignment values from HLA full output
+    if (col_calign > 0) {
+        # Use actual alignment values from HLA output (even if zero)
+        align = c_align  # Use C_align as the alignment value
+        cpred_align = c_align  # Use C_align as the corrected prediction
+    } else {
+        # No alignment column available - this shouldn't happen with v0.1.5+ output
+        n0_val = sum_n0[key]
+        cpmin_val = cpmin
 
-    align = 2* R(sqrt(2*n0p)) 
-    log_n0p = (n0p >= 2.72 ? log(n0p) : 1.0)
-    cpred_align = 2.6406472634;
-    # Guard against n0p too small for log(log(n0p))
-    if (log_n0p > 1.0) {
-        loglog_n0p = log(log_n0p)
-        align = 2.0 * sqrt(n0p) / (loglog_n0p * loglog_n0p)
-        cpred_align = cpmin_val;
+        align = 2* R(sqrt(2*n0p)) 
+        log_n0p = (n0p >= 2.72 ? log(n0p) : 1.0)
+        cpred_align = 2.6406472634;
+        # Guard against n0p too small for log(log(n0p))
+        if (log_n0p > 1.0) {
+            loglog_n0p = log(log_n0p)
+            align = 2.0 * sqrt(n0p) / (loglog_n0p * loglog_n0p)
+            cpred_align = cpmin_val;
+        }
+        cpred_align -= align * (log_n0p * log_n0p) / (n0p)  # Simplified without alpha
+        if (cpred_align < 0.0) cpred_align = 0.0
     }
-    # cpred_align = ((cpmin_val > 2.6406472634)?2.6406472634:cpmin_val) - align * (log_n0p * log_n0p) / (alpha * n0p)
-    cpred_align -= align * (log_n0p * log_n0p) / (eulerCapAlpha(n0p,alpha) * n0p)
-    if (cpred_align < 0.0) cpred_align = 0.0
     
-    printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%.6f,%.6f\n",
+    # Use actual conservative bound values from HLA full output
+    if (col_ccbound > 0) {
+        # Use actual C_cBound value from HLA output (even if zero)
+        cpred_bound = c_cbound
+    } else {
+        # No cBound column available - this shouldn't happen with v0.1.5+ output
+        cpred_bound = cpmin
+    }
+    
+    printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%.6f,%.6f,%.6f\n",
         output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
         sum_n1[key], sum_cmax[key], n1p, cpmax,
-        sum_ng[key], sum_cavg[key], cpavg, align, cpred_align
+        sum_ng[key], sum_cavg[key], cpavg, align, cpred_align, cpred_bound
 }
 

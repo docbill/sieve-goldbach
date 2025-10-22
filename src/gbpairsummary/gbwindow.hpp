@@ -68,7 +68,7 @@ public:
     }
 
     long double calcCminus(std::uint64_t n, std::uint64_t delta,long double logNlogN) {
-        return logNlogN*product_series_left.eval(n)*product_series_right.eval(n+delta);
+        return logNlogN*product_series_left(n)*product_series_right(n+delta);
     }
 
     long double calcCminusAsymp(long double logN) {

@@ -45,116 +45,308 @@ static inline void vfprintf_both(FILE* a, FILE* b, const char* fmt, va_list ap) 
     }
 }
 
-// r_eff = r            if p_next | center (no new leverage)
-// r_eff = r * (p_next - 2)^s   with s = (w mod q_next) / q_next  otherwise
-static inline long double expose_next(
-    long double w,
-    long double r,        // current ∏(p-2) over aligner primes
-    bool next_aligns,       // true if next prime does NOT divide the center
-    long double p_next,
-    long double q_next
-) {
-    if (!next_aligns) {
-        return (r == 1.0L)? 0.0L : r;
-    }
-    long double s = fmodl(w, q_next);
-    if (s < 0) {
-        s += q_next;
-    }
-    s /= q_next;                                     // s in [0,1)
-    return r * powl(p_next - 2.0L, s);
+static inline long double expose_next_log_fast(
+    long double w, long double p_next, long double q_next, bool next_aligns, bool require_span)
+{
+    if (!next_aligns || (require_span && w < p_next)) return 0.0L;
+    // fractional part of w/q_next in [0,1)
+    long double t = w / q_next;
+    t -= floorl(t);
+    return t * logl(p_next - 2.0L);   // add to sum of logs
 }
 
+long double effective_small_prime_deficit(uint64_t n, long double w)
+{
+    if (n < 3ULL) return 0.0L;
+
+    // seed with mod-3 admissible fraction
+    long double sumlog = logl((n % 3ULL == 0ULL) ? (2.0L/3.0L) : 1.0L);
+
+    // --- up to p=5 ---
+    static constexpr long double PR5 = 3.0L*5.0L;
+    const bool a5 = (n % 5ULL) != 0ULL;
+    if (w < PR5) {
+        sumlog += expose_next_log_fast(w, 5.0L, PR5, a5, /*require_span=*/true);
+        return expl(sumlog);
+    }
+    if (a5) sumlog += logl(5.0L - 2.0L); // *3
+
+    // --- up to p=7/11/13/17/19 ---
+    static constexpr long double PR7  = 7.0L*PR5;
+    static constexpr long double PR11 = 11.0L*PR7;
+    static constexpr long double PR13 = 13.0L*PR11;
+    static constexpr long double PR17 = 17.0L*PR13;
+    static constexpr long double PR19 = 19.0L*PR17;
+
+    const bool a7  = (n %  7ULL) != 0ULL;
+    const bool a11 = (n % 11ULL) != 0ULL;
+    const bool a13 = (n % 13ULL) != 0ULL;
+    const bool a17 = (n % 17ULL) != 0ULL;
+    const bool a19 = (n % 19ULL) != 0ULL;
+
+    if (w < PR7) {
+        sumlog += expose_next_log_fast(w,  7.0L, PR7,  a7,  false);
+        sumlog += expose_next_log_fast(w, 11.0L, PR11, a11, false);
+        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, false);
+        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, /*require_span=*/true);
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, /*require_span=*/true);
+        return expl(sumlog);
+    }
+    if (a7) sumlog += logl(7.0L - 2.0L);   // *5
+
+    // --- up to p=23 ---
+    static constexpr long double PR23 = 23.0L*PR19;
+    const bool a23 = (n % 23ULL) != 0ULL;
+    if (w < PR11) {
+        sumlog += expose_next_log_fast(w, 11.0L, PR11, a11, false);
+        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, false);
+        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, false);
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, false);
+        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, false);
+        return expl(sumlog);
+    }
+    if (a11) sumlog += logl(11.0L - 2.0L); // *9
+
+    // --- up to p=29 ---
+    static constexpr long double PR29 = 29.0L*PR23;
+    const bool a29 = (n % 29ULL) != 0ULL;
+    if (w < PR13) {
+        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, false);
+        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, false);
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, false);
+        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, false);
+        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, false);
+        return expl(sumlog);
+    }
+    if (a13) sumlog += logl(13.0L - 2.0L); // *11
+
+    // --- up to p=31 ---
+    static constexpr long double PR31 = 31.0L*PR29;
+    const bool a31 = (n % 31ULL) != 0ULL;
+    if (w < PR17) {
+        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, false);
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, false);
+        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, false);
+        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, false);
+        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, false);
+        return expl(sumlog);
+    }
+    if (a17) sumlog += logl(17.0L - 2.0L); // *15
+
+    // --- up to p=37 ---
+    static constexpr long double PR37 = 37.0L*PR31;
+    const bool a37 = (n % 37ULL) != 0ULL;
+    if (w < PR19) {
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, false);
+        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, false);
+        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, false);
+        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, false);
+        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, false);
+        return expl(sumlog);
+    }
+    if (a19) sumlog += logl(19.0L - 2.0L); // *17
+
+    // --- up to p=41,43,47,53 (likely never reached, but cheap if we do) ---
+    static constexpr long double PR41 = 41.0L*PR37;
+    static constexpr long double PR43 = 43.0L*PR41;
+    static constexpr long double PR47 = 47.0L*PR43;
+    static constexpr long double PR53 = 53.0L*PR47;
+
+    const bool a41 = (n % 41ULL) != 0ULL;
+    const bool a43 = (n % 43ULL) != 0ULL;
+    const bool a47 = (n % 47ULL) != 0ULL;
+    const bool a53 = (n % 53ULL) != 0ULL;
+
+    if (w < PR23) {
+        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, false);
+        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, false);
+        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, false);
+        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, false);
+        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, false);
+        return expl(sumlog);
+    }
+    if (a23) sumlog += logl(21.0L); // 23-2
+
+    if (w < PR29) {
+        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, false);
+        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, false);
+        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, false);
+        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, false);
+        sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, false);
+        return expl(sumlog);
+    }
+    if (a29) sumlog += logl(27.0L); // 29-2
+
+    if (w < PR31) {
+        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, false);
+        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, false);
+        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, false);
+        sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, false);
+        sumlog += expose_next_log_fast(w, 47.0L, PR47, a47, false);
+        return expl(sumlog);
+    }
+
+    // Tail (practically negligible, but harmless if reached)
+    sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, false);
+    sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, false);
+    sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, false);
+    sumlog += expose_next_log_fast(w, 47.0L, PR47, a47, false);
+    sumlog += expose_next_log_fast(w, 53.0L, PR53, a53, false);
+    return expl(sumlog);
+}
+
+/*
 static inline long double effective_small_prime_deficit(const std::uint64_t n, const long double w)
 {
     // n should reflect small-prime divisibility of the center.
-    if (n < 3ULL || n % 3ULL == 0ULL) {
+    if (n < 3ULL) {
         return 0.0L;
     }
 
-    std::uint64_t r = 1ULL;  // accumulate ∏(p-2) only when p ∤ center
+    long double r = (n%3ULL == 0ULL) ? (1ULL/3ULL) : 1ULL;  // accumulate ∏(p-2) only when p ∤ center
 
     // ---- up to p=5 ----
-    bool aligns_next = (n % 5ULL) != 0ULL;
-    if (w < 15.0L) {
-        return expose_next(w, r, aligns_next, 5.0L, 15.0L);
+    const bool aligns_next5 = (n % 5ULL) != 0ULL;
+    const long double PR5 = 3.0L*5.0L;
+    if (w < PR5) {
+        return r * expose_next(w, aligns_next5 && (w >= 5.0L), 5.0L, PR5);
     }
-    if (aligns_next) {
-        r *= 3ULL;
+    if (aligns_next5) {
+        r *= 3.0L;
     }
 
     // ---- up to p=7 ----
-    aligns_next = (n % 7ULL) != 0ULL;
-    if (w < 105.0L) {
-        return expose_next(w, r, aligns_next, 7.0L, 105.0L);
-    }
-    if (aligns_next) {
-        r *= 5ULL;
-    }
-
+    const bool aligns_next7 = (n % 7ULL) != 0ULL;
+    const long double PR7 = 7.0L*PR5;
     // ---- up to p=11 ----
-    aligns_next = (n % 11ULL) != 0ULL;
-    if (w < 1155.0L) {
-        return expose_next(w, r, aligns_next, 11.0L, 1155.0L);
-    }
-    if (aligns_next) {
-        r *= 9ULL;
-    }
-
+    const bool aligns_next11 = (n % 11ULL) != 0ULL;
+    const long double PR11 = 11.0L*PR7;
     // ---- up to p=13 ----
-    aligns_next = (n % 13ULL) != 0ULL;
-    if (w < 15015.0L) {
-        return expose_next(w, r, aligns_next, 13.0L, 15015.0L);
-    }
-    if (aligns_next) {
-        r *= 11ULL;
-    }
+    const bool aligns_next13 = (n % 13ULL) != 0ULL;
+    const long double PR13 = 13.0L*PR11;
 
     // ---- up to p=17 ----
-    aligns_next = (n % 17ULL) != 0ULL;
-    if (w < 255255.0L) {
-        return expose_next(w, r, aligns_next, 17.0L, 255255.0L);
-    }
-    if (aligns_next) {
-        r *= 15ULL;
-    }
-
+    const bool aligns_next17 = (n % 17ULL) != 0ULL;
+    const long double PR17 = 17.0L*PR13;
     // ---- up to p=19 ----
-    aligns_next = (n % 19ULL) != 0ULL;
-    if (w < 4849845.0L) {
-        return expose_next(w, r, aligns_next, 19.0L, 4849845.0L);
+    const bool aligns_next19 = (n % 19ULL) != 0ULL;
+    const long double PR19 = 19.0L*PR17;
+    if (w < PR7) {
+        return r * expose_next(w, aligns_next7, 7.0L, PR7)
+            * expose_next(w, aligns_next11, 11.0L, PR11)
+            * expose_next(w, aligns_next13, 13.0L, PR13)
+            * expose_next(w, aligns_next17&&(w >= 17.0L), 17.0L, PR17)
+            * expose_next(w, aligns_next19&&(w >= 19.0L), 19.0L, PR19);
     }
-    if (aligns_next) {
-        r *= 17ULL;
+    if (aligns_next7) {
+        r *= 5.0L;
     }
 
     // ---- up to p=23 ----
-    aligns_next = (n % 23ULL) != 0ULL;
-    if (w < 111546435.0L) {
-        return expose_next(w, r, aligns_next, 23.0L, 111546435.0L);
+    const bool aligns_next23 = (n % 23ULL) != 0ULL;
+    const long double PR23 = 23.0L*PR19;
+    if (w < PR11) {
+        return r * expose_next(w, aligns_next11, 11.0L, PR11)
+            * expose_next(w, aligns_next13, 13.0L, PR13)
+            * expose_next(w, aligns_next17, 17.0L, PR17)
+            * expose_next(w, aligns_next19, 19.0L, PR19)
+            * expose_next(w, aligns_next23, 23.0L, PR23);
     }
-    if (aligns_next) {
-        r *= 21ULL;
+    if (aligns_next11) {
+        r *= 9.0L;
     }
 
     // ---- up to p=29 ----
-    aligns_next = (n % 29ULL) != 0ULL;
-    if (w < 3234846615.0L) {
-        return expose_next(w, r, aligns_next, 29.0L, 3234846615.0L);
+    const bool aligns_next29 = (n % 29ULL) != 0ULL;
+    const long double PR29 = 29.0L*PR23;
+    if (w < PR13) {
+        return r * expose_next(w, aligns_next13, 13.0L, PR13)
+            * expose_next(w, aligns_next17, 17.0L, PR17)
+            * expose_next(w, aligns_next19, 19.0L, PR19)
+            * expose_next(w, aligns_next23, 23.0L, PR23)
+            * expose_next(w, aligns_next29, 29.0L, PR29);
     }
-    if (aligns_next) {
-        r *= 27ULL;
+    if (aligns_next13) {
+        r *= 11.0L;
     }
 
     // ---- up to p=31 ----
-    aligns_next = (n % 31ULL) != 0ULL;
-    if (w < 100280245065.0L) {
-        return expose_next(w, r, aligns_next, 31.0L, 100280245065.0L);
+    const bool aligns_next31 = (n % 31ULL) != 0ULL;
+    const long double PR31 = 31.0L*PR29;
+    if (w < PR17) {
+        return r * expose_next(w, aligns_next17, 17.0L, PR17)
+            * expose_next(w, aligns_next19, 19.0L, PR19)
+            * expose_next(w, aligns_next23, 23.0L, PR23)
+            * expose_next(w, aligns_next29, 29.0L, PR29)
+            * expose_next(w, aligns_next31, 31.0L, PR31);
+    }
+    if (aligns_next17) {
+        r *= 15.0L;
     }
 
-    // beyond 31, just return r * 29.0L
-    return (aligns_next) ? (r * 29.0L) : (long double)r;
+    // ---- up to p=37 ----
+    const bool aligns_next37 = (n % 37ULL) != 0ULL;
+    const long double PR37 = 37.0L*PR31;
+    if (w < PR19) {
+        return r * expose_next(w, aligns_next19, 19.0L, PR19)
+            * expose_next(w, aligns_next23, 23.0L, PR23)
+            * expose_next(w, aligns_next29, 29.0L, PR29)
+            * expose_next(w, aligns_next31, 31.0L, PR31)
+            * expose_next(w, aligns_next37, 37.0L, PR37);
+    }
+    if (aligns_next19) {
+        r *= 17.0L;
+    }
+
+    // ---- up to p=41 ----
+    const bool aligns_next41 = (n % 41ULL) != 0ULL;
+    const long double PR41 = 41.0L*PR37;
+    if (w < PR23) {
+        return r * expose_next(w, aligns_next23, 23.0L, PR23)
+            * expose_next(w, aligns_next29, 29.0L, PR29)
+            * expose_next(w, aligns_next31, 31.0L, PR31)
+            * expose_next(w, aligns_next37, 37.0L, PR37)
+            * expose_next(w, aligns_next41, 41.0L, PR41);
+    }
+    if (aligns_next23) {
+        r *= 21.0L;
+    }
+
+    // ---- up to p=43 ----
+    const bool aligns_next43 = (n % 43ULL) != 0ULL;
+    const long double PR43 = 43.0L*PR41;
+    if (w < PR29) {
+        return r * expose_next(w, aligns_next29, 29.0L, PR29)
+            * expose_next(w, aligns_next31, 31.0L, PR31)
+            * expose_next(w, aligns_next37, 37.0L, PR37)
+            * expose_next(w, aligns_next41, 41.0L, PR41)
+            * expose_next(w, aligns_next43, 43.0L, PR43);
+    }
+    if (aligns_next29) {
+        r *= 27.0L;
+    }
+
+    // ---- up to p=47 ----
+    const bool aligns_next47 = (n % 47ULL) != 0ULL;
+    const long double PR47 = 47.0L*PR43;
+    if (w < PR31) {
+        return r * expose_next(w, aligns_next31, 31.0L, PR31)
+            * expose_next(w, aligns_next37, 37.0L, PR37)
+            * expose_next(w, aligns_next41, 41.0L, PR41)
+            * expose_next(w, aligns_next43, 43.0L, PR43)
+            * expose_next(w, aligns_next47, 47.0L, PR47);
+    }
+
+    // beyond PR37, we'll have the wrong answer.   But that will well exceed the language's precision for a short interval anyway.
+    const bool aligns_next53 = (n % 53ULL) != 0ULL;
+    const long double PR53 = 53.0L*PR47;
+    return r * expose_next(w, aligns_next37, 37.0L, PR37)
+        * expose_next(w, aligns_next41, 41.0L, PR41)
+        * expose_next(w, aligns_next43, 43.0L, PR43)
+        * expose_next(w, aligns_next47, 47.0L, PR47)
+        * expose_next(w, aligns_next53, 53.0L, PR53);
 }
+*/
 
 static inline void fprintf_both(FILE* a, FILE* b, const char* fmt, ...) {
     va_list ap; va_start(ap, fmt);
@@ -179,7 +371,7 @@ static void printHeaderFull(FILE *out1,FILE *out2,bool useLegacy,Model model) {
                 :"DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr\n")
             :(model == Model::Empirical
                 ?"FIRST,LAST,START,minAt,G(minAt),maxAt,G(maxAt),n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg\n"
-                :"FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_align,C_align\n"),
+                :"FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_alignMax,c_alignMax,n_alignMin,c_alignMin,n_cBound,c_cBound\n"),
         out1, out2);
 }
 
@@ -247,6 +439,14 @@ std::uint64_t GBRange::decReset(std::uint64_t n_start) {
     if(decAgg.left >= decAgg.n_end) {
         dec_close();
     }
+    // Init interpolators for new aggregate range
+    if (model == Model::HLA && compat_ver != CompatVer::V015) {
+        for(auto &w : windows) {
+            if(w->is_dec_active()) {
+                w->dec.summary.hlCorrEstimate.init(decAgg.left, decAgg.right, &decState);
+            }
+        }
+    }
     return decAgg.left;
 }
 
@@ -265,6 +465,14 @@ std::uint64_t GBRange::primReset(std::uint64_t n_start) {
     if(primAgg.left >= primAgg.n_end) {
         prim_close();
     }
+    // Init interpolators for new aggregate range
+    if (model == Model::HLA && compat_ver != CompatVer::V015) {
+        for(auto &w : windows) {
+            if(w->is_prim_active()) {
+                w->prim.summary.hlCorrEstimate.init(primAgg.left, primAgg.right, &primState);
+            }
+        }
+    }
     return primAgg.left;
 }
 
@@ -272,7 +480,13 @@ void GBRange::calcAverage(GBWindow &w,GBLongInterval &interval, GBAggregate &agg
     GBLongIntervalSummary &summary = interval.summary;
     summary.pairCountAvg = summary.pairCountTotal / (agg.right - agg.left);
     summary.cAvg = summary.pairCountTotalNorm / (agg.right - agg.left);
-    if(model == Model::HLA && ! summary.useHLCorrInst) {
+    if(model != Model::HLA) {
+        return;
+    }
+    if(compat_ver != CompatVer::V015  && summary.useHLCorrInst) {
+        summary.applyHLCorr(agg.minCalc, agg.maxCalc, agg.minNormCalc, agg.maxNormCalc, agg.alignNormCalc );
+    }
+    else if(! summary.useHLCorrInst) {
         const std::uint64_t n_geom_odd  = (useLegacy ? ((1ULL | (std::uint64_t)floorl(agg.n_geom))) : minPrefOdd(agg.n_geom,agg.right - 1));
         const std::uint64_t delta_odd = w.computeDelta(n_geom_odd);
         const std::uint64_t n_geom_even  = (compat_ver == CompatVer::V015 ? (1ULL + n_geom_odd) : maxPrefEven(agg.n_geom,agg.left));
@@ -293,10 +507,10 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
                 "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf\n",
                 agg.left, agg.right -1,
                 agg.label.c_str(),
-                summary.minAtLast, summary.pairCountMinLast,
-                summary.maxAtFirst, summary.pairCountMaxFirst,
-                summary.n0Last, summary.cMinLast,
-                summary.n1First, summary.cMaxFirst,
+                summary.pairCountMinima.n_last, summary.pairCountMinima.c_last,
+                summary.pairCountMaxima.n_first, summary.pairCountMaxima.c_first,
+                summary.cMinima.n_last, summary.cMinima.c_last,
+                summary.cMaxima.n_first, summary.cMaxima.c_first,
                 agg.n_geom,
                 summary.pairCountAvg,
                 summary.cAvg
@@ -305,18 +519,22 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
         }
         fprintf_both(interval.out,interval.trace,
             "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64
-                ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf,%" PRIu64 ",%.6Lf\n",
+                ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf\n",
             agg.left, agg.right -1,
             agg.label.c_str(),
-            summary.minAtLast, summary.pairCountMinLast,
-            summary.maxAtFirst, summary.pairCountMaxFirst,
-            summary.n0Last, summary.cMinLast,
-            summary.n1First, summary.cMaxFirst,
+            summary.pairCountMinima.n_last, summary.pairCountMinima.c_last,
+            summary.pairCountMaxima.n_first, summary.pairCountMaxima.c_first,
+            summary.cMinima.n_last, summary.cMinima.c_last,
+            summary.cMaxima.n_first, summary.cMaxima.c_first,
             agg.n_geom,
             summary.pairCountAvg,
             summary.cAvg,
-            summary.nAlignLast,
-            summary.cAlignLast
+            summary.pairCountAlignMaxima.n_last,
+            summary.pairCountAlignMaxima.c_last,
+            summary.alignMinima.n_last,
+            summary.alignMinima.c_last,
+            summary.alignNoHLCorrMinima.n_last,
+            summary.alignNoHLCorrMinima.c_last
         );
         return;
     }
@@ -324,10 +542,10 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
         fprintf_both(interval.out,interval.trace,
             "%s,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.6Lf\n",
             agg.label.c_str(),
-            summary.minAtFirst, summary.pairCountMinFirst,
-            summary.maxAtFirst, summary.pairCountMaxFirst,
-            summary.n0First, summary.cMinFirst,
-            summary.n1First, summary.cMaxFirst,
+            summary.pairCountMinima.n_first, summary.pairCountMinima.c_first,
+            summary.pairCountMaxima.n_first, summary.pairCountMaxima.c_first,
+            summary.cMinima.n_first, summary.cMinima.c_first,
+            summary.cMaxima.n_first, summary.cMaxima.c_first,
             ((std::uint64_t)floorl(agg.n_geom)) | (agg.n_geom >= 10L ? 1ULL : 0ULL),
             summary.pairCountAvg,
             summary.cAvg
@@ -337,10 +555,10 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
     fprintf_both(interval.out,interval.trace,
         "%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%" PRIu64 ",%.8Lf,%" PRIu64 ",%.8Lf,%.8Lf,%.8Lf\n",
         agg.label.c_str(),
-        summary.minAtFirst, summary.pairCountMinFirst,
-        summary.maxAtFirst, summary.pairCountMaxFirst,
-        summary.n0First, summary.cMinFirst,
-        summary.n1First, summary.cMaxFirst,
+        summary.pairCountMinima.n_first, summary.pairCountMinima.c_first,
+        summary.pairCountMaxima.n_first, summary.pairCountMaxima.c_first,
+        summary.cMinima.n_first, summary.cMinima.c_first,
+        summary.cMaxima.n_first, summary.cMaxima.c_first,
         ((std::uint64_t)floorl(agg.n_geom)) | (agg.n_geom >= 10L ? 1ULL : 0ULL),
         summary.pairCountAvg,
         summary.cAvg,
@@ -357,8 +575,8 @@ void GBRange::outputRaw(GBAggregate &agg,GBLongInterval &interval) {
                 : "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%.0Lf,%.6Lf\n",
             agg.left, agg.right -1,
             agg.label.c_str(),
-            summary.minAtLast, summary.pairCountMinLast,
-            summary.maxAtFirst, summary.pairCountMaxFirst,
+            summary.pairCountMinima.n_last, summary.pairCountMinima.c_last,
+            summary.pairCountMaxima.n_first, summary.pairCountMaxima.c_first,
             agg.n_geom,
             summary.pairCountAvg
         );
@@ -373,22 +591,24 @@ void GBRange::outputNorm(GBAggregate &agg,GBLongInterval &interval) {
                 "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf\n",
                 agg.left, agg.right -1,
                 agg.label.c_str(),
-                summary.n0First, summary.cMinFirst,
-                summary.n1Last, summary.cMaxLast,
+                summary.cMinima.n_first, summary.cMinima.c_first,
+                summary.cMaxima.n_last, summary.cMaxima.c_last,
                 agg.n_geom,
                 summary.cAvg );
         }
         else {
             std::fprintf(interval.norm,
-                "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf,%" PRIu64 ",%.3Lf\n",
+                "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf\n",
                 agg.left, agg.right -1,
                 agg.label.c_str(),
-                summary.n0First, summary.cMinFirst,
-                summary.n1Last, summary.cMaxLast,
+                summary.cMinima.n_first, summary.cMinima.c_first,
+                summary.cMaxima.n_last, summary.cMaxima.c_last,
                 agg.n_geom,
                 summary.cAvg,
-                summary.nAlignLast,
-                summary.cAlignLast );
+                summary.alignMinima.n_last,
+                summary.alignMinima.c_last,
+                summary.alignNoHLCorrMinima.n_last,
+                summary.alignNoHLCorrMinima.c_last );
         }
     }
 }
@@ -625,8 +845,8 @@ int GBRange::addRow(
         long double cminusAsymp = w.calcCminusAsymp(logN);
         long double pairCount = (long double)pc;
         long double c_of_n = pairCount * norm;
-        prim_summary.pairCount = dec_summary.pairCount = pairCount;
-        prim_summary.c_of_n = dec_summary.c_of_n = c_of_n;
+        prim_summary.pairCountMinima.current = prim_summary.pairCount = dec_summary.pairCountMinima.current = dec_summary.pairCount = pairCount;
+        prim_summary.cMinima.current = prim_summary.c_of_n = dec_summary.cMinima.current = dec_summary.c_of_n = c_of_n;
         w.checkCrossing(n,c_of_n <= cminus);
         w.checkCrossingAsymp(n,c_of_n <= cminusAsymp);
         w.updateN5percent(n,delta,logNlogN,c_of_n-cminus,c_of_n-cminusAsymp);
@@ -639,45 +859,77 @@ int GBRange::addRow(
         long double hlCorrAvg = 0.0L;
         long double pairCountAlign = 2.0L*effective_small_prime_deficit(n, sqrtl(2.0L*(long double)n));
         if(w.is_prim_active()) {
-            if(primAgg.minor < 5) {
+            if(compat_ver != CompatVer::V015) {
                 prim_summary.useHLCorrInst = 1;
-                prim_summary.hlCorrAvg = hlCorrAvg = hlCorr(n,delta);
+                // Use interpolated HLCorr for better accuracy
+                prim_summary.hlCorrAvg = hlCorrAvg = prim_summary.hlCorrEstimate(n,delta);
                 prim_summary.c_of_n = twoSGB*hlCorrAvg;
-                prim_summary.pairCountAlign = pairCountAlign*hlCorrAvg;
+            }
+            else if(primAgg.minor < 5) {
+                prim_summary.useHLCorrInst = 1;
+                prim_summary.hlCorrAvg = hlCorrAvg = hlcorr(n,delta);
+                prim_summary.c_of_n = twoSGB*hlCorrAvg;
             }
             else {
                 prim_summary.c_of_n = twoSGB;
-                prim_summary.pairCountAlign = pairCountAlign;
             }
             if (pc) {
                 prim_summary.pairCount  = (norm > 0.5L) ? (prim_summary.c_of_n / deltaL) : 1.0L;
                 prim_summary.c_of_n = prim_summary.pairCount * norm;
+                prim_summary.pairCountMinima.current = (norm > 0.5L)? twoSGB / deltaL : 1.0L;
             } else if (norm > 0.0L) {
                 prim_summary.pairCount = prim_summary.c_of_n / norm;
+                prim_summary.pairCountMinima.current = twoSGB / norm;
             }
-            prim_summary.cAlign = (prim_summary.c_of_n > prim_summary.pairCountAlign * norm) ? (prim_summary.c_of_n - prim_summary.pairCountAlign * norm) : 0.0L;
+            prim_summary.pairCountAlignMaxima.current = pairCountAlign;
+            prim_summary.alignMinima.current = (norm > 0.0L && prim_summary.c_of_n > pairCountAlign * norm)
+                ? (prim_summary.c_of_n - pairCountAlign * norm)
+                : 0.0L;
+            // Conservative bound: use raw values without HLCorr
+            prim_summary.alignNoHLCorrMinima.current = (norm > 0.0L && twoSGB > pairCountAlign * norm)
+                ? (twoSGB - pairCountAlign * norm)
+                : 0.0L;
         }
         if(w.is_dec_active()) {
-            if (decAgg.base < 10) {
+            if (compat_ver != CompatVer::V015) {
+                dec_summary.useHLCorrInst  = 1;
+                // Use interpolated HLCorr for better accuracy
+                dec_summary.hlCorrAvg = hlCorrAvg = dec_summary.hlCorrEstimate(n,delta);
+                dec_summary.c_of_n = twoSGB*hlCorrAvg;
+            }
+            else if (decAgg.base < 10) {
                 dec_summary.useHLCorrInst  = 1;
                 if(hlCorrAvg == 0.0L) {
-                    hlCorrAvg = hlCorr(n,delta);
+                    hlCorrAvg = hlcorr(n,delta);
                 } 
                 dec_summary.hlCorrAvg = hlCorrAvg;
                 dec_summary.c_of_n = twoSGB*hlCorrAvg;
-                dec_summary.pairCountAlign = pairCountAlign*hlCorrAvg;
             }
             else {
                 dec_summary.c_of_n = twoSGB;
-                dec_summary.pairCountAlign = pairCountAlign;
             }
             if (pc) {
                 dec_summary.pairCount  = (norm > 0.5L) ? (dec_summary.c_of_n / deltaL) : 1.0L;
                 dec_summary.c_of_n = dec_summary.pairCount * norm;
+                dec_summary.pairCountMinima.current = (norm > 0.5L)? twoSGB / deltaL : 1.0L;
+                if (hlCorrAvg != 0.0L && dec_summary.useHLCorrInst && compat_ver == CompatVer::V015) {
+                    dec_summary.pairCountMinima.current *= hlCorrAvg;
+                }
             } else if (norm > 0.0L) {
                 dec_summary.pairCount = dec_summary.c_of_n / norm;
+                dec_summary.pairCountMinima.current = twoSGB / norm;
+                if (hlCorrAvg != 0.0L && dec_summary.useHLCorrInst && compat_ver == CompatVer::V015) {
+                    dec_summary.pairCountMinima.current *= hlCorrAvg;
+                }
             }
-            dec_summary.cAlign = (dec_summary.c_of_n > dec_summary.pairCountAlign * norm) ? (dec_summary.c_of_n - dec_summary.pairCountAlign * norm) : 0.0L;
+            dec_summary.pairCountAlignMaxima.current = pairCountAlign;
+            dec_summary.alignMinima.current = (norm > 0.0L && dec_summary.c_of_n > pairCountAlign * norm)
+                ? (dec_summary.c_of_n - pairCountAlign * norm)
+                : 0.0L;
+            // Conservative bound: use raw values without HLCorr
+            dec_summary.alignNoHLCorrMinima.current = (norm > 0.0L && twoSGB > pairCountAlign * norm)
+                ? (twoSGB - pairCountAlign * norm)
+                : 0.0L;
         }
     }
     aggregate(w, n, delta, w.calcCminus(n,delta,logNlogN), w.calcCminusAsymp(logN));
@@ -755,8 +1007,46 @@ int GBRange::processRows() {
     for(auto &w : windows) {
         w->preMertens = w->preMertensAsymp = n_start - 1;
     }
-    for (std::uint64_t n = n_start; n < n_end; ) {
+    // Prescan now happens in decReset() and primReset() for each aggregate block
+    std::vector<GBWindow*> dec_windows_to_prescan; 
+    std::vector<GBWindow*> prim_windows_to_prescan;
 
+    if(model == Model::HLA && compat_ver != CompatVer::V015) {
+        for(auto & w : windows) {
+            if(w->is_dec_active()) {
+                w->dec.summary.hlCorrEstimate.init(decAgg.left, decAgg.right, &decState);
+                dec_windows_to_prescan.push_back(w.get());
+            }
+            if(w->is_prim_active()) {
+                w->prim.summary.hlCorrEstimate.init(primAgg.left, primAgg.right, &primState);
+                if(model == Model::HLA && compat_ver != CompatVer::V015) {
+                    prim_windows_to_prescan.push_back(w.get());
+                }
+            }
+            prim_windows_to_prescan.push_back(w.get());
+        }
+    }
+    for (std::uint64_t n = n_start; n < n_end; ) {
+        if(model == Model::HLA && compat_ver != CompatVer::V015) {
+            if(! dec_windows_to_prescan.empty()) {
+                for(std::uint64_t i = n,next_n; i < n_end; i = next_n) {
+                    next_n = n_end;
+                    for(auto &w : dec_windows_to_prescan) {
+                        w->dec.summary.hlCorrEstimate.prescan(i, next_n,[&w](long double n) { return w->computeDelta(n); });
+                    }
+                }
+                dec_windows_to_prescan.clear();
+            }
+            if(! prim_windows_to_prescan.empty()) {
+                for(std::uint64_t i = n,next_n; i < n_end; i = next_n) {
+                    next_n = n_end;
+                    for(auto &w : prim_windows_to_prescan) {
+                        w->prim.summary.hlCorrEstimate.prescan(i, next_n,[&w](long double n) { return w->computeDelta(n); });
+                    }
+                }
+                prim_windows_to_prescan.clear();
+            }
+        }
         const long double twoSGB_n = (model == Model::Empirical ? 0.0L : (long double)twoSGB(n, primeArray, primeArrayEndlen));
         if (twoSGB_n < 0.0L) {
             std::fprintf(stderr, "Failed HL-A prediction at %" PRIu64 "\n", n);
@@ -819,6 +1109,9 @@ int GBRange::processRows() {
                 outputNorm(decAgg,w->dec);
                 w->dec.summary.outputCps(w->dec,w->alpha_n,(compat_ver == CompatVer::V015)?decAgg.decade:-1,n_start,w->preMertens,w->preMertensAsymp);
                 need_decReset = true;
+                if(model == Model::HLA && compat_ver != CompatVer::V015) {
+                    dec_windows_to_prescan.push_back(w.get());
+                }
             }
             if (w->is_prim_active() && n == primAgg.right) {
                 calcAverage(*w,w->prim,primAgg,false);
@@ -827,6 +1120,9 @@ int GBRange::processRows() {
                 outputNorm(primAgg,w->prim);
                 w->prim.summary.outputCps(w->prim,w->alpha_n,-1,n_start,w->preMertens,w->preMertensAsymp);
                 need_primReset = true;
+                if(model == Model::HLA && compat_ver != CompatVer::V015) {
+                    prim_windows_to_prescan.push_back(w.get());
+                }
             }
         }
         if(need_decReset) {

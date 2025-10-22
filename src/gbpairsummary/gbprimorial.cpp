@@ -44,7 +44,7 @@ static inline void odd_prim_base_and_next(std::uint64_t n, std::uint64_t* P, std
         }
     }
     if (p < 3 && n >= 3) {
-       p = 3;
+        p = 3;
     }
     *P = p;
     *P_next = next;

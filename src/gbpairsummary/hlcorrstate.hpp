@@ -28,6 +28,7 @@ extern "C" {
 
 class HLCorrState {
 private:
+    long double logN = 0.0L;
     long double invlogNlogN = 0.0L;
     long double invSum = 0.0L;
     long double sum = 0.0L;
@@ -38,28 +39,39 @@ private:
 public:
     void reset(std::uint64_t n) {
         n_prev = n;
-        const long double logN = logl((long double)n);
+        logN = logl((long double)n);
         invlogNlogN = 1.0L / (logN * logN);
         invSum = 0.0L;
         sum = 0.0L;
         m = 1 + (n & 1ULL);
     }
 
-    long double eval( std::uint64_t n, std::uint64_t delta) {
+    long double operator()( std::uint64_t n, std::uint64_t delta) {
         if(n_prev != n || delta < delta_prev) {
             reset(n);
         }
         delta_prev = delta;
         for (; m <= delta; m += 2ULL) {
-            sum    += 1.0L / (logl((long double)(n - m)) * logl((long double)(n + m)));
+            if( m <= (n >> 3ULL)) {
+                const long double x = (long double)m / (long double)n;
+                const long double ln_minus = logN + log1pl(-x);
+                const long double ln_plus  = logN + log1pl(+x);
+                sum += 1.0L / (ln_minus * ln_plus);
+            }
+            else {
+                const long double nm = (long double)(n - m);
+                const long double np = (long double)(n + m);
+                sum += 1.0L / (logl(nm) * logl(np));
+            }
             invSum += invlogNlogN;
         }
         return (invSum > 0.0L) ? (sum / invSum) : 1.0L;
     }
 };
 
-static inline long double hlCorr(std::uint64_t n, std::uint64_t delta) {
-    return HLCorrState().eval(n,delta);
+static inline long double hlcorr(std::uint64_t n, std::uint64_t delta) {
+    static thread_local HLCorrState state;
+    return state(n,delta);
 }
 
 #endif // HLCORR_STATE_HPP

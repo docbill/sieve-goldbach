@@ -23,6 +23,7 @@
 #include <string>
 
 #include "hlcorrstate.hpp"
+#include "hlcorrinterp.hpp"
 
 class GBAggregate {
 public:

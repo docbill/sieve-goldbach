@@ -1,5 +1,5 @@
 #!/usr/bin/awk -f
-# compareAlign - combines summary and SGB file for alignment-corrected min comparison
+# compareAlign - combines summary and HLA full output for alignment-corrected min comparison
 # Copyright (C) 2025 Bill C. Riemers
 # 
 # This program is free software: you can redistribute it and/or modify
@@ -17,19 +17,13 @@
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# Usage: awk -f compareAlign.awk -v alpha=0.5 pairrangesummary.csv pairrange2sgbll.csv > merged.csv
+# Usage: awk -f compareAlign.awk pairrangesummary.csv pairrange2sgbll-full.csv > merged.csv
 # v0.1.5: A=Dec, F=n_0, G=C_min, J=n_geom
-# v0.2.0: A=FIRST, H=n_0, I=C_min(n_0), L=n_geom
-# Computes CpredAlign = Cpred_min - Align * ln^2(n0p) / (alpha * n0p)
+# v0.2.0: A=FIRST, H=n_0, I=C_min(n_0), L=n_geom, Q=n_align, R=C_align
+# Uses actual alignment values from HLA full output instead of computing approximate values
 
 BEGIN {
     FS=","; OFS=","
-    
-    # Alpha parameter (should be passed via -v alpha=VALUE)
-    if (alpha == "") {
-        alpha = 0.5
-        print "WARNING: alpha not provided, defaulting to 0.5" > "/dev/stderr"
-    }
     
     # Global variables
     col_label = 0
@@ -38,12 +32,14 @@ BEGIN {
     col_cmin = 0
     col_ngeom = 0
     
-    # Second file variables
+    # Second file variables (HLA full output)
     col_label2 = 0
     col_minat_2 = 0
     col_n0_2 = 0
     col_cmin_2 = 0
     col_ngeom_2 = 0
+    col_nalign = 0
+    col_calign = 0
 }
 
 function trim(s){ sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
@@ -100,13 +96,15 @@ FNR==NR {
     next
 }
 
-# ---------- Pass 2: file2 (SGB), compute CpredAlign and emit merged ----------
+# ---------- Pass 2: file2 (HLA full output), use actual alignment values ----------
 FNR==1 {
     format = detect_format($0)
     if (format == "v0.2.0") {
-        col_label2 = 3; col_minat_2 = 4; col_n0_2 = 8; col_cmin_2 = 9; col_ngeom_2 = 12
+        # HLA v0.2.0 format: FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_alignMax,c_alignMax,n_alignMin,c_alignMin
+        col_label2 = 3; col_minat_2 = 4; col_n0_2 = 8; col_cmin_2 = 9; col_ngeom_2 = 12; col_nalign = 17; col_calign = 18
     } else {
-        col_label2 = 1; col_minat_2 = 2; col_n0_2 = 6; col_cmin_2 = 7; col_ngeom_2 = 10
+        # v0.1.5 format: DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr
+        col_label2 = 1; col_minat_2 = 2; col_n0_2 = 6; col_cmin_2 = 7; col_ngeom_2 = 10; col_nalign = 0; col_calign = 0
     }
     
     if(col_label2 == 1) {
@@ -126,6 +124,8 @@ FNR==1 {
     np_0  = trim($col_n0_2) + 0
     cpred_min = trim($col_cmin_2) + 0
     ngeo = trim($col_ngeom_2)
+    n_align = (col_nalign > 0) ? trim($col_nalign) + 0 : 0
+    c_align = (col_calign > 0) ? trim($col_calign) + 0 : 0
 
     key = label "\034" ngeo
     cmn = (key in cmin) ? cmin[key] : ""
@@ -138,8 +138,14 @@ FNR==1 {
         next
     }
 
-    # Compute CpredAlign using the alignment correction
-    cpred_align = compute_cpred_align(np_0, cpred_min)
+    # Use actual alignment values from HLA full output
+    if (col_calign > 0) {
+        # Use actual C_align value from HLA output (even if zero)
+        cpred_align = c_align
+    } else {
+        # No alignment column available - this shouldn't happen with v0.1.5+ output
+        cpred_align = cpred_min
+    }
 
     # Lambda_min = log(C_min/CpredAlign) in scientific notation; blank if C_min==0
     if ((cmn+0) > 0 && cpred_align > 0) {

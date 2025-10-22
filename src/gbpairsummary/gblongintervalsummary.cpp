@@ -44,7 +44,7 @@ void GBLongIntervalSummary::outputCps(
     }
     // trivial sorting of 6 values
     // substituting a 0 for repeats, so a bubble sort is sufficient to detect repeats
-    uint64_t a = n0First, b = n0Last, c = n2First, d = n2Last, e = n3First, f = n3Last;
+    uint64_t a = cMinima.n_first, b = cMinima.n_last, c = n2First, d = n2Last, e = n3First, f = n3Last;
     // bubble sort first pass
     if(a >= b) a = aToB(a,b);
     if(b >= c) b = aToB(b,c);
@@ -88,6 +88,95 @@ static inline std::string fmt_preMertens(std::uint64_t preMertens, std::uint64_t
     return std::string(buf);
 }
 
+void ExtremaValues::putMinima(long double c, std::uint64_t n, std::uint64_t delta, long double hlCorr) {
+    current = c;
+    
+    // Compare values directly for MINIMUM
+    if (c <= c_last  || !n_last) {
+        if (c < c_first  || !n_first) {
+            c_first = c;
+            delta_first = delta;
+            n_first = n;
+            hlCorr_first = hlCorr;
+        }
+        c_last = c;
+        delta_last = delta;
+        n_last = n;
+        hlCorr_last = hlCorr;
+    }
+}
+
+void ExtremaValues::putMaxima(long double c, std::uint64_t n, std::uint64_t delta, long double hlCorr) {
+    current = c;
+    
+    // Compare values directly for MAXIMUM
+    if (c >= c_last  || !n_last) {
+        if (c > c_first  || !n_first) {
+            c_first = c;
+            delta_first = delta;
+            n_first = n;
+            hlCorr_first = hlCorr;
+        }
+        c_last = c;
+        delta_last = delta;
+        n_last = n;
+        hlCorr_last = hlCorr;
+    }
+}
+
+void ExtremaValues::applyHLCorrFirst(long double hlCorr,long double c_firstBaseline) {
+    if(hlCorr_first != 1.0L && hlCorr_first != 0.0L) {
+        c_first = (c_first - c_firstBaseline) / hlCorr_first;  // Divide by OLD value
+    }
+    hlCorr_first = hlCorr;  // Update to NEW value
+    if(hlCorr_first != 1.0L && hlCorr_first != 0.0L) {
+        c_first = c_firstBaseline + (c_first * hlCorr_first);  // Multiply by NEW value
+    }
+}
+
+void ExtremaValues::applyHLCorrLast(long double hlCorr,long double c_lastBaseline) {
+    if(hlCorr_last != 1.0L && hlCorr_last != 0.0L) {
+        c_last = (c_last - c_lastBaseline) / hlCorr_last;  // Divide by OLD value
+    }
+    hlCorr_last = hlCorr;  // Update to NEW value
+    if(hlCorr_last != 1.0L && hlCorr_last != 0.0L) {
+        c_last = c_lastBaseline + (c_last * hlCorr_last);  // Multiply by NEW value
+    }
+}
+
+void ExtremaValues::applyHLCorrStateMin(HLCorrState &state,long double c_firstBaseline,long double c_lastBaseline) {
+    applyHLCorrFirst(state(n_first, delta_first), c_firstBaseline);
+    applyHLCorrLast(state(n_last, delta_last), c_lastBaseline);
+    // Keep the minimum value
+    if(c_last < c_first) {
+        c_first = c_last;
+        n_first = n_last;
+        delta_first = delta_last;
+        hlCorr_first = hlCorr_last;
+    } else if(c_last > c_first) {
+        c_last = c_first;
+        n_last = n_first;
+        delta_last = delta_first;
+        hlCorr_last = hlCorr_first;
+    }
+}
+
+void ExtremaValues::applyHLCorrStateMax(HLCorrState &state,long double c_firstBaseline,long double c_lastBaseline) {
+    applyHLCorrFirst(state(n_first, delta_first), c_firstBaseline);
+    applyHLCorrLast(state(n_last, delta_last), c_lastBaseline);
+    // Keep the maximum value
+    if(c_last > c_first) {
+        c_first = c_last;
+        n_first = n_last;
+        delta_first = delta_last;
+        hlCorr_first = hlCorr_last;
+    } else if(c_last < c_first) {
+        c_last = c_first;
+        n_last = n_first;
+        delta_last = delta_first;
+        hlCorr_last = hlCorr_first;
+    }
+}
 
 void GBLongIntervalSummary::outputCpsLine(
     GBLongInterval &interval,
@@ -107,13 +196,13 @@ void GBLongIntervalSummary::outputCpsLine(
     }
     double long deltaC = 0.0L;
     double long deltaCAsymp = 0.0L;
-    if(n == n0First) {
-        deltaC = cMinFirst - cminus_of_n0First;
-        deltaCAsymp = cMinFirst - cminusAsymp_of_n0First;
+    if(n == cMinima.n_first) {
+        deltaC = cMinima.c_first - cminus_of_n0First;
+        deltaCAsymp = cMinima.c_first - cminusAsymp_of_n0First;
         if(decade < 0) {
             std::fprintf(interval.cps,
                 "%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF,%s,%s,%0.12LF\n",
-                n0First,cMinFirst,cminus_of_n0First,deltaC,
+                cMinima.n_first,cMinima.c_first,cminus_of_n0First,deltaC,
                 cminusAsymp_of_n0First,deltaCAsymp,
                 fmt_preMertens(preMertens,n_start).c_str(),fmt_preMertens(preMertensAsymp,n_start).c_str(),
                 alpha_n);
@@ -121,18 +210,18 @@ void GBLongIntervalSummary::outputCpsLine(
         else {
             std::fprintf(interval.cps,
                 "%d,%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF\n",
-                decade,n0First,cMinFirst,cminus_of_n0First,deltaC,
+                decade,cMinima.n_first,cMinima.c_first,cminus_of_n0First,deltaC,
                 cminusAsymp_of_n0First,deltaCAsymp
             );
         }
     }
-    else if(n == n0Last) {
-        deltaC = cMinLast - cminus_of_n0Last;
-        deltaCAsymp = cMinLast - cminusAsymp_of_n0Last;
+    else if(n == cMinima.n_last) {
+        deltaC = cMinima.c_last - cminus_of_n0Last;
+        deltaCAsymp = cMinima.c_last - cminusAsymp_of_n0Last;
         if(decade < 0) {
             std::fprintf(interval.cps,
                 "%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF,%s,%s,%0.12LF\n",
-                n0Last,cMinLast,cminus_of_n0Last,deltaC,
+                cMinima.n_last,cMinima.c_last,cminus_of_n0Last,deltaC,
                 cminusAsymp_of_n0Last,deltaCAsymp,
                 fmt_preMertens(preMertens,n_start).c_str(),fmt_preMertens(preMertensAsymp,n_start).c_str(),
                 alpha_n);
@@ -140,7 +229,7 @@ void GBLongIntervalSummary::outputCpsLine(
         else {
             std::fprintf(interval.cps,
                 "%d,%" PRIu64 ",%0.6LF,%0.6LF,%0.6LF,%0.6LF,%0.6LF\n",
-                decade,n0Last,cMinLast,cminus_of_n0Last,deltaC,
+                decade,cMinima.n_last,cMinima.c_last,cminus_of_n0Last,deltaC,
                 cminusAsymp_of_n0Last,deltaCAsymp
             );
         }
