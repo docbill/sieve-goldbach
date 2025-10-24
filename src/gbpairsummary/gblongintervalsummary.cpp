@@ -88,72 +88,91 @@ static inline std::string fmt_preMertens(std::uint64_t preMertens, std::uint64_t
     return std::string(buf);
 }
 
-void ExtremaValues::putMinima(long double c, std::uint64_t n, std::uint64_t delta, long double hlCorr) {
-    current = c;
-    
-    // Compare values directly for MINIMUM
-    if (c <= c_last  || !n_last) {
-        if (c < c_first  || !n_first) {
-            c_first = c;
+void ExtremaValues::putMinima(long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr) {
+    current = c+cBaseline;
+    currentBaseline = cBaseline;
+    // For alignment calculations: track any negative value (current <= 0.0L) or 
+    // any value <= the current last value. This ensures we track the last occurrence
+    // of any negative value, not just the absolute minimum.
+    // NOTE: c_first/n_first should NOT be trusted for this extrema type as we're
+    // tracking the last occurrence of any negative value, not the true minimum.
+    // Only apply special logic when there's a non-zero baseline (alignment calculations)
+    if ((cBaseline != 0.0L && current <= 0.0L) || current <= c_last  || !n_last) {
+        if (current < c_first  || !n_first) {
+            c_firstBaseline = currentBaseline;
+            c_first = current;
             delta_first = delta;
             n_first = n;
             hlCorr_first = hlCorr;
         }
-        c_last = c;
+        c_lastBaseline = currentBaseline;
+        c_last = current;  // Store current (c+cBaseline)
         delta_last = delta;
         n_last = n;
         hlCorr_last = hlCorr;
     }
 }
 
-void ExtremaValues::putMaxima(long double c, std::uint64_t n, std::uint64_t delta, long double hlCorr) {
-    current = c;
-    
+void ExtremaValues::putMaxima(long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr) {
+    current = c+cBaseline;
+    currentBaseline = cBaseline;
     // Compare values directly for MAXIMUM
-    if (c >= c_last  || !n_last) {
-        if (c > c_first  || !n_first) {
-            c_first = c;
+    if (current >= c_last  || !n_last) {
+        if (current > c_first  || !n_first) {
+            c_firstBaseline = currentBaseline;
+            c_first = current;
             delta_first = delta;
             n_first = n;
             hlCorr_first = hlCorr;
         }
-        c_last = c;
+        c_lastBaseline = currentBaseline;
+        c_last = current;
         delta_last = delta;
         n_last = n;
         hlCorr_last = hlCorr;
     }
 }
 
-void ExtremaValues::applyHLCorrFirst(long double hlCorr,long double c_firstBaseline) {
+void ExtremaValues::applyHLCorrFirst(long double hlCorr) {
+    c_first -= c_firstBaseline;
     if(hlCorr_first != 1.0L && hlCorr_first != 0.0L) {
-        c_first = (c_first - c_firstBaseline) / hlCorr_first;  // Divide by OLD value
+        c_first /= hlCorr_first;  // Divide by OLD value
     }
     hlCorr_first = hlCorr;  // Update to NEW value
     if(hlCorr_first != 1.0L && hlCorr_first != 0.0L) {
-        c_first = c_firstBaseline + (c_first * hlCorr_first);  // Multiply by NEW value
+        c_first *= hlCorr_first;  // Multiply by NEW value
     }
+    c_first += c_firstBaseline;
 }
 
-void ExtremaValues::applyHLCorrLast(long double hlCorr,long double c_lastBaseline) {
+void ExtremaValues::applyHLCorrLast(long double hlCorr) {
+    c_last -= c_lastBaseline;
     if(hlCorr_last != 1.0L && hlCorr_last != 0.0L) {
-        c_last = (c_last - c_lastBaseline) / hlCorr_last;  // Divide by OLD value
+        c_last /= hlCorr_last;  // Divide by OLD value
     }
     hlCorr_last = hlCorr;  // Update to NEW value
     if(hlCorr_last != 1.0L && hlCorr_last != 0.0L) {
-        c_last = c_lastBaseline + (c_last * hlCorr_last);  // Multiply by NEW value
+        c_last *= hlCorr_last;  // Multiply by NEW value
     }
+    c_last += c_lastBaseline;
 }
 
-void ExtremaValues::applyHLCorrStateMin(HLCorrState &state,long double c_firstBaseline,long double c_lastBaseline) {
-    applyHLCorrFirst(state(n_first, delta_first), c_firstBaseline);
-    applyHLCorrLast(state(n_last, delta_last), c_lastBaseline);
-    // Keep the minimum value
-    if(c_last < c_first) {
+
+void ExtremaValues::applyHLCorrStateMin(HLCorrState &state) {
+    applyHLCorrFirst(state(n_first, delta_first));
+    applyHLCorrLast(state(n_last, delta_last));
+    // For alignment calculations: after HLCorr correction, keep the minimum value.
+    // The condition c_last <= 0.0L handles cases where the last value is still negative
+    // after correction, ensuring we maintain proper minimum tracking.
+    // NOTE: c_first/n_first should NOT be trusted for this extrema type.
+    if(c_last <= 0.0L || c_last < c_first) {
+        c_firstBaseline = c_lastBaseline;
         c_first = c_last;
         n_first = n_last;
         delta_first = delta_last;
         hlCorr_first = hlCorr_last;
     } else if(c_last > c_first) {
+        c_lastBaseline = c_firstBaseline;
         c_last = c_first;
         n_last = n_first;
         delta_last = delta_first;
@@ -161,17 +180,19 @@ void ExtremaValues::applyHLCorrStateMin(HLCorrState &state,long double c_firstBa
     }
 }
 
-void ExtremaValues::applyHLCorrStateMax(HLCorrState &state,long double c_firstBaseline,long double c_lastBaseline) {
-    applyHLCorrFirst(state(n_first, delta_first), c_firstBaseline);
-    applyHLCorrLast(state(n_last, delta_last), c_lastBaseline);
+void ExtremaValues::applyHLCorrStateMax(HLCorrState &state) {
+    applyHLCorrFirst(state(n_first, delta_first));
+    applyHLCorrLast(state(n_last, delta_last));
     // Keep the maximum value
     if(c_last > c_first) {
         c_first = c_last;
+        c_firstBaseline = c_lastBaseline;
         n_first = n_last;
         delta_first = delta_last;
         hlCorr_first = hlCorr_last;
     } else if(c_last < c_first) {
         c_last = c_first;
+        c_lastBaseline = c_firstBaseline;
         n_last = n_first;
         delta_last = delta_first;
         hlCorr_last = hlCorr_first;

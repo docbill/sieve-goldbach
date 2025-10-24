@@ -35,21 +35,24 @@ class GBLongInterval;
 class ExtremaValues {
 public:
     long double current = 0.0L;
+    long double currentBaseline = 0.0L;
     long double c_first = 0.0L;
     long double c_last = 0.0L;
+    long double c_firstBaseline = 0.0L;
+    long double c_lastBaseline = 0.0L;
     std::uint64_t n_first = 0;
     std::uint64_t n_last = 0;
     std::uint64_t delta_first = 0;
     std::uint64_t delta_last = 0;
     long double hlCorr_first = 1.0L;
     long double hlCorr_last = 1.0L;
-    void putMinima(long double c, std::uint64_t n, std::uint64_t delta, long double hlCorr=1.0L);
-    void putMaxima(long double c, std::uint64_t n, std::uint64_t delta, long double hlCorr=1.0L);
-    void applyHLCorrStateMin(HLCorrState &state,long double c_firstBaseline=0.0L,long double c_lastBaseline=0.0L);
-    void applyHLCorrStateMax(HLCorrState &state,long double c_firstBaseline=0.0L,long double c_lastBaseline=0.0L);
+    void putMinima(long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr=1.0L);
+    void putMaxima(long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr=1.0L);
+    void applyHLCorrStateMin(HLCorrState &state);
+    void applyHLCorrStateMax(HLCorrState &state);
 private:
-    void applyHLCorrFirst(long double hlCorr,long double c_firstBaseline=0.0L);
-    void applyHLCorrLast(long double hlCorr,long double c_lastBaseline=0.0L);
+    void applyHLCorrFirst(long double hlCorr);
+    void applyHLCorrLast(long double hlCorr);
 };
 
 class GBLongIntervalSummary {
@@ -57,8 +60,6 @@ public:
     bool useHLCorrInst = false;
     long double pairCount = 0.0L;
     long double c_of_n = 0.0L;
-    long double c_alignFirst = 0.0L;
-    long double c_alignLast = 0.0L;
     ExtremaValues pairCountMinima;
     ExtremaValues pairCountMaxima;
     ExtremaValues pairCountAlignMaxima;
@@ -87,6 +88,9 @@ public:
     long double cminusAsymp_of_n3Last = 0.0L;
     long double cAvg = 0.0L;
     long double hlCorrAvg = 1.0L;
+    long double currentJitter = 0.0L;
+    long double jitterLast = 0.0L;
+    long double jitterFirst = 0.0L;
 
     std::uint64_t n2First = 0;
     std::uint64_t n2Last = 0;
@@ -107,20 +111,10 @@ public:
         bool useHLCorr
     ) {
         // Store the current hlCorrAvg value that's embedded in the data
-        pairCountMinima.putMinima(pairCountMinima.current, n, delta);
-        pairCountMaxima.putMaxima(pairCount, n, delta, hlCorrAvg);
-        pairCountAlignMaxima.putMaxima(pairCountAlignMaxima.current, n, delta, hlCorrAvg);
-        cMinima.putMinima(c_of_n, n, delta, hlCorrAvg);
-        cMaxima.putMaxima(c_of_n, n, delta, hlCorrAvg);
-        alignMinima.putMinima(alignMinima.current, n, delta, hlCorrAvg);
+        pairCountMaxima.putMaxima(pairCount, 0.0L, n, delta, hlCorrAvg);
+        cMinima.putMinima(c_of_n, 0.0L, n, delta, hlCorrAvg);
+        cMaxima.putMaxima(c_of_n, 0.0L, n, delta, hlCorrAvg);
         // Conservative bound: use raw values without HLCorr
-        alignNoHLCorrMinima.putMinima(alignNoHLCorrMinima.current, n, delta);
-        if(alignMinima.c_first == n) {
-            c_alignFirst = c_of_n - alignMinima.c_first;
-        }
-        if(alignMinima.c_last == n) {
-            c_alignLast = c_of_n - alignMinima.c_last;
-        }
         if (useHLCorrInst && useHLCorr && hlCorrAvg != 0.0L) {
             pairCountTotal     += pairCount     / hlCorrAvg;
             pairCountTotalNorm += c_of_n / hlCorrAvg;
@@ -129,7 +123,12 @@ public:
             pairCountTotal     += pairCount;
             pairCountTotalNorm += c_of_n;
         }
-
+        if(n == alignNoHLCorrMinima.n_last) {
+            jitterLast = currentJitter;
+        }
+        if(n == alignNoHLCorrMinima.n_first) {
+            jitterFirst = currentJitter;
+        }
         if(n == cMinima.n_last) {
             if(n == cMinima.n_first) {
                 cminus_of_n0First = cminus;
@@ -190,6 +189,11 @@ public:
         HLCorrState &maxNormState,
         HLCorrState &alignNormState
     ) {
+        // Note: pairCountMinima should NOT call applyHLCorrStateMin because that method
+        // has swapping logic designed for alignment calculations, not regular minimum tracking.
+        // For pairCountMinima, we just need to apply the HLCorr to the c values without swapping n values.
+        // However, when useHLCorrInst is false, the values have already been corrected during aggregation,
+        // so we should NOT apply HLCorr correction again here.
         if(! useHLCorrInst) {
             pairCountMinima.applyHLCorrStateMin(minState);
         }
@@ -198,7 +202,7 @@ public:
         // pairCountAlignMaxima.applyHLCorrStateMax(alignNormState);
         cMinima.applyHLCorrStateMin(minNormState);
         cMaxima.applyHLCorrStateMax(maxNormState);
-        alignMinima.applyHLCorrStateMin(alignNormState, c_alignFirst, c_alignLast);
+        alignMinima.applyHLCorrStateMin(alignNormState);
         // Conservative bound: do NOT apply HLCorr (already using raw values)
         // alignNoHLCorrMinima.applyHLCorrStateMin(alignNormState, c_alignFirst, c_alignLast);
     }

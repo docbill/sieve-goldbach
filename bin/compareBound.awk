@@ -40,6 +40,7 @@ BEGIN {
     col_ngeom_2 = 0
     col_nbound = 0
     col_cbound = 0
+    col_jitter = 0
 }
 
 function trim(s){ sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
@@ -85,18 +86,18 @@ FNR==NR {
 FNR==1 {
     format = detect_format($0)
     if (format == "v0.2.0") {
-        # HLA v0.2.0 format: FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_alignMax,c_alignMax,n_alignMin,c_alignMin,n_cBound,c_cBound
-        col_label2 = 3; col_minat_2 = 4; col_n0_2 = 8; col_cmin_2 = 9; col_ngeom_2 = 12; col_nbound = 19; col_cbound = 20
+        # HLA v0.2.0 format: FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_alignMax,c_alignMax,n_alignMin,c_alignMin,n_cBound,c_cBound,jitter
+        col_label2 = 3; col_minat_2 = 4; col_n0_2 = 8; col_cmin_2 = 9; col_ngeom_2 = 12; col_nbound = 19; col_cbound = 20; col_jitter = 21
     } else {
-        # v0.1.5 format: DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr
-        col_label2 = 1; col_minat_2 = 2; col_n0_2 = 6; col_cmin_2 = 7; col_ngeom_2 = 10; col_nbound = 0; col_cbound = 0
+        # v0.1.5 format: DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr,n_alignMax,c_alignMax,n_alignMin,c_alignMin,n_cBound,c_cBound,jitter
+        col_label2 = 1; col_minat_2 = 2; col_n0_2 = 6; col_cmin_2 = 7; col_ngeom_2 = 10; col_nbound = 0; col_cbound = 0; col_jitter = 19
     }
     
     if(col_label2 == 1) {
-       print "Dec","n_0","C_min","Npred_0","CpredBound","Lambda_min"
+       print "Dec","n_0","C_min","Npred_0","CpredBound","Lambda_min","Jitter","JitterRatio"
     }
     else {
-       print "START","n_0","C_min","Npred_0","CpredBound","Lambda_min"
+       print "START","n_0","C_min","Npred_0","CpredBound","Lambda_min","Jitter","JitterRatio"
     }
     next
 }
@@ -111,6 +112,7 @@ FNR==1 {
     ngeo = trim($col_ngeom_2)
     n_bound = (col_nbound > 0) ? trim($col_nbound) + 0 : 0
     c_bound = (col_cbound > 0) ? trim($col_cbound) + 0 : 0
+    jitter = (col_jitter > 0) ? trim($col_jitter) + 0 : 0
 
     key = label "\034" ngeo
     cmn = (key in cmin) ? cmin[key] : ""
@@ -118,9 +120,9 @@ FNR==1 {
 
     if (cmn=="") {
         # No match from file1 for this row
-        printf("WARN: unmatched key in file2: Dec=%s, n_geom=%s%s\n",
+        printf("ERROR: unmatched key in file2: Dec=%s, n_geom=%s%s\n",
                label, ngeo, (label=="0"?sprintf(", minAt=%s",minA):"")) > "/dev/stderr"
-        next
+        exit 1
     }
 
     # Use actual conservative bound values from HLA full output
@@ -132,26 +134,42 @@ FNR==1 {
         cpred_bound = cpred_min
     }
 
+    # Calculate jitter ratio: (Cmeas_min_raw-CpredBound_raw)/[jitter]
+    # where C_raw = C * αn/log²n
+    jitter_ratio = 0.0
+    if (jitter > 0 && np_0 > 0) {
+        log_n = log(np_0)
+        log_squared = log_n * log_n
+        alpha_n = alpha * np_0
+        conversion_factor = alpha_n / log_squared
+        
+        c_min_raw = (cmn+0) * conversion_factor
+        c_bound_raw = cpred_bound * conversion_factor
+        c_diff_raw = c_min_raw - c_bound_raw
+        jitter_ratio = c_diff_raw / jitter
+    }
+
     # Lambda_min = log(C_min/CpredBound) in scientific notation; blank if C_min==0
     if ((cmn+0) > 0 && cpred_bound > 0) {
-        printf "%s,%d,%.6f,%d,%.6f,%.6e\n", label, n, cmn, np_0, cpred_bound, log((cmn+0)/cpred_bound)
+        printf "%s,%d,%.6f,%d,%.6f,%.6e,%.6f,%.6e\n", label, n, cmn, np_0, cpred_bound, log((cmn+0)/cpred_bound), jitter, jitter_ratio
     }
     seen[key]++
 }
 
 END {
-    # Warn if file1 had keys that didn't appear in file2
+    # Error if file1 had keys that didn't appear in file2
     for (k in count1) {
         if (!(k in seen)) {
             # reconstruct a readable note
             split(k, p, SUBSEP)
             if (length(p)==3) {
-                printf("WARN: key present only in file1: Dec=%s, n_geom=%s, minAt=%s\n",
+                printf("ERROR: key present only in file1: Dec=%s, n_geom=%s, minAt=%s\n",
                        p[1], p[3], p[2]) > "/dev/stderr"
             } else {
-                printf("WARN: key present only in file1: Dec=%s, n_geom=%s\n",
+                printf("ERROR: key present only in file1: Dec=%s, n_geom=%s\n",
                        p[1], p[2]) > "/dev/stderr"
             }
+            exit 1
         }
     }
 }

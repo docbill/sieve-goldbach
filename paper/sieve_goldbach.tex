@@ -251,6 +251,14 @@
       ] {\datatable};
     \addlegendentry{\(\Lambda < 0\)}
 
+    % style
+    \pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
+
+   % draw them last, and don't add to legend
+   \foreach \x in {15,105,1155,15015,255255,4849845,111546435}{
+       \addplot[primorial, forget plot] coordinates {(\x,1) (\x,1e-4)};
+   }
+
   \end{axis}
   \end{tikzpicture}%
   \endgroup

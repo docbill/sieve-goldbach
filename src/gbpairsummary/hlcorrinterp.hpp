@@ -42,8 +42,17 @@ private:
 
 public:
     HLCorrInterpolator() : sample_interval(0) {}
+    
+    // Assignment operator overload - do nothing to preserve samples
+    HLCorrInterpolator& operator=(const HLCorrInterpolator& /* other */) {
+        // Do nothing - preserve existing samples and state
+        return *this;
+    }
 
     void init(std::uint64_t n_start, std::uint64_t n_end, HLCorrState *state=nullptr) {
+        if(n_start == this->n_start && n_end == this->n_end && state == this->state) {
+            return;
+        }
         if(state != nullptr) {
             this->state = state;
         }
@@ -54,6 +63,7 @@ public:
         // Use sqrt(sqrt(range_size)) is too small a sample size in most cases, so we cap at 31
         this->sample_interval = std::min(31ULL, std::max(3ULL, (std::uint64_t)std::ceil(1.0L + std::sqrt(std::sqrt((long double)range_size)))));
         this->sample_size = (range_size + sample_interval - 1) / sample_interval;
+        //fprintf(stderr, "DEBUG: hlcorrinterp: init(n_start=%llu, n_end=%llu, range_size=%llu, sample_interval=%llu, sample_size=%llu)\n", (unsigned long long)n_start, (unsigned long long)n_end, (unsigned long long)range_size, (unsigned long long)sample_interval, (unsigned long long)sample_size);
     }
     
     // Pre-scan: sample exact HLCorr at regular intervals
@@ -61,12 +71,14 @@ public:
     template<typename ComputeDeltaFunc>
     void prescan(std::uint64_t n, std::uint64_t &next_n, ComputeDeltaFunc computeDelta) {
         if(n >= n_end) {
+            //fprintf(stderr, "DEBUG: (1) hlcorrinterp: prescan(n=%llu, next_n=%llu, n_end=%llu)\n", (unsigned long long)n, (unsigned long long)next_n, (unsigned long long)n_end);
             return;
         }
         if(n < n_start) {
             if(next_n > n_start) {
                 next_n = n_start;
             }
+            //fprintf(stderr, "DEBUG: (2) hlcorrinterp: prescan(n=%llu, next_n=%llu, n_start=%llu, n_end=%llu)\n", (unsigned long long)n, (unsigned long long)next_n, (unsigned long long)n_start, (unsigned long long)n_end);
             return;
         }
         std::uint64_t _next_n = ((n-n_start)/sample_size)*sample_size + n_start;
@@ -75,6 +87,7 @@ public:
             long double hlCorr = state ? state->operator()(n, delta) : hlcorr(n, delta);
             samples.push_back({n, hlCorr});
             _next_n += sample_size;
+            //fprintf(stderr, "DEBUG: (3) hlcorrinterp: prescan(n=%llu, _next_n=%llu, delta=%llu, hlCorr=%0.6LF)\n", (unsigned long long)n, (unsigned long long)_next_n, (unsigned long long)delta, hlCorr);
         }
         if(_next_n >= n_end) {
             _next_n = n_end-1;
@@ -88,6 +101,7 @@ public:
     // Interpolate HLCorr for a given n (linear interpolation)
     long double operator()(std::uint64_t n, std::uint64_t delta) {
         if (samples.empty()) {
+            //fprintf(stderr, "DEBUG: hlcorrinterp: no samples, using hlcorr(n=%llu, delta=%llu,n_start=%llu,n_end=%llu)\n", (unsigned long long)n, (unsigned long long)delta, (unsigned long long)n_start, (unsigned long long)n_end);
             return hlcorr(n, delta);
         }
         

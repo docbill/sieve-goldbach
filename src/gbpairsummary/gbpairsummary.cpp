@@ -446,7 +446,7 @@ int main(int argc, char* argv[]) try {
 
     const char* prime_file = argv[optind];
 
-    if (n_end_opt <= n_start_opt) {
+    if (n_end_opt > 0 && n_end_opt <= n_start_opt) {
         std::fprintf(stderr, "Error: *-n-end (%" PRIu64 ") must be > *-n-start (%" PRIu64 ")\n", n_end_opt, n_start_opt);
         return 1;
     }

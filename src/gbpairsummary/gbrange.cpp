@@ -46,18 +46,20 @@ static inline void vfprintf_both(FILE* a, FILE* b, const char* fmt, va_list ap) 
 }
 
 static inline long double expose_next_log_fast(
-    long double w, long double p_next, long double q_next, bool next_aligns, bool require_span)
+    long double w, long double p_next, long double q_next, bool next_aligns, bool single_residue=false, bool require_span=false)
 {
     if (!next_aligns || (require_span && w < p_next)) return 0.0L;
     // fractional part of w/q_next in [0,1)
     long double t = w / q_next;
     t -= floorl(t);
-    return t * logl(p_next - 2.0L);   // add to sum of logs
+    return t * (single_residue ? logl(p_next - 1.0L) : logl(p_next-2.0L));   // add to sum of logs
 }
 
-long double effective_small_prime_deficit(uint64_t n, long double w)
+long double effective_small_prime_deficit(uint64_t n, long double w,bool single_residue=false)
 {
     if (n < 3ULL) return 0.0L;
+
+    w = floorl(w);
 
     // seed with mod-3 admissible fraction
     long double sumlog = logl((n % 3ULL == 0ULL) ? (2.0L/3.0L) : 1.0L);
@@ -66,10 +68,10 @@ long double effective_small_prime_deficit(uint64_t n, long double w)
     static constexpr long double PR5 = 3.0L*5.0L;
     const bool a5 = (n % 5ULL) != 0ULL;
     if (w < PR5) {
-        sumlog += expose_next_log_fast(w, 5.0L, PR5, a5, /*require_span=*/true);
+        sumlog += expose_next_log_fast(w, 5.0L, PR5, a5, single_residue, /*require_span=*/true);
         return expl(sumlog);
     }
-    if (a5) sumlog += logl(5.0L - 2.0L); // *3
+    if (a5) sumlog += (single_residue ? logl(5.0L - 1.0L) : logl(5.0L - 2.0L)); // *3
 
     // --- up to p=7/11/13/17/19 ---
     static constexpr long double PR7  = 7.0L*PR5;
@@ -85,50 +87,50 @@ long double effective_small_prime_deficit(uint64_t n, long double w)
     const bool a19 = (n % 19ULL) != 0ULL;
 
     if (w < PR7) {
-        sumlog += expose_next_log_fast(w,  7.0L, PR7,  a7,  false);
-        sumlog += expose_next_log_fast(w, 11.0L, PR11, a11, false);
-        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, false);
-        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, /*require_span=*/true);
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, /*require_span=*/true);
+        sumlog += expose_next_log_fast(w,  7.0L, PR7,  a7,  single_residue);
+        sumlog += expose_next_log_fast(w, 11.0L, PR11, a11, single_residue);
+        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, single_residue);
+        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue, /*require_span=*/true);
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue, /*require_span=*/true);
         return expl(sumlog);
     }
-    if (a7) sumlog += logl(7.0L - 2.0L);   // *5
+    if (a7) sumlog += (single_residue ? logl(7.0L - 1.0L) : logl(7.0L - 2.0L));   // *5
 
     // --- up to p=23 ---
     static constexpr long double PR23 = 23.0L*PR19;
     const bool a23 = (n % 23ULL) != 0ULL;
     if (w < PR11) {
-        sumlog += expose_next_log_fast(w, 11.0L, PR11, a11, false);
-        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, false);
-        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, false);
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, false);
-        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, false);
+        sumlog += expose_next_log_fast(w, 11.0L, PR11, a11, single_residue);
+        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, single_residue);
+        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue);
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
+        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
         return expl(sumlog);
     }
-    if (a11) sumlog += logl(11.0L - 2.0L); // *9
+    if (a11) sumlog += (single_residue ? logl(11.0L - 1.0L) : logl(11.0L - 2.0L)); // *9
 
     // --- up to p=29 ---
     static constexpr long double PR29 = 29.0L*PR23;
     const bool a29 = (n % 29ULL) != 0ULL;
     if (w < PR13) {
-        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, false);
-        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, false);
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, false);
-        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, false);
-        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, false);
+        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, single_residue);
+        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue);
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
+        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
+        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
         return expl(sumlog);
     }
-    if (a13) sumlog += logl(13.0L - 2.0L); // *11
+    if (a13) sumlog += (single_residue ? logl(13.0L - 1.0L) : logl(13.0L - 2.0L)); // *11
 
     // --- up to p=31 ---
     static constexpr long double PR31 = 31.0L*PR29;
     const bool a31 = (n % 31ULL) != 0ULL;
     if (w < PR17) {
-        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, false);
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, false);
-        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, false);
-        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, false);
-        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, false);
+        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue);
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
+        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
+        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
+        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
         return expl(sumlog);
     }
     if (a17) sumlog += logl(17.0L - 2.0L); // *15
@@ -137,14 +139,14 @@ long double effective_small_prime_deficit(uint64_t n, long double w)
     static constexpr long double PR37 = 37.0L*PR31;
     const bool a37 = (n % 37ULL) != 0ULL;
     if (w < PR19) {
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, false);
-        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, false);
-        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, false);
-        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, false);
-        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, false);
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
+        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
+        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
+        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
+        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
         return expl(sumlog);
     }
-    if (a19) sumlog += logl(19.0L - 2.0L); // *17
+    if (a19) sumlog += (single_residue ? logl(19.0L - 1.0L) : logl(19.0L - 2.0L)); // *17
 
     // --- up to p=41,43,47,53 (likely never reached, but cheap if we do) ---
     static constexpr long double PR41 = 41.0L*PR37;
@@ -158,195 +160,43 @@ long double effective_small_prime_deficit(uint64_t n, long double w)
     const bool a53 = (n % 53ULL) != 0ULL;
 
     if (w < PR23) {
-        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, false);
-        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, false);
-        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, false);
-        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, false);
-        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, false);
+        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
+        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
+        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
+        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
+        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
         return expl(sumlog);
     }
-    if (a23) sumlog += logl(21.0L); // 23-2
+    if (a23) sumlog += (single_residue ? logl(23.0L - 1.0L) : logl(23.0L - 2.0L)); // 23-2
 
     if (w < PR29) {
-        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, false);
-        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, false);
-        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, false);
-        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, false);
-        sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, false);
+        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
+        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
+        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
+        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
+        sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, single_residue);
         return expl(sumlog);
     }
-    if (a29) sumlog += logl(27.0L); // 29-2
+    if (a29) sumlog += (single_residue ? logl(29.0L - 1.0L) : logl(29.0L - 2.0L)); // 29-2
 
     if (w < PR31) {
-        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, false);
-        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, false);
-        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, false);
-        sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, false);
-        sumlog += expose_next_log_fast(w, 47.0L, PR47, a47, false);
+        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
+        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
+        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
+        sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, single_residue);
+        sumlog += expose_next_log_fast(w, 47.0L, PR47, a47, single_residue);
         return expl(sumlog);
     }
 
     // Tail (practically negligible, but harmless if reached)
-    sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, false);
-    sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, false);
-    sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, false);
-    sumlog += expose_next_log_fast(w, 47.0L, PR47, a47, false);
-    sumlog += expose_next_log_fast(w, 53.0L, PR53, a53, false);
+    sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
+    sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
+    sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, single_residue);
+    sumlog += expose_next_log_fast(w, 47.0L, PR47, a47, single_residue);
+    sumlog += expose_next_log_fast(w, 53.0L, PR53, a53, single_residue);
     return expl(sumlog);
 }
 
-/*
-static inline long double effective_small_prime_deficit(const std::uint64_t n, const long double w)
-{
-    // n should reflect small-prime divisibility of the center.
-    if (n < 3ULL) {
-        return 0.0L;
-    }
-
-    long double r = (n%3ULL == 0ULL) ? (1ULL/3ULL) : 1ULL;  // accumulate ∏(p-2) only when p ∤ center
-
-    // ---- up to p=5 ----
-    const bool aligns_next5 = (n % 5ULL) != 0ULL;
-    const long double PR5 = 3.0L*5.0L;
-    if (w < PR5) {
-        return r * expose_next(w, aligns_next5 && (w >= 5.0L), 5.0L, PR5);
-    }
-    if (aligns_next5) {
-        r *= 3.0L;
-    }
-
-    // ---- up to p=7 ----
-    const bool aligns_next7 = (n % 7ULL) != 0ULL;
-    const long double PR7 = 7.0L*PR5;
-    // ---- up to p=11 ----
-    const bool aligns_next11 = (n % 11ULL) != 0ULL;
-    const long double PR11 = 11.0L*PR7;
-    // ---- up to p=13 ----
-    const bool aligns_next13 = (n % 13ULL) != 0ULL;
-    const long double PR13 = 13.0L*PR11;
-
-    // ---- up to p=17 ----
-    const bool aligns_next17 = (n % 17ULL) != 0ULL;
-    const long double PR17 = 17.0L*PR13;
-    // ---- up to p=19 ----
-    const bool aligns_next19 = (n % 19ULL) != 0ULL;
-    const long double PR19 = 19.0L*PR17;
-    if (w < PR7) {
-        return r * expose_next(w, aligns_next7, 7.0L, PR7)
-            * expose_next(w, aligns_next11, 11.0L, PR11)
-            * expose_next(w, aligns_next13, 13.0L, PR13)
-            * expose_next(w, aligns_next17&&(w >= 17.0L), 17.0L, PR17)
-            * expose_next(w, aligns_next19&&(w >= 19.0L), 19.0L, PR19);
-    }
-    if (aligns_next7) {
-        r *= 5.0L;
-    }
-
-    // ---- up to p=23 ----
-    const bool aligns_next23 = (n % 23ULL) != 0ULL;
-    const long double PR23 = 23.0L*PR19;
-    if (w < PR11) {
-        return r * expose_next(w, aligns_next11, 11.0L, PR11)
-            * expose_next(w, aligns_next13, 13.0L, PR13)
-            * expose_next(w, aligns_next17, 17.0L, PR17)
-            * expose_next(w, aligns_next19, 19.0L, PR19)
-            * expose_next(w, aligns_next23, 23.0L, PR23);
-    }
-    if (aligns_next11) {
-        r *= 9.0L;
-    }
-
-    // ---- up to p=29 ----
-    const bool aligns_next29 = (n % 29ULL) != 0ULL;
-    const long double PR29 = 29.0L*PR23;
-    if (w < PR13) {
-        return r * expose_next(w, aligns_next13, 13.0L, PR13)
-            * expose_next(w, aligns_next17, 17.0L, PR17)
-            * expose_next(w, aligns_next19, 19.0L, PR19)
-            * expose_next(w, aligns_next23, 23.0L, PR23)
-            * expose_next(w, aligns_next29, 29.0L, PR29);
-    }
-    if (aligns_next13) {
-        r *= 11.0L;
-    }
-
-    // ---- up to p=31 ----
-    const bool aligns_next31 = (n % 31ULL) != 0ULL;
-    const long double PR31 = 31.0L*PR29;
-    if (w < PR17) {
-        return r * expose_next(w, aligns_next17, 17.0L, PR17)
-            * expose_next(w, aligns_next19, 19.0L, PR19)
-            * expose_next(w, aligns_next23, 23.0L, PR23)
-            * expose_next(w, aligns_next29, 29.0L, PR29)
-            * expose_next(w, aligns_next31, 31.0L, PR31);
-    }
-    if (aligns_next17) {
-        r *= 15.0L;
-    }
-
-    // ---- up to p=37 ----
-    const bool aligns_next37 = (n % 37ULL) != 0ULL;
-    const long double PR37 = 37.0L*PR31;
-    if (w < PR19) {
-        return r * expose_next(w, aligns_next19, 19.0L, PR19)
-            * expose_next(w, aligns_next23, 23.0L, PR23)
-            * expose_next(w, aligns_next29, 29.0L, PR29)
-            * expose_next(w, aligns_next31, 31.0L, PR31)
-            * expose_next(w, aligns_next37, 37.0L, PR37);
-    }
-    if (aligns_next19) {
-        r *= 17.0L;
-    }
-
-    // ---- up to p=41 ----
-    const bool aligns_next41 = (n % 41ULL) != 0ULL;
-    const long double PR41 = 41.0L*PR37;
-    if (w < PR23) {
-        return r * expose_next(w, aligns_next23, 23.0L, PR23)
-            * expose_next(w, aligns_next29, 29.0L, PR29)
-            * expose_next(w, aligns_next31, 31.0L, PR31)
-            * expose_next(w, aligns_next37, 37.0L, PR37)
-            * expose_next(w, aligns_next41, 41.0L, PR41);
-    }
-    if (aligns_next23) {
-        r *= 21.0L;
-    }
-
-    // ---- up to p=43 ----
-    const bool aligns_next43 = (n % 43ULL) != 0ULL;
-    const long double PR43 = 43.0L*PR41;
-    if (w < PR29) {
-        return r * expose_next(w, aligns_next29, 29.0L, PR29)
-            * expose_next(w, aligns_next31, 31.0L, PR31)
-            * expose_next(w, aligns_next37, 37.0L, PR37)
-            * expose_next(w, aligns_next41, 41.0L, PR41)
-            * expose_next(w, aligns_next43, 43.0L, PR43);
-    }
-    if (aligns_next29) {
-        r *= 27.0L;
-    }
-
-    // ---- up to p=47 ----
-    const bool aligns_next47 = (n % 47ULL) != 0ULL;
-    const long double PR47 = 47.0L*PR43;
-    if (w < PR31) {
-        return r * expose_next(w, aligns_next31, 31.0L, PR31)
-            * expose_next(w, aligns_next37, 37.0L, PR37)
-            * expose_next(w, aligns_next41, 41.0L, PR41)
-            * expose_next(w, aligns_next43, 43.0L, PR43)
-            * expose_next(w, aligns_next47, 47.0L, PR47);
-    }
-
-    // beyond PR37, we'll have the wrong answer.   But that will well exceed the language's precision for a short interval anyway.
-    const bool aligns_next53 = (n % 53ULL) != 0ULL;
-    const long double PR53 = 53.0L*PR47;
-    return r * expose_next(w, aligns_next37, 37.0L, PR37)
-        * expose_next(w, aligns_next41, 41.0L, PR41)
-        * expose_next(w, aligns_next43, 43.0L, PR43)
-        * expose_next(w, aligns_next47, 47.0L, PR47)
-        * expose_next(w, aligns_next53, 53.0L, PR53);
-}
-*/
 
 static inline void fprintf_both(FILE* a, FILE* b, const char* fmt, ...) {
     va_list ap; va_start(ap, fmt);
@@ -362,7 +212,7 @@ static inline void fputs_both(const char* s, FILE* a, FILE* b) {
         std::fputs(s, b);
     }
 }
- 
+
 static void printHeaderFull(FILE *out1,FILE *out2,bool useLegacy,Model model) {
     fputs_both(
         useLegacy
@@ -371,7 +221,7 @@ static void printHeaderFull(FILE *out1,FILE *out2,bool useLegacy,Model model) {
                 :"DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr\n")
             :(model == Model::Empirical
                 ?"FIRST,LAST,START,minAt,G(minAt),maxAt,G(maxAt),n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg\n"
-                :"FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_alignMax,c_alignMax,n_alignMin,c_alignMin,n_cBound,c_cBound\n"),
+                :"FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_alignMax,c_alignMax,n_alignMin,c_alignMin,n_cBound,c_cBound,jitter\n"),
         out1, out2);
 }
 
@@ -425,10 +275,10 @@ void GBRange::printCpsSummaryHeaders() {
 }
 
 std::uint64_t GBRange::decReset(std::uint64_t n_start) {
-    int need_reset = 0;
+    bool need_reset = false;
     for(auto &w : windows) {
         if(w->is_dec_active()) {
-            need_reset = 1;
+            need_reset = true;
             w->dec.summary.reset();
         }
     }
@@ -519,7 +369,7 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
         }
         fprintf_both(interval.out,interval.trace,
             "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64
-                ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf\n",
+                ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.6Lf\n",
             agg.left, agg.right -1,
             agg.label.c_str(),
             summary.pairCountMinima.n_last, summary.pairCountMinima.c_last,
@@ -532,9 +382,10 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
             summary.pairCountAlignMaxima.n_last,
             summary.pairCountAlignMaxima.c_last,
             summary.alignMinima.n_last,
-            summary.alignMinima.c_last,
+            (summary.alignMinima.c_last > 0.0L ? summary.alignMinima.c_last : 0.0L),
             summary.alignNoHLCorrMinima.n_last,
-            summary.alignNoHLCorrMinima.c_last
+            (summary.alignNoHLCorrMinima.c_last > 0.0L ? summary.alignNoHLCorrMinima.c_last : 0.0L),
+            summary.jitterLast
         );
         return;
     }
@@ -606,9 +457,9 @@ void GBRange::outputNorm(GBAggregate &agg,GBLongInterval &interval) {
                 agg.n_geom,
                 summary.cAvg,
                 summary.alignMinima.n_last,
-                summary.alignMinima.c_last,
+                (summary.alignMinima.c_last > 0.0L ? summary.alignMinima.c_last : 0.0L),
                 summary.alignNoHLCorrMinima.n_last,
-                summary.alignNoHLCorrMinima.c_last );
+                (summary.alignNoHLCorrMinima.c_last > 0.0L ? summary.alignNoHLCorrMinima.c_last : 0.0L) );
         }
     }
 }
@@ -845,91 +696,125 @@ int GBRange::addRow(
         long double cminusAsymp = w.calcCminusAsymp(logN);
         long double pairCount = (long double)pc;
         long double c_of_n = pairCount * norm;
-        prim_summary.pairCountMinima.current = prim_summary.pairCount = dec_summary.pairCountMinima.current = dec_summary.pairCount = pairCount;
-        prim_summary.cMinima.current = prim_summary.c_of_n = dec_summary.cMinima.current = dec_summary.c_of_n = c_of_n;
+        prim_summary.pairCount = dec_summary.pairCount = pairCount;
+        prim_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
+        dec_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
+        prim_summary.c_of_n = dec_summary.c_of_n = c_of_n;
         w.checkCrossing(n,c_of_n <= cminus);
         w.checkCrossingAsymp(n,c_of_n <= cminusAsymp);
         w.updateN5percent(n,delta,logNlogN,c_of_n-cminus,c_of_n-cminusAsymp);
     }
-    else { // HLA
-        prim_summary.pairCount = dec_summary.pairCount = 0.0L;
-        prim_summary.c_of_n = dec_summary.c_of_n = 0.0L;
+    else if(w.is_prim_active()|| w.is_dec_active()) { // HLA
+        // --- Small-prime structure and jitter bounds ---
+        // Applies the short-interval residue model on both halves of n ± δ.
+        // Conservative terms use residue 1; predictive term uses residue 2.
 
-        prim_summary.hlCorrAvg = dec_summary.hlCorrAvg = 1.0L;
-        long double hlCorrAvg = 0.0L;
-        long double pairCountAlign = 2.0L*effective_small_prime_deficit(n, sqrtl(2.0L*(long double)n));
+        const long double nl = (long double)n;
+        const long double dl = (long double)delta;
+
+        // Each half covers a different short interval:
+        // lower: √(n−1), upper: √(n+δ)
+        const long double w_lower = sqrtl(nl - 1.0L);
+        const long double w_upper = sqrtl(nl + dl);
+
+        // --- Conservative alignment (residue 1) ---
+        const long double R1_lower = effective_small_prime_deficit(n, w_lower, true);
+        const long double R1_upper = effective_small_prime_deficit(n, w_upper, true);
+        const long double pairCountAlignConservative = 2.0L * (R1_lower + R1_upper); // ×2 for ordered pairs
+
+        // Short-of-short for jitter: √w on each half
+        const long double wj_lower = sqrtl(w_lower);
+        const long double wj_upper = sqrtl(w_upper);
+
+        // --- Jitter (residue 1, short-of-short) ---
+        const long double J_lower = effective_small_prime_deficit(n, wj_lower, true);
+        const long double J_upper = effective_small_prime_deficit(n, wj_upper, true);
+        const long double jitter  = 2.0L * (J_lower + J_upper); // ×2 for ordered pairs
+
+        // --- Predictive alignment (residue 2) ---
+        // Applies to the canonical short interval √(2n)
+        //const long double w_main = sqrtl(2.0L*nl - 2.0L);
+        const long double pairCountAlignPredictive = 2.0L * effective_small_prime_deficit(n, w_upper, false);
+        /*
+        // this is based on a two residual sieve long double pairCountAlign = 2.0L*effective_small_prime_deficit(n, sqrtl(2.0L*(long double)n),false); // this is based on a two residual sieve
+        long double jitterBottom = effective_small_prime_deficit(n, sqrtl(sqrtl((long double)n-1.0L)),true);
+        long double jitterTop = effective_small_prime_deficit(n, sqrtl(sqrtl(sqrtl(delta+(long double)n))),true); // the two is for ordered pairs
+        long double jitter = 2.0L*(jitterBottom+jitterTop);
+        long double pairCountAlignConservativeBottom = effective_small_prime_deficit(n, sqrtl((long double)n-1.0L),true);
+        long double pairCountAlignConservativeTop = effective_small_prime_deficit(n, sqrtl(delta+sqrtl((long double)n)),true); // the two is for ordered pairs
+        long double pairCountAlignConservative = 2.0L*(pairCountAlignConservativeBottom+pairCountAlignConservativeTop); 
+        */
+        long double c_raw = twoSGB;
+        long double pairCount_raw = 0.0L;
+        long double pairCountMinima = 0.0L;
+        if (pc) {
+            pairCount_raw  = (norm > 0.5L) ? (c_raw / deltaL) : 1.0L;
+            c_raw = pairCount_raw * norm;
+            pairCountMinima = (norm > 0.5L)? c_raw / deltaL : 1.0L;
+        }
+        else if (norm > 0.0L) {
+            pairCount_raw = c_raw / norm;
+            pairCountMinima = c_raw / norm;
+        }
         if(w.is_prim_active()) {
+            long double hlCorrAvg = 1.0L;
+            prim_summary.useHLCorrInst = false;
             if(compat_ver != CompatVer::V015) {
-                prim_summary.useHLCorrInst = 1;
+                prim_summary.useHLCorrInst = true;
                 // Use interpolated HLCorr for better accuracy
-                prim_summary.hlCorrAvg = hlCorrAvg = prim_summary.hlCorrEstimate(n,delta);
-                prim_summary.c_of_n = twoSGB*hlCorrAvg;
+                hlCorrAvg = prim_summary.hlCorrEstimate(n,delta);
             }
             else if(primAgg.minor < 5) {
-                prim_summary.useHLCorrInst = 1;
-                prim_summary.hlCorrAvg = hlCorrAvg = hlcorr(n,delta);
-                prim_summary.c_of_n = twoSGB*hlCorrAvg;
+                prim_summary.useHLCorrInst = true;
+                hlCorrAvg = hlcorr(n,delta);
+            }
+            const long double c_corr = c_raw * hlCorrAvg;
+            prim_summary.hlCorrAvg = hlCorrAvg;
+            prim_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
+            prim_summary.pairCount = pairCount_raw * hlCorrAvg;
+            prim_summary.c_of_n = c_corr;
+            prim_summary.pairCountAlignMaxima.putMaxima(pairCountAlignPredictive,0.0L,n,delta,hlCorrAvg);
+            prim_summary.currentJitter = jitter;
+            if(norm > 0.0L) {
+                prim_summary.alignMinima.putMinima(c_corr,-pairCountAlignPredictive*norm,n,delta,hlCorrAvg);
+                prim_summary.alignNoHLCorrMinima.putMinima(c_raw,-(pairCountAlignConservative+jitter)*norm,n,delta);
             }
             else {
-                prim_summary.c_of_n = twoSGB;
+                prim_summary.alignMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvg);
+                prim_summary.alignNoHLCorrMinima.putMinima(0.0L,0.0L,n,delta);
             }
-            if (pc) {
-                prim_summary.pairCount  = (norm > 0.5L) ? (prim_summary.c_of_n / deltaL) : 1.0L;
-                prim_summary.c_of_n = prim_summary.pairCount * norm;
-                prim_summary.pairCountMinima.current = (norm > 0.5L)? twoSGB / deltaL : 1.0L;
-            } else if (norm > 0.0L) {
-                prim_summary.pairCount = prim_summary.c_of_n / norm;
-                prim_summary.pairCountMinima.current = twoSGB / norm;
-            }
-            prim_summary.pairCountAlignMaxima.current = pairCountAlign;
-            prim_summary.alignMinima.current = (norm > 0.0L && prim_summary.c_of_n > pairCountAlign * norm)
-                ? (prim_summary.c_of_n - pairCountAlign * norm)
-                : 0.0L;
-            // Conservative bound: use raw values without HLCorr
-            prim_summary.alignNoHLCorrMinima.current = (norm > 0.0L && twoSGB > pairCountAlign * norm)
-                ? (twoSGB - pairCountAlign * norm)
-                : 0.0L;
         }
         if(w.is_dec_active()) {
-            if (compat_ver != CompatVer::V015) {
-                dec_summary.useHLCorrInst  = 1;
+            long double hlCorrAvg = 1.0L;
+            dec_summary.useHLCorrInst = false;
+            if(compat_ver != CompatVer::V015) {
+                dec_summary.useHLCorrInst = true;
                 // Use interpolated HLCorr for better accuracy
-                dec_summary.hlCorrAvg = hlCorrAvg = dec_summary.hlCorrEstimate(n,delta);
-                dec_summary.c_of_n = twoSGB*hlCorrAvg;
+                hlCorrAvg = dec_summary.hlCorrEstimate(n,delta);
+                dec_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
             }
-            else if (decAgg.base < 10) {
-                dec_summary.useHLCorrInst  = 1;
-                if(hlCorrAvg == 0.0L) {
-                    hlCorrAvg = hlcorr(n,delta);
-                } 
-                dec_summary.hlCorrAvg = hlCorrAvg;
-                dec_summary.c_of_n = twoSGB*hlCorrAvg;
+            else if(n < 10ULL) {
+                dec_summary.useHLCorrInst = true;
+                hlCorrAvg = hlcorr(n,delta);
+                dec_summary.pairCountMinima.putMinima(pairCountMinima*hlCorrAvg,0.0L,n,delta,hlCorrAvg);
             }
             else {
-                dec_summary.c_of_n = twoSGB;
+                dec_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
             }
-            if (pc) {
-                dec_summary.pairCount  = (norm > 0.5L) ? (dec_summary.c_of_n / deltaL) : 1.0L;
-                dec_summary.c_of_n = dec_summary.pairCount * norm;
-                dec_summary.pairCountMinima.current = (norm > 0.5L)? twoSGB / deltaL : 1.0L;
-                if (hlCorrAvg != 0.0L && dec_summary.useHLCorrInst && compat_ver == CompatVer::V015) {
-                    dec_summary.pairCountMinima.current *= hlCorrAvg;
-                }
-            } else if (norm > 0.0L) {
-                dec_summary.pairCount = dec_summary.c_of_n / norm;
-                dec_summary.pairCountMinima.current = twoSGB / norm;
-                if (hlCorrAvg != 0.0L && dec_summary.useHLCorrInst && compat_ver == CompatVer::V015) {
-                    dec_summary.pairCountMinima.current *= hlCorrAvg;
-                }
+            const long double c_corr = c_raw * hlCorrAvg;
+            dec_summary.hlCorrAvg = hlCorrAvg;
+            dec_summary.pairCount = pairCount_raw * hlCorrAvg;
+            dec_summary.c_of_n = c_corr;
+            dec_summary.pairCountAlignMaxima.putMaxima(pairCountAlignPredictive,0.0L,n,delta,hlCorrAvg);
+            dec_summary.currentJitter = jitter;
+            if(norm > 0.0L) {
+                dec_summary.alignMinima.putMinima(c_corr,-pairCountAlignPredictive*norm,n,delta,hlCorrAvg);
+                dec_summary.alignNoHLCorrMinima.putMinima(c_raw,-(pairCountAlignConservative+jitter)*norm,n,delta);
             }
-            dec_summary.pairCountAlignMaxima.current = pairCountAlign;
-            dec_summary.alignMinima.current = (norm > 0.0L && dec_summary.c_of_n > pairCountAlign * norm)
-                ? (dec_summary.c_of_n - pairCountAlign * norm)
-                : 0.0L;
-            // Conservative bound: use raw values without HLCorr
-            dec_summary.alignNoHLCorrMinima.current = (norm > 0.0L && twoSGB > pairCountAlign * norm)
-                ? (twoSGB - pairCountAlign * norm)
-                : 0.0L;
+            else {
+                dec_summary.alignMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvg);
+                dec_summary.alignNoHLCorrMinima.putMinima(0.0L,0.0L,n,delta);
+            }
         }
     }
     aggregate(w, n, delta, w.calcCminus(n,delta,logNlogN), w.calcCminusAsymp(logN));
@@ -1019,14 +904,20 @@ int GBRange::processRows() {
             }
             if(w->is_prim_active()) {
                 w->prim.summary.hlCorrEstimate.init(primAgg.left, primAgg.right, &primState);
-                if(model == Model::HLA && compat_ver != CompatVer::V015) {
-                    prim_windows_to_prescan.push_back(w.get());
-                }
+                prim_windows_to_prescan.push_back(w.get());
             }
-            prim_windows_to_prescan.push_back(w.get());
         }
     }
     for (std::uint64_t n = n_start; n < n_end; ) {
+        // Reset at the beginning of each new range (needed to fix minAt bug)
+        for(auto & w : windows) {
+            if (w->is_dec_active() && n == decAgg.left) {
+                w->dec.summary.reset();
+            }
+            if (w->is_prim_active() && n == primAgg.left) {
+                w->prim.summary.reset();
+            }
+        }
         if(model == Model::HLA && compat_ver != CompatVer::V015) {
             if(! dec_windows_to_prescan.empty()) {
                 for(std::uint64_t i = n,next_n; i < n_end; i = next_n) {
@@ -1127,9 +1018,11 @@ int GBRange::processRows() {
         }
         if(need_decReset) {
             decReset(decAgg.right);
+            need_decReset = false;
         }
         if(need_primReset) {
             primReset(primAgg.right);
+            need_primReset = false;
         }
     }
     return 0;
