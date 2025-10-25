@@ -58,6 +58,9 @@ LIBSRC  := $(wildcard $(LIBDIR)/*.c)
 LIBOBJ  := $(LIBSRC:.c=.o)
 LIBFILE := $(LIBDIR)/libprime.a
 
+# Ensure chineseRemainderTheorem.c is included in the library
+LIBSRC := $(filter-out $(LIBDIR)/chineseRemainderTheorem.c, $(LIBSRC)) $(LIBDIR)/chineseRemainderTheorem.c
+
 .PHONY: all clean $(PROGRAMS) $(PROGRAMS:%=%.clean) help
 
 # Default rule builds library + all programs

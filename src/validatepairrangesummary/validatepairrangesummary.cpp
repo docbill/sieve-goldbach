@@ -282,7 +282,7 @@ static int get_col_idx(std::unordered_map<std::string,int>& idx, const char * na
     return -1;
 };
 
-static ColIdx parse_header_and_get_indices(std::istream& in, size_t& header_ln, bool compat_v015, bool& detected_v015){
+static ColIdx parse_header_and_get_indices(std::istream& in, size_t& header_ln, bool /*compat_v015*/, bool& detected_v015){
     std::string line; header_ln = 0;
     while(std::getline(in,line)){
         ++header_ln; rstrip_cr(line);
@@ -300,11 +300,6 @@ static ColIdx parse_header_and_get_indices(std::istream& in, size_t& header_ln, 
     std::unordered_map<std::string,int> idx;
     for(int i=0;i<(int)H.size();++i) idx[H[i]] = i;
 
-    auto need = [&](const char* name)->int{
-        auto it = idx.find(name);
-        if(it==idx.end()) die(std::string("Header missing column: ")+name);
-        return it->second;
-    };
 
     ColIdx ci;
     

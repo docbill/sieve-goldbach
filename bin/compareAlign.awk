@@ -25,6 +25,17 @@
 BEGIN {
     FS=","; OFS=","
     
+    # Version checking
+    VERSION = ENVIRON["VERSION"]
+    if (VERSION == "") {
+        print "ERROR: VERSION environment variable not set. Use: VERSION=v0.1.5 or VERSION=v0.2.0" > "/dev/stderr"
+        exit 1
+    }
+    if (VERSION != "v0.1.5" && VERSION != "v0.2.0") {
+        print "ERROR: Invalid VERSION '" VERSION "'. Must be v0.1.5 or v0.2.0" > "/dev/stderr"
+        exit 1
+    }
+    
     # Global variables
     col_label = 0
     col_minat = 0
@@ -52,6 +63,18 @@ function detect_format(header) {
     } else {
         return "v0.1.5"
     }
+}
+
+# Find column position by name
+function find_column(header, name) {
+    split(header, cols, ",")
+    for (i = 1; i <= length(cols); i++) {
+        gsub(/^[ \t\r]+|[ \t\r]+$/, "", cols[i])  # trim whitespace
+        if (cols[i] == name) {
+            return i
+        }
+    }
+    return 0
 }
 
 # Compute CpredAlign from predicted values
@@ -101,10 +124,29 @@ FNR==NR {
 FNR==1 {
     format = detect_format($0)
     if (format == "v0.2.0") {
-        # HLA v0.2.0 format: FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_alignMax,c_alignMax,n_alignMin,c_alignMin,n_cBound,c_cBound,jitter
-        col_label2 = 3; col_minat_2 = 4; col_n0_2 = 8; col_cmin_2 = 9; col_ngeom_2 = 12; col_nalign = 17; col_calign = 18; col_jitter = 21
+        # Use dynamic column detection for v0.2.0 format
+        col_label2 = find_column($0, "START")
+        col_minat_2 = find_column($0, "minAt*")
+        col_n0_2 = find_column($0, "n_0*")
+        col_cmin_2 = find_column($0, "Cpred_min(n_0*)")
+        col_ngeom_2 = find_column($0, "n_geom")
+        col_nalign = find_column($0, "n_v")
+        col_calign = find_column($0, "Calign_min(n_v)")
+        col_jitter = find_column($0, "jitter")
+        
+        # Validate required columns for v0.2.0
+        missing_columns = 0
+        if (col_label2 == 0) { print "ERROR: START column not found for " VERSION > "/dev/stderr"; missing_columns++ }
+        if (col_n0_2 == 0) { print "ERROR: n_0* column not found for " VERSION > "/dev/stderr"; missing_columns++ }
+        if (col_cmin_2 == 0) { print "ERROR: Cpred_min(n_0*) column not found for " VERSION > "/dev/stderr"; missing_columns++ }
+        if (col_ngeom_2 == 0) { print "ERROR: n_geom column not found for " VERSION > "/dev/stderr"; missing_columns++ }
+        if (col_calign == 0) { print "ERROR: Calign_min(n_v) column not found for " VERSION > "/dev/stderr"; missing_columns++ }
+        if (missing_columns > 0) {
+            print "ERROR: " missing_columns " required columns missing for " VERSION ". Cannot proceed." > "/dev/stderr"
+            exit 1
+        }
     } else {
-        # v0.1.5 format: DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr,n_alignMax,c_alignMax,n_alignMin,c_alignMin,n_cBound,c_cBound,jitter
+        # v0.1.5 format: DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr,n_u,Calign_max(n_u),n_v,Calign_min(n_v),n_a,CboundMin,jitter
         col_label2 = 1; col_minat_2 = 2; col_n0_2 = 6; col_cmin_2 = 7; col_ngeom_2 = 10; col_nalign = 0; col_calign = 0; col_jitter = 19
     }
     
@@ -149,19 +191,12 @@ FNR==1 {
         cpred_align = cpred_min
     }
 
-    # Calculate jitter ratio: (Cmeas_min_raw-CpredAlign_raw)/[jitter]
-    # where C_raw = C * αn/log²n
+    # Calculate jitter ratio: (Cmeas - Calign)/jitter
+    # Jitter is now normalized during generation
     jitter_ratio = 0.0
-    if (jitter > 0 && np_0 > 0) {
-        log_n = log(np_0)
-        log_squared = log_n * log_n
-        alpha_n = alpha * np_0
-        conversion_factor = alpha_n / log_squared
-        
-        c_min_raw = (cmn+0) * conversion_factor
-        c_align_raw = cpred_align * conversion_factor
-        c_diff_raw = c_min_raw - c_align_raw
-        jitter_ratio = c_diff_raw / jitter
+    if (jitter > 0) {
+        c_diff = (cmn+0) - cpred_align
+        jitter_ratio = c_diff / jitter
     }
 
     # Lambda_min = log(C_min/CpredAlign) in scientific notation; blank if C_min==0

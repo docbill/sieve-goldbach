@@ -17,6 +17,17 @@
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+# Find column position by name
+function find_column(header, name) {
+    split(header, cols, ",")
+    for (i = 1; i <= length(cols); i++) {
+        if (cols[i] == name) {
+            return i
+        }
+    }
+    return -1
+}
+
 # Usage:
 #   awk -f joinSumPred.awk pairrangesummary-100M.csv pairrange2sgbll-full-100M.csv > joined.csv
 #
@@ -36,14 +47,30 @@ BEGIN {
     # Twin prime constant (C₂) times 4 for theoretical Hardy-Littlewood baseline
     TWIN_PRIME_CONST_4 = 2.6406472634
     
+    # Version checking
+    VERSION = ENVIRON["VERSION"]
+    if (VERSION == "") {
+        print "ERROR: VERSION environment variable not set. Use: VERSION=v0.1.5 or VERSION=v0.2.0" > "/dev/stderr"
+        exit 1
+    }
+    if (VERSION != "v0.1.5" && VERSION != "v0.2.0") {
+        print "ERROR: Invalid VERSION '" VERSION "'. Must be v0.1.5 or v0.2.0" > "/dev/stderr"
+        exit 1
+    }
+    
     # Global column variables
     col_label = 0
     col_n0 = 0
+    file2_format = ""
     col_cmin = 0
     col_n1 = 0
     col_cmax = 0
     col_ngeom = 0
     col_cavg = 0
+    
+    # File tracking variables
+    file1_name = ""
+    file2_name = ""
     
     # Second file column variables (HLA full output)
     col_label2 = 0
@@ -53,11 +80,16 @@ BEGIN {
     col_cmax_2 = 0
     col_ngeom_2 = 0
     col_cavg_2 = 0
-    col_nalign = 0
-    col_calign = 0
-    col_ncbound = 0
-    col_ccbound = 0
-}
+        col_nalign = 0
+        col_calign = 0
+        col_nalignmax = 0
+        col_calignmax = 0
+        col_ncbound = 0
+        col_ccbound = 0
+        
+        # Validate required columns for v0.1.5 (using hardcoded positions)
+        # For v0.1.5, use dynamic column detection
+    }
 
 function trim(s){ sub(/^[ \t\r]+/,"",s); sub(/[ \t\r]+$/,"",s); return s }
 
@@ -91,8 +123,8 @@ function R(n) {
 
 # No longer needed - we use actual alignment values from HLA full output
 
-# Detect format version based on header
-function detect_format(header) {
+# Detect VERSION version based on header
+function detect_VERSION(header) {
     if (index(header, "FIRST") > 0) {
         return "v0.2.0"
     } else {
@@ -100,29 +132,32 @@ function detect_format(header) {
     }
 }
 
-# Set column numbers based on format (inline)
+# Set column numbers based on VERSION (inline)
 
 # ---- Pass 1: read pairrangesummary (file1) ----
 FNR==NR {
     sub(/\r$/,"")
     if (FNR==1) {
-        format = detect_format($0)
-        if (format == "v0.2.0") {
-            col_label = 3
-            col_n0 = 8
-            col_cmin = 9
-            col_n1 = 10
-            col_cmax = 11
-            col_ngeom = 12
-            col_cavg = 14
+        file1_name = FILENAME
+        # Detect format from file header
+        if (index($0, "FIRST") > 0) {
+            # v0.2.0 format
+            col_label = find_column($0, "START")
+            col_n0 = find_column($0, "n_0")
+            col_cmin = find_column($0, "C_min(n_0)")
+            col_n1 = find_column($0, "n_1")
+            col_cmax = find_column($0, "C_max(n_1)")
+            col_ngeom = find_column($0, "n_geom")
+            col_cavg = find_column($0, "C_avg")
         } else {
-            col_label = 1
-            col_n0 = 6
-            col_cmin = 7
-            col_n1 = 8
-            col_cmax = 9
-            col_ngeom = 10
-            col_cavg = 12
+            # v0.1.5 format
+            col_label = find_column($0, "DECADE")
+            col_n0 = find_column($0, "n_0")
+            col_cmin = find_column($0, "C_min")
+            col_n1 = find_column($0, "n_1")
+            col_cmax = find_column($0, "C_max")
+            col_ngeom = find_column($0, "n_geom")
+            col_cavg = find_column($0, "C_avg")
         }
         first_file_processed = 1
         next  # skip header
@@ -139,7 +174,7 @@ FNR==NR {
 
     # For v0.2.0 files, use n_geom as the key (it's unique)
     # For v0.1.5 files, use label + n_geom as the key
-    if (format == "v0.2.0") {
+    if (VERSION == "v0.2.0") {
         key = ngeom
     } else {
         key = label "\034" ngeom
@@ -157,46 +192,111 @@ FNR==NR {
 
 # ---- Pass 2: read HLA full output (file2), emit join ----
 FNR==1 {
+    file2_name = FILENAME
     
-    # Detect format from second file header and set columns
-    format = detect_format($0)
-    if (format == "v0.2.0") {
-        # HLA v0.2.0 format: FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_alignMax,c_alignMax,n_alignMin,c_alignMin
-        col_label2 = 3
-        col_n0_2 = 8
-        col_cmin_2 = 9
-        col_n1_2 = 10
-        col_cmax_2 = 11
-        col_ngeom_2 = 12
-        col_cavg_2 = 14
-        col_nalign = 17
-        col_calign = 18
-        col_ncbound = 19
-        col_ccbound = 20
+    # Detect format from file header
+    if (index($0, "FIRST") > 0) {
+        # Check if it has align/bound columns to distinguish v0.2.0 from v0.1.5 primorial
+        if (index($0, "n_v") > 0 && index($0, "Calign_min") > 0) {
+            file2_format = "v0.2.0"
+        } else {
+            file2_format = "v0.1.5"
+        }
+        if (file2_format == "v0.2.0") {
+            # HLA v0.2.0 VERSION: FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_v,Calign_min(n_v),n_u,Calign_max(n_u),n_a,CboundMin,jitter
+            col_label2 = find_column($0, "START")
+            col_n0_2 = find_column($0, "n_0*")
+            col_cmin_2 = find_column($0, "Cpred_min(n_0*)")
+            col_n1_2 = find_column($0, "n_1*")
+            col_cmax_2 = find_column($0, "Cpred_max(n_1*)")
+            col_ngeom_2 = find_column($0, "n_geom")
+            col_cavg_2 = find_column($0, "Cpred_avg")
+            col_nalign = find_column($0, "n_v")
+            col_calign = find_column($0, "Calign_min(n_v)")
+            col_nalignmax = find_column($0, "n_u")
+            col_calignmax = find_column($0, "Calign_max(n_u)")
+            col_ncbound = find_column($0, "n_a")
+            col_ccbound = find_column($0, "Cbound")
+        } else {
+            # v0.1.5 primorial format: FIRST,LAST,START,minAt,G(minAt),maxAt,G(maxAt),n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg
+            col_label2 = find_column($0, "START")
+            col_n0_2 = find_column($0, "n_0")
+            col_cmin_2 = find_column($0, "C_min(n_0)")
+            col_n1_2 = find_column($0, "n_1")
+            col_cmax_2 = find_column($0, "C_max(n_1)")
+            col_ngeom_2 = find_column($0, "n_geom")
+            col_cavg_2 = find_column($0, "C_avg")
+            col_nalign = 0
+            col_calign = 0
+            col_nalignmax = 0
+            col_calignmax = 0
+            col_ncbound = 0
+            col_ccbound = 0
+        }
+        
+        # Validate required columns based on format
+        missing_columns = 0
+        if (file2_format == "v0.2.0") {
+            if (col_nalign == -1) { print "ERROR: n_v column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_calign == -1) { print "ERROR: Calign_min(n_v) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_nalignmax == -1) { print "ERROR: n_u column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_calignmax == -1) { print "ERROR: Calign_max(n_u) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_ncbound == -1) { print "ERROR: n_a column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_ccbound == -1) { print "ERROR: Cbound column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+        } else {
+            if (col_label2 == -1) { print "ERROR: START column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_n0_2 == -1) { print "ERROR: n_0 column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_cmin_2 == -1) { print "ERROR: C_min(n_0) column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_n1_2 == -1) { print "ERROR: n_1 column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_cmax_2 == -1) { print "ERROR: C_max(n_1) column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_ngeom_2 == -1) { print "ERROR: n_geom column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_cavg_2 == -1) { print "ERROR: C_avg column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        }
+        if (missing_columns > 0) {
+            print "ERROR: " missing_columns " required columns missing for " file2_format ". Cannot proceed." > "/dev/stderr"
+            exit 1
+        }
     } else {
+        file2_format = "v0.1.5"
         # v0.1.5 format: DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr
-        col_label2 = 1
-        col_n0_2 = 6
-        col_cmin_2 = 7
-        col_n1_2 = 8
-        col_cmax_2 = 9
-        col_ngeom_2 = 10
-        col_cavg_2 = 12
+        col_label2 = find_column($0, "DECADE")
+        col_n0_2 = find_column($0, "n_0")
+        col_cmin_2 = find_column($0, "Cpred_min")
+        col_n1_2 = find_column($0, "n_1")
+        col_cmax_2 = find_column($0, "Cpred_max")
+        col_ngeom_2 = find_column($0, "N_geom")
+        col_cavg_2 = find_column($0, "Cpred_avg")
         col_nalign = 0
         col_calign = 0
         col_ncbound = 0
         col_ccbound = 0
+        
+        # Validate required columns for v0.1.5
+        missing_columns = 0
+        if (col_label2 == -1) { print "ERROR: DECADE column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (col_n0_2 == -1) { print "ERROR: n_0 column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (col_cmin_2 == -1) { print "ERROR: Cpred_min column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (col_n1_2 == -1) { print "ERROR: n_1 column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (col_cmax_2 == -1) { print "ERROR: Cpred_max column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (col_ngeom_2 == -1) { print "ERROR: N_geom column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (col_cavg_2 == -1) { print "ERROR: Cpred_avg column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (missing_columns > 0) {
+            print "ERROR: " missing_columns " required columns missing for v0.1.5. Cannot proceed." > "/dev/stderr"
+            exit 1
+        }
     }
-    if(col_label2 == 3) {
+    # Use VERSION environment variable for output format
+    if (VERSION == "v0.2.0") {
+        # v0.2.0 format: include align/bound columns
         print "START","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
-            "n_geom","C_avg","Cpred_avg","Align","CpredAlign","CpredBound"
+            "n_geom","C_avg","Cpred_avg","Align","Cpred","n_v","Calign_min","n_u","Calign_max","n_a","Cbound"
     }
     else {
+        # v0.1.5 format: original 12 columns only
         print "DECADE","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
-            "n_geom","C_avg","Cpred_avg","Align","CpredAlign","CpredBound"
-
+            "n_geom","C_avg","Cpred_avg"
     }
     next
 }
@@ -214,23 +314,35 @@ FNR==1 {
     cpavg  = trim($col_cavg_2)
     n_align = (col_nalign > 0) ? trim($col_nalign) + 0 : 0
     c_align = (col_calign > 0) ? trim($col_calign) + 0 : 0
+    n_alignmax = (col_nalignmax > 0) ? trim($col_nalignmax) + 0 : 0
+    c_alignmax = (col_calignmax > 0) ? trim($col_calignmax) + 0 : 0
     n_cbound = (col_ncbound > 0) ? trim($col_ncbound) + 0 : 0
     c_cbound = (col_ccbound > 0) ? trim($col_ccbound) + 0 : 0
     
     # For v0.2.0 files, use n_geom as the key (it's unique)
     # For v0.1.5 files, use label + n_geom as the key
-    if (col_label2 == 3) {  # v0.2.0 format
+    if (VERSION == "v0.2.0") {  # v0.2.0 format
         key = ngeomp
     } else {  # v0.1.5 format
         key = label "\034" ngeomp
     }
+    
+    # Store align and bound values in sum arrays for later use
+    sum_n_align[key] = n_align
+    sum_c_align[key] = c_align
+    sum_n_alignmax[key] = n_alignmax
+    sum_c_alignmax[key] = c_alignmax
+    sum_n_cbound[key] = n_cbound
+    sum_c_cbound[key] = c_cbound
 
     if (!(key in sum_n0)) {
-        if(col_label2 == 1) {
-            printf("WARN: no match for DECADE=%s n_geom=%s in file1\n", label, ngeomp) > "/dev/stderr"
+        if (VERSION == "v0.1.5") {
+            printf("ERROR: no match for DECADE=%s n_geom=%s in file1\n", label, ngeomp) > "/dev/stderr"
+            printf("ERROR: Processing files: file1='%s' file2='%s'\n", file1_name, file2_name) > "/dev/stderr"; exit 1
         }
         else {
-            printf("WARN: no match for START=%s n_geom=%s in file1\n", label, ngeomp) > "/dev/stderr"
+            printf("ERROR: no match for START=%s n_geom=%s in file1\n", label, ngeomp) > "/dev/stderr"
+            printf("ERROR: Processing files: file1='%s' file2='%s'\n", file1_name, file2_name) > "/dev/stderr"; exit 1
         }
         next
     }
@@ -270,9 +382,20 @@ FNR==1 {
         cpred_bound = cpmin
     }
     
-    printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%.6f,%.6f,%.6f\n",
-        output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
-        sum_n1[key], sum_cmax[key], n1p, cpmax,
-        sum_ng[key], sum_cavg[key], cpavg, align, cpred_align, cpred_bound
+    # Use VERSION environment variable for data output
+    if (VERSION == "v0.2.0") {
+        # v0.2.0 format: include align/bound columns
+        printf "%s,%d,%.6f,%d,%.6f,%d,%.8f,%d,%.8f,%.0f,%.9f,%.9f,%.6f,%.6f,%d,%.6f,%d,%.6f,%d,%.6f\n",
+            output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
+            sum_n1[key], sum_cmax[key], n1p, cpmax,
+            sum_ng[key], sum_cavg[key], cpavg, align, cpred_align,
+            sum_n_align[key], sum_c_align[key], sum_n_alignmax[key], sum_c_alignmax[key], sum_n_cbound[key], sum_c_cbound[key]
+    } else {
+        # v0.1.5 format: original 12 columns only
+        printf "%s,%d,%.6f,%d,%.8f,%d,%.6f,%d,%.8f,%.0f,%.6f,%.8f\n",
+            output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
+            sum_n1[key], sum_cmax[key], n1p, cpmax,
+            sum_ng[key], sum_cavg[key], cpavg
+    }
 }
 

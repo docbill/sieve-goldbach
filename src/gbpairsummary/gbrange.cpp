@@ -18,7 +18,24 @@
 #include <cstdarg>   // for va_list, va_start, va_end, va_copy
 #include <cstdio>    // for std::vfprintf, std::fflush
 #include <cstring>   // for strstr
+#include <cstdint>   // for std::uint64_t
+#include <cinttypes> // for SCNu64, PRIu64
+#include <cmath>     // for math functions
+#include <vector>    // for std::vector
+#include "chineseRemainderTheorem.h"
 #include "gbrange.hpp"
+
+#if 0
+static constexpr unsigned SMALL_PRIMES[] = {
+    5,7,11,13,17,19,23,29,31,37,41,43,47,53
+};
+
+// largest odd primorial fitting uint64_t: 3*5*7*...*53
+static constexpr std::uint64_t ODD_PRIMORIAL_U64 = 16294579238595022365ULL;
+
+// If you also want the long-double primorial value handy:
+static constexpr long double ODD_PRIMORIAL_LD = 1.6294579238595022365e19L;
+#endif
 
 // ----- Small helpers -----
 static inline std::uint64_t maxPrefEven(long double value, std::uint64_t minValue) {
@@ -45,6 +62,7 @@ static inline void vfprintf_both(FILE* a, FILE* b, const char* fmt, va_list ap) 
     }
 }
 
+#if 0
 static inline long double expose_next_log_fast(
     long double w, long double p_next, long double q_next, bool next_aligns, bool single_residue=false, bool require_span=false)
 {
@@ -55,24 +73,30 @@ static inline long double expose_next_log_fast(
     return t * (single_residue ? logl(p_next - 1.0L) : logl(p_next-2.0L));   // add to sum of logs
 }
 
-long double effective_small_prime_deficit(uint64_t n, long double w,bool single_residue=false)
+long double allowed_prime_deficit(uint64_t n, long double w,bool single_residue=false)
 {
-    if (n < 3ULL) return 0.0L;
-
-    w = floorl(w);
+    if (n < 3ULL) {
+        return (n == 0ULL) ? 0.0L : 1.0L;
+    }
+    
+    std::uint64_t w = (std::uint64_t)floorl(w);
 
     // seed with mod-3 admissible fraction
-    long double sumlog = logl((n % 3ULL == 0ULL) ? (2.0L/3.0L) : 1.0L);
+    long double sumlog = 0.0L
+    std::uint64_t q = (n % 3ULL == 0ULL) ? 3ULL : 1ULL;
 
     // --- up to p=5 ---
     static constexpr long double PR5 = 3.0L*5.0L;
     const bool a5 = (n % 5ULL) != 0ULL;
-    if (w < PR5) {
-        sumlog += expose_next_log_fast(w, 5.0L, PR5, a5, single_residue, /*require_span=*/true);
+    std::uint64_t q_next *= 5.0ULL;
+    if (w < q_next) {
+        sumlog += expose_next_log_fast(w, 5.0L, PR5, a5, single_residue, true);
         return expl(sumlog);
     }
-    if (a5) sumlog += (single_residue ? logl(5.0L - 1.0L) : logl(5.0L - 2.0L)); // *3
-
+    if (a5) {
+        sumlog += (single_residue ? logl(5.0L - 1.0L) : logl(5.0L - 2.0L)); // *3
+        q = q_next;
+    }
     // --- up to p=7/11/13/17/19 ---
     static constexpr long double PR7  = 7.0L*PR5;
     static constexpr long double PR11 = 11.0L*PR7;
@@ -85,21 +109,25 @@ long double effective_small_prime_deficit(uint64_t n, long double w,bool single_
     const bool a13 = (n % 13ULL) != 0ULL;
     const bool a17 = (n % 17ULL) != 0ULL;
     const bool a19 = (n % 19ULL) != 0ULL;
-
-    if (w < PR7) {
+    q_next *= 7.0ULL;
+    if (w < q_next) {
         sumlog += expose_next_log_fast(w,  7.0L, PR7,  a7,  single_residue);
         sumlog += expose_next_log_fast(w, 11.0L, PR11, a11, single_residue);
         sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, single_residue);
-        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue, /*require_span=*/true);
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue, /*require_span=*/true);
+        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue, true);
+        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue, true);
         return expl(sumlog);
     }
-    if (a7) sumlog += (single_residue ? logl(7.0L - 1.0L) : logl(7.0L - 2.0L));   // *5
+    if (a7) {
+        sumlog += (single_residue ? logl(7.0L - 1.0L) : logl(7.0L - 2.0L));   // *5
+        q = q_next;
+    }
 
     // --- up to p=23 ---
     static constexpr long double PR23 = 23.0L*PR19;
     const bool a23 = (n % 23ULL) != 0ULL;
-    if (w < PR11) {
+    q_next *= 11.0ULL;
+    if (w < q_next) {
         sumlog += expose_next_log_fast(w, 11.0L, PR11, a11, single_residue);
         sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, single_residue);
         sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue);
@@ -107,12 +135,16 @@ long double effective_small_prime_deficit(uint64_t n, long double w,bool single_
         sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
         return expl(sumlog);
     }
-    if (a11) sumlog += (single_residue ? logl(11.0L - 1.0L) : logl(11.0L - 2.0L)); // *9
+    if (a11) {
+        sumlog += (single_residue ? logl(11.0L - 1.0L) : logl(11.0L - 2.0L)); // *9
+        q = q_next;
+    }
 
     // --- up to p=29 ---
     static constexpr long double PR29 = 29.0L*PR23;
     const bool a29 = (n % 29ULL) != 0ULL;
-    if (w < PR13) {
+    q_next *= 13.0ULL;
+    if (w < q_next) {
         sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, single_residue);
         sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue);
         sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
@@ -120,12 +152,16 @@ long double effective_small_prime_deficit(uint64_t n, long double w,bool single_
         sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
         return expl(sumlog);
     }
-    if (a13) sumlog += (single_residue ? logl(13.0L - 1.0L) : logl(13.0L - 2.0L)); // *11
+    if (a13) {
+        sumlog += (single_residue ? logl(13.0L - 1.0L) : logl(13.0L - 2.0L)); // *11
+        q = q_next;
+    }
 
     // --- up to p=31 ---
     static constexpr long double PR31 = 31.0L*PR29;
     const bool a31 = (n % 31ULL) != 0ULL;
-    if (w < PR17) {
+    q_next *= 17.0ULL;
+    if (w < q_next) {
         sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue);
         sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
         sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
@@ -133,12 +169,16 @@ long double effective_small_prime_deficit(uint64_t n, long double w,bool single_
         sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
         return expl(sumlog);
     }
-    if (a17) sumlog += logl(17.0L - 2.0L); // *15
+    if (a17) {
+        sumlog += logl(17.0L - 2.0L); // *15
+        q = q_next;
+    }
 
     // --- up to p=37 ---
     static constexpr long double PR37 = 37.0L*PR31;
     const bool a37 = (n % 37ULL) != 0ULL;
-    if (w < PR19) {
+    q_next *= 19.0ULL;
+    if (w < q_next) {
         sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
         sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
         sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
@@ -146,7 +186,10 @@ long double effective_small_prime_deficit(uint64_t n, long double w,bool single_
         sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
         return expl(sumlog);
     }
-    if (a19) sumlog += (single_residue ? logl(19.0L - 1.0L) : logl(19.0L - 2.0L)); // *17
+    if (a19) {
+        sumlog += (single_residue ? logl(19.0L - 1.0L) : logl(19.0L - 2.0L)); // *17
+        q = q_next;
+    }
 
     // --- up to p=41,43,47,53 (likely never reached, but cheap if we do) ---
     static constexpr long double PR41 = 41.0L*PR37;
@@ -159,7 +202,8 @@ long double effective_small_prime_deficit(uint64_t n, long double w,bool single_
     const bool a47 = (n % 47ULL) != 0ULL;
     const bool a53 = (n % 53ULL) != 0ULL;
 
-    if (w < PR23) {
+    q_next *= 23.0ULL;
+    if (w < q_next) {
         sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
         sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
         sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
@@ -167,9 +211,13 @@ long double effective_small_prime_deficit(uint64_t n, long double w,bool single_
         sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
         return expl(sumlog);
     }
-    if (a23) sumlog += (single_residue ? logl(23.0L - 1.0L) : logl(23.0L - 2.0L)); // 23-2
+    if (a23) {
+        sumlog += (single_residue ? logl(23.0L - 1.0L) : logl(23.0L - 2.0L)); // 23-2
+        q = q_next;
+    }
 
-    if (w < PR29) {
+    q_next *= 29.0ULL;
+    if (w < q_next) {
         sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
         sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
         sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
@@ -177,9 +225,13 @@ long double effective_small_prime_deficit(uint64_t n, long double w,bool single_
         sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, single_residue);
         return expl(sumlog);
     }
-    if (a29) sumlog += (single_residue ? logl(29.0L - 1.0L) : logl(29.0L - 2.0L)); // 29-2
+    if (a29) {
+        sumlog += (single_residue ? logl(29.0L - 1.0L) : logl(29.0L - 2.0L)); // 29-2
+        q = q_next;
+    }
 
-    if (w < PR31) {
+    q_next *= 31.0ULL;
+    if (w < q_next) {
         sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
         sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
         sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
@@ -187,7 +239,10 @@ long double effective_small_prime_deficit(uint64_t n, long double w,bool single_
         sumlog += expose_next_log_fast(w, 47.0L, PR47, a47, single_residue);
         return expl(sumlog);
     }
-
+    if (a31) {
+        sumlog += (single_residue ? logl(31.0L - 1.0L) : logl(31.0L - 2.0L)); // 31-2
+        q = q_next;
+    }
     // Tail (practically negligible, but harmless if reached)
     sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
     sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
@@ -196,6 +251,7 @@ long double effective_small_prime_deficit(uint64_t n, long double w,bool single_
     sumlog += expose_next_log_fast(w, 53.0L, PR53, a53, single_residue);
     return expl(sumlog);
 }
+#endif
 
 
 static inline void fprintf_both(FILE* a, FILE* b, const char* fmt, ...) {
@@ -221,7 +277,8 @@ static void printHeaderFull(FILE *out1,FILE *out2,bool useLegacy,Model model) {
                 :"DECADE,MIN AT,MIN,MAX AT,MAX,n_0,Cpred_min,n_1,Cpred_max,N_geom,<COUNT>,Cpred_avg,HLCorr\n")
             :(model == Model::Empirical
                 ?"FIRST,LAST,START,minAt,G(minAt),maxAt,G(maxAt),n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg\n"
-                :"FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_alignMax,c_alignMax,n_alignMin,c_alignMin,n_cBound,c_cBound,jitter\n"),
+                :"FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg"
+                    ",n_v,Calign_min(n_v),n_u,Calign_max(n_u),n_a,Cbound,jitter\n"),
         out1, out2);
 }
 
@@ -352,24 +409,10 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
     }
     GBLongIntervalSummary &summary = interval.summary;
     if(! useLegacy) {
-        if (model == Model::Empirical) {
-            fprintf_both(interval.out,interval.trace,
-                "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf\n",
-                agg.left, agg.right -1,
-                agg.label.c_str(),
-                summary.pairCountMinima.n_last, summary.pairCountMinima.c_last,
-                summary.pairCountMaxima.n_first, summary.pairCountMaxima.c_first,
-                summary.cMinima.n_last, summary.cMinima.c_last,
-                summary.cMaxima.n_first, summary.cMaxima.c_first,
-                agg.n_geom,
-                summary.pairCountAvg,
-                summary.cAvg
-            );
-            return;
-        }
         fprintf_both(interval.out,interval.trace,
-            "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64
-                ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.6Lf\n",
+            (model == Model::Empirical) 
+                ? "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf\n"
+                : "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf,",
             agg.left, agg.right -1,
             agg.label.c_str(),
             summary.pairCountMinima.n_last, summary.pairCountMinima.c_last,
@@ -378,33 +421,26 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
             summary.cMaxima.n_first, summary.cMaxima.c_first,
             agg.n_geom,
             summary.pairCountAvg,
-            summary.cAvg,
-            summary.pairCountAlignMaxima.n_last,
-            summary.pairCountAlignMaxima.c_last,
-            summary.alignMinima.n_last,
-            (summary.alignMinima.c_last > 0.0L ? summary.alignMinima.c_last : 0.0L),
-            summary.alignNoHLCorrMinima.n_last,
-            (summary.alignNoHLCorrMinima.c_last > 0.0L ? summary.alignNoHLCorrMinima.c_last : 0.0L),
-            summary.jitterLast
-        );
-        return;
-    }
-    if(model == Model::Empirical) {
-        fprintf_both(interval.out,interval.trace,
-            "%s,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.6Lf\n",
-            agg.label.c_str(),
-            summary.pairCountMinima.n_first, summary.pairCountMinima.c_first,
-            summary.pairCountMaxima.n_first, summary.pairCountMaxima.c_first,
-            summary.cMinima.n_first, summary.cMinima.c_first,
-            summary.cMaxima.n_first, summary.cMaxima.c_first,
-            ((std::uint64_t)floorl(agg.n_geom)) | (agg.n_geom >= 10L ? 1ULL : 0ULL),
-            summary.pairCountAvg,
             summary.cAvg
         );
+        if (model != Model::Empirical) {
+            fprintf_both(interval.out,interval.trace,
+                "%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.6Lf\n",
+                summary.alignMinima.n_last,
+                (summary.alignMinima.c_last > 0.0L ? summary.alignMinima.c_last : 0.0L),
+                summary.alignMaxima.n_last,
+                (summary.alignMaxima.c_last > 0.0L ? summary.alignMaxima.c_last : 0.0L),
+                summary.alignNoHLCorrMinima.n_last,
+                (summary.alignNoHLCorrMinima.c_last > 0.0L ? summary.alignNoHLCorrMinima.c_last : 0.0L),
+                summary.jitterLast
+            );
+        }
         return;
     }
     fprintf_both(interval.out,interval.trace,
-        "%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%" PRIu64 ",%.8Lf,%" PRIu64 ",%.8Lf,%.8Lf,%.8Lf\n",
+        (model == Model::Empirical)
+            ? "%s,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.6Lf\n"
+            : "%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%" PRIu64 ",%.8Lf,%" PRIu64 ",%.8Lf,%.8Lf,",
         agg.label.c_str(),
         summary.pairCountMinima.n_first, summary.pairCountMinima.c_first,
         summary.pairCountMaxima.n_first, summary.pairCountMaxima.c_first,
@@ -412,9 +448,11 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
         summary.cMaxima.n_first, summary.cMaxima.c_first,
         ((std::uint64_t)floorl(agg.n_geom)) | (agg.n_geom >= 10L ? 1ULL : 0ULL),
         summary.pairCountAvg,
-        summary.cAvg,
-        summary.hlCorrAvg
+        summary.cAvg
     );
+    if(model != Model::Empirical) {
+        fprintf_both(interval.out,interval.trace, "%.8Lf\n", summary.hlCorrAvg);
+    }
 }
 
 void GBRange::outputRaw(GBAggregate &agg,GBLongInterval &interval) {
@@ -449,7 +487,7 @@ void GBRange::outputNorm(GBAggregate &agg,GBLongInterval &interval) {
         }
         else {
             std::fprintf(interval.norm,
-                "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf\n",
+                "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf\n",
                 agg.left, agg.right -1,
                 agg.label.c_str(),
                 summary.cMinima.n_first, summary.cMinima.c_first,
@@ -458,6 +496,8 @@ void GBRange::outputNorm(GBAggregate &agg,GBLongInterval &interval) {
                 summary.cAvg,
                 summary.alignMinima.n_last,
                 (summary.alignMinima.c_last > 0.0L ? summary.alignMinima.c_last : 0.0L),
+                summary.alignMaxima.n_last,
+                (summary.alignMaxima.c_last > 0.0L ? summary.alignMaxima.c_last : 0.0L),
                 summary.alignNoHLCorrMinima.n_last,
                 (summary.alignNoHLCorrMinima.c_last > 0.0L ? summary.alignNoHLCorrMinima.c_last : 0.0L) );
         }
@@ -709,41 +749,37 @@ int GBRange::addRow(
         // Applies the short-interval residue model on both halves of n ± δ.
         // Conservative terms use residue 1; predictive term uses residue 2.
 
-        const long double nl = (long double)n;
+        // const long double nl = (long double)n;
         const long double dl = (long double)delta;
-
-        // Each half covers a different short interval:
-        // lower: √(n−1), upper: √(n+δ)
-        const long double w_lower = sqrtl(nl - 1.0L);
-        const long double w_upper = sqrtl(nl + dl);
-
-        // --- Conservative alignment (residue 1) ---
-        const long double R1_lower = effective_small_prime_deficit(n, w_lower, true);
-        const long double R1_upper = effective_small_prime_deficit(n, w_upper, true);
-        const long double pairCountAlignConservative = 2.0L * (R1_lower + R1_upper); // ×2 for ordered pairs
-
-        // Short-of-short for jitter: √w on each half
-        const long double wj_lower = sqrtl(w_lower);
-        const long double wj_upper = sqrtl(w_upper);
-
-        // --- Jitter (residue 1, short-of-short) ---
-        const long double J_lower = effective_small_prime_deficit(n, wj_lower, true);
-        const long double J_upper = effective_small_prime_deficit(n, wj_upper, true);
-        const long double jitter  = 2.0L * (J_lower + J_upper); // ×2 for ordered pairs
 
         // --- Predictive alignment (residue 2) ---
         // Applies to the canonical short interval √(2n)
-        //const long double w_main = sqrtl(2.0L*nl - 2.0L);
-        const long double pairCountAlignPredictive = 2.0L * effective_small_prime_deficit(n, w_upper, false);
-        /*
-        // this is based on a two residual sieve long double pairCountAlign = 2.0L*effective_small_prime_deficit(n, sqrtl(2.0L*(long double)n),false); // this is based on a two residual sieve
-        long double jitterBottom = effective_small_prime_deficit(n, sqrtl(sqrtl((long double)n-1.0L)),true);
-        long double jitterTop = effective_small_prime_deficit(n, sqrtl(sqrtl(sqrtl(delta+(long double)n))),true); // the two is for ordered pairs
-        long double jitter = 2.0L*(jitterBottom+jitterTop);
-        long double pairCountAlignConservativeBottom = effective_small_prime_deficit(n, sqrtl((long double)n-1.0L),true);
-        long double pairCountAlignConservativeTop = effective_small_prime_deficit(n, sqrtl(delta+sqrtl((long double)n)),true); // the two is for ordered pairs
-        long double pairCountAlignConservative = 2.0L*(pairCountAlignConservativeBottom+pairCountAlignConservativeTop); 
-        */
+        const long double w_main = sqrtl(2.0L*dl);
+        const long double pairCountAlignPredictive = 2.0L * allowed_prime_deficit(n, w_main, false);
+        const long double j_main = sqrtl(w_main);
+        const long double jitterPredictive = 2.0L * allowed_prime_deficit(n, j_main, false);
+        
+        // Each half covers a different short interval:
+        // lower: √(n−1), upper: √(n+δ)
+        // const long double w_lower = sqrtl(nl - 1.0L);
+        // const long double w_upper = sqrtl(nl + dl);
+
+        // --- Conservative alignment (residue 1) ---
+        // const long double R1_lower = allowed_prime_deficit(n, w_lower, true);
+        // const long double R1_upper = allowed_prime_deficit(n, w_upper, true);
+        // const long double pairCountAlignConservative = 2.0L * (R1_lower + R1_upper); // ×2 for ordered pairs
+        const long double pairCountAlignConservative = 4.0L * allowed_prime_deficit(n, w_main , true);
+
+        // Short-of-short for jitter: √w on each half
+        // const long double wj_lower = sqrtl(w_lower);
+        // const long double wj_upper = sqrtl(w_upper);
+
+        // // --- Jitter (residue 1, short-of-short) ---
+        // const long double J_lower = allowed_prime_deficit(n, wj_lower, true);
+        // const long double J_upper = allowed_prime_deficit(n, wj_upper, true);
+        // const long double jitter  = 2.0L * (J_lower + J_upper); // ×2 for ordered pairs
+
+        
         long double c_raw = twoSGB;
         long double pairCount_raw = 0.0L;
         long double pairCountMinima = 0.0L;
@@ -774,14 +810,17 @@ int GBRange::addRow(
             prim_summary.pairCount = pairCount_raw * hlCorrAvg;
             prim_summary.c_of_n = c_corr;
             prim_summary.pairCountAlignMaxima.putMaxima(pairCountAlignPredictive,0.0L,n,delta,hlCorrAvg);
-            prim_summary.currentJitter = jitter;
             if(norm > 0.0L) {
                 prim_summary.alignMinima.putMinima(c_corr,-pairCountAlignPredictive*norm,n,delta,hlCorrAvg);
-                prim_summary.alignNoHLCorrMinima.putMinima(c_raw,-(pairCountAlignConservative+jitter)*norm,n,delta);
+                prim_summary.alignMaxima.putMaxima(c_corr,+pairCountAlignPredictive*norm,n,delta,hlCorrAvg);
+                prim_summary.alignNoHLCorrMinima.putMinima(c_raw,-(pairCountAlignConservative)*norm,n,delta);
+                prim_summary.currentJitter = jitterPredictive*norm;
             }
             else {
                 prim_summary.alignMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvg);
+                prim_summary.alignMaxima.putMaxima(0.0L,0.0L,n,delta,hlCorrAvg);
                 prim_summary.alignNoHLCorrMinima.putMinima(0.0L,0.0L,n,delta);
+                prim_summary.currentJitter = 0.0L;
             }
         }
         if(w.is_dec_active()) {
@@ -806,14 +845,17 @@ int GBRange::addRow(
             dec_summary.pairCount = pairCount_raw * hlCorrAvg;
             dec_summary.c_of_n = c_corr;
             dec_summary.pairCountAlignMaxima.putMaxima(pairCountAlignPredictive,0.0L,n,delta,hlCorrAvg);
-            dec_summary.currentJitter = jitter;
             if(norm > 0.0L) {
                 dec_summary.alignMinima.putMinima(c_corr,-pairCountAlignPredictive*norm,n,delta,hlCorrAvg);
-                dec_summary.alignNoHLCorrMinima.putMinima(c_raw,-(pairCountAlignConservative+jitter)*norm,n,delta);
+                dec_summary.alignMaxima.putMaxima(c_corr,+pairCountAlignPredictive*norm,n,delta,hlCorrAvg);
+                dec_summary.alignNoHLCorrMinima.putMinima(c_raw,-(pairCountAlignConservative)*norm,n,delta);
+                dec_summary.currentJitter = jitterPredictive*norm;
             }
             else {
                 dec_summary.alignMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvg);
+                dec_summary.alignMaxima.putMaxima(0.0L,0.0L,n,delta,hlCorrAvg);
                 dec_summary.alignNoHLCorrMinima.putMinima(0.0L,0.0L,n,delta);
+                dec_summary.currentJitter = 0.0L;
             }
         }
     }

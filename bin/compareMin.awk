@@ -147,8 +147,8 @@ FNR==1 {
 
     if (cmn=="") {
         # No match from file1 for this row
-        printf("WARN: unmatched key in file2: Dec=%s, n_geom=%s%s\n",
-               label, ngeo, (label=="0"?sprintf(", minAt=%s",minA):"")) > "/dev/stderr"
+        printf("ERROR: unmatched key in file2: Dec=%s, n_geom=%s%s\n",
+               label, ngeo, (label=="0"?sprintf(", minAt=%s",minA):"")) > "/dev/stderr"; exit 1
         next
     }
 
@@ -166,11 +166,11 @@ END {
             # reconstruct a readable note
             split(k, p, SUBSEP)
             if (length(p)==3) {
-                printf("WARN: key present only in file1: Dec=%s, n_geom=%s, minAt=%s\n",
-                       p[1], p[3], p[2]) > "/dev/stderr"
+                printf("ERROR: key present only in file1: Dec=%s, n_geom=%s, minAt=%s\n",
+                       p[1], p[3], p[2]) > "/dev/stderr"; exit 1
             } else {
-                printf("WARN: key present only in file1: Dec=%s, n_geom=%s\n",
-                       p[1], p[2]) > "/dev/stderr"
+                printf("ERROR: key present only in file1: Dec=%s, n_geom=%s\n",
+                       p[1], p[2]) > "/dev/stderr"; exit 1
             }
         }
     }

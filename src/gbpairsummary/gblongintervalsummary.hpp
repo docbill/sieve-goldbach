@@ -64,6 +64,7 @@ public:
     ExtremaValues pairCountMaxima;
     ExtremaValues pairCountAlignMaxima;
     ExtremaValues alignMinima;
+    ExtremaValues alignMaxima;
     ExtremaValues alignNoHLCorrMinima;
     ExtremaValues cMinima;
     ExtremaValues cMaxima;

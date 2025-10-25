@@ -1104,12 +1104,16 @@ respectively.
 \addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
 
 \addplot[mypred, thick, purple!70!black, dotted, sharp plot]
-  table[x={Npred_0}, y={CpredBound}] {\pairdata};
+  table[x={n_a}, y={Cbound}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
 
 \addplot[mypred, thick, brown!70!black, dashed, sharp plot]
-  table[x={Npred_0}, y={CpredAlign}] {\pairdata};
+  table[x={n_v}, y={Calign_min}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\talign} \)}
+
+\addplot[mypred, thick, orange!70!black, dashed, sharp plot]
+  table[x={n_u}, y={Cpred_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max}^{\talign} \)}
 
 \addplot[mypred, thick, blue!70!black, dashed, sharp plot]
   table[x={Npred_0}, y={Cpred_min}] {\pairdata};
@@ -1183,12 +1187,16 @@ respectively.
 \addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
 
 \addplot[mypred, thick, purple!70!black, dotted, sharp plot]
-  table[x={Npred_0}, y={CpredBound}] {\pairdata};
+  table[x={n_a}, y={Cbound}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
 
 \addplot[mypred, thick, brown!70!black, dashed, sharp plot]
-  table[x={Npred_0}, y={CpredAlign}] {\pairdata};
+  table[x={n_v}, y={Calign_min}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\talign} \)}
+
+\addplot[mypred, thick, orange!70!black, dashed, sharp plot]
+  table[x={n_u}, y={Cpred_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max}^{\talign} \)}
 
 \addplot[mypred, thick, blue!70!black, dashed, sharp plot]
   table[x={Npred_0}, y={Cpred_min}] {\pairdata};
@@ -1264,12 +1272,16 @@ respectively.
 \addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
 
 \addplot[mypred, thick, purple!70!black, dotted, sharp plot]
-  table[x={Npred_0}, y={CpredBound}] {\pairdata};
+  table[x={n_a}, y={Cbound}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
 
 \addplot[mypred, thick, brown!70!black, dashed, sharp plot]
-  table[x={Npred_0}, y={CpredAlign}] {\pairdata};
+  table[x={n_v}, y={Calign_min}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\talign} \)}
+
+\addplot[mypred, thick, orange!70!black, dashed, sharp plot]
+  table[x={n_u}, y={Cpred_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max}^{\talign} \)}
 
 \addplot[mypred, thick, blue!70!black, dashed, sharp plot]
   table[x={Npred_0}, y={Cpred_min}] {\pairdata};

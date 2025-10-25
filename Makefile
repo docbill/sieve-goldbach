@@ -47,6 +47,7 @@ GBCOUNT      := 10000
 FORMATS_HL_A := full raw norm
 FORMATS_EMP  := full raw norm cps
 COMPAT       := v0.1.5
+COMPAT_V2    := v0.2.0
 
 
 START_SMALL   := 4
@@ -484,7 +485,7 @@ $$(JOIN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $(SGB_DEFAULT_$(1)).csv 
 		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
 		dst="$$(call GET,JOIN_TPL,$(1))"; \
 		dst="$$$${dst//-=ALPHA=-/$$$$a}"; \
-		./bin/joinSumPred.awk -v alpha=$$$$a "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$dst.csv"; \
+		export VERSION=$(COMPAT); ./bin/joinSumPred.awk -v alpha=$$$$a "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$dst.csv"; \
 	done
 
 $$(JOIN_$(1)).csv: $$(JOIN_DEFAULT_$(1)).csv
@@ -508,7 +509,7 @@ $$(LAVG_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv
 		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
 		lavg_dst="$$(call GET,LAVG_TPL,$(1))"; \
 		lavg_dst="$$$${lavg_dst//-=ALPHA=-/$$$$a}"; \
-		./bin/compareAvg.awk "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lavg_dst.csv"; \
+		export VERSION=$(COMPAT); ./bin/compareAvg.awk "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lavg_dst.csv"; \
 	done
 
 # Lambda CSVs - copy from alpha-0.5 versions
@@ -528,7 +529,7 @@ $$(LMIN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv
 		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
 		lmin_dst="$$(call GET,LMIN_TPL,$(1))"; \
 		lmin_dst="$$$${lmin_dst//-=ALPHA=-/$$$$a}"; \
-		./bin/compareMin.awk "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lmin_dst.csv"; \
+		export VERSION=$(COMPAT); ./bin/compareMin.awk "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lmin_dst.csv"; \
 	done
 
 $$(LMIN_$(1)).csv: $$(LMIN_DEFAULT_$(1)).csv
@@ -537,18 +538,23 @@ $$(LMIN_$(1)).csv: $$(LMIN_DEFAULT_$(1)).csv
 
 $$(LALIGN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv bin/compareAlign.awk
 	@chmod ugo+x ./bin/compareAlign.awk
-	# Generate lambda align files for all alphas
+	# Generate lambda align files for all alphas (skip for v0.1.5 decimal files)
 	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
-	for a in $(ALPHAS); do \
-		summary_src="$$(call GET,SUMMARY_TPL,$(1))"; sgb_src="$$(call GET,SGB_TPL,$(1))"; \
-		summary_src="$$$${summary_src//-=ALPHA=-/$$$$a}"; sgb_src="$$$${sgb_src//-=ALPHA=-/$$$$a}"; \
-		summary_src="$$$${summary_src//-=FORMAT=-/full}"; sgb_src="$$$${sgb_src//-=FORMAT=-/full}"; \
-		[ -r "$$$$summary_src.csv" ] || (echo "Failed to find $$$$summary_src.csv" >&2; exit 1) ; \
-		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
-		lalign_dst="$$(call GET,LALIGN_TPL,$(1))"; \
-		lalign_dst="$$$${lalign_dst//-=ALPHA=-/$$$$a}"; \
-		./bin/compareAlign.awk -v alpha=$$$$a "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lalign_dst.csv"; \
-	done
+	if [ "$(COMPAT)" = "v0.1.5" ] && [ "$(1)" = "SMALL" ]; then \
+		echo "Skipping lambda align generation for v0.1.5 decimal files (would contain zeros)"; \
+		touch "$$@"; \
+	else \
+		for a in $(ALPHAS); do \
+			summary_src="$$(call GET,SUMMARY_TPL,$(1))"; sgb_src="$$(call GET,SGB_TPL,$(1))"; \
+			summary_src="$$$${summary_src//-=ALPHA=-/$$$$a}"; sgb_src="$$$${sgb_src//-=ALPHA=-/$$$$a}"; \
+			summary_src="$$$${summary_src//-=FORMAT=-/full}"; sgb_src="$$$${sgb_src//-=FORMAT=-/full}"; \
+			[ -r "$$$$summary_src.csv" ] || (echo "Failed to find $$$$summary_src.csv" >&2; exit 1) ; \
+			[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
+			lalign_dst="$$(call GET,LALIGN_TPL,$(1))"; \
+			lalign_dst="$$$${lalign_dst//-=ALPHA=-/$$$$a}"; \
+			export VERSION=$(COMPAT); ./bin/compareAlign.awk -v alpha=$$$$a "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lalign_dst.csv"; \
+		done; \
+	fi
 
 $$(LALIGN_$(1)).csv: $$(LALIGN_DEFAULT_$(1)).csv
 	cp "$$<" "$$@"
@@ -556,18 +562,23 @@ $$(LALIGN_$(1)).csv: $$(LALIGN_DEFAULT_$(1)).csv
 
 $$(LBOUND_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv bin/compareBound.awk
 	@chmod ugo+x ./bin/compareBound.awk
-	# Generate lambda bound files for all alphas
+	# Generate lambda bound files for all alphas (skip for v0.1.5 decimal files)
 	@set -Eeuo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
-	for a in $(ALPHAS); do \
-		summary_src="$$(call GET,SUMMARY_TPL,$(1))"; sgb_src="$$(call GET,SGB_TPL,$(1))"; \
-		summary_src="$$$${summary_src//-=ALPHA=-/$$$$a}"; sgb_src="$$$${sgb_src//-=ALPHA=-/$$$$a}"; \
-		summary_src="$$$${summary_src//-=FORMAT=-/full}"; sgb_src="$$$${sgb_src//-=FORMAT=-/full}"; \
-		[ -r "$$$$summary_src.csv" ] || (echo "Failed to find $$$$summary_src.csv" >&2; exit 1) ; \
-		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
-		lbound_dst="$$(call GET,LBOUND_TPL,$(1))"; \
-		lbound_dst="$$$${lbound_dst//-=ALPHA=-/$$$$a}"; \
-		./bin/compareBound.awk -v alpha=$$$$a "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lbound_dst.csv"; \
-	done
+	if [ "$(COMPAT)" = "v0.1.5" ] && [ "$(1)" = "SMALL" ]; then \
+		echo "Skipping lambda bound generation for v0.1.5 decimal files (would contain zeros)"; \
+		touch "$$@"; \
+	else \
+		for a in $(ALPHAS); do \
+			summary_src="$$(call GET,SUMMARY_TPL,$(1))"; sgb_src="$$(call GET,SGB_TPL,$(1))"; \
+			summary_src="$$$${summary_src//-=ALPHA=-/$$$$a}"; sgb_src="$$$${sgb_src//-=ALPHA=-/$$$$a}"; \
+			summary_src="$$$${summary_src//-=FORMAT=-/full}"; sgb_src="$$$${sgb_src//-=FORMAT=-/full}"; \
+			[ -r "$$$$summary_src.csv" ] || (echo "Failed to find $$$$summary_src.csv" >&2; exit 1) ; \
+			[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
+			lbound_dst="$$(call GET,LBOUND_TPL,$(1))"; \
+			lbound_dst="$$$${lbound_dst//-=ALPHA=-/$$$$a}"; \
+			export VERSION=$(COMPAT); ./bin/compareBound.awk -v alpha=$$$$a "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lbound_dst.csv"; \
+		done; \
+	fi
 
 $$(LBOUND_$(1)).csv: $$(LBOUND_DEFAULT_$(1)).csv
 	cp "$$<" "$$@"
@@ -585,7 +596,7 @@ $$(LMAX_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv
 		[ -r "$$$$sgb_src.csv" ] || (echo "Failed to find $$$$sgb_src.csv" >&2; exit 1) ; \
 		lmax_dst="$$(call GET,LMAX_TPL,$(1))"; \
 		lmax_dst="$$$${lmax_dst//-=ALPHA=-/$$$$a}"; \
-		./bin/compareMax.awk "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lmax_dst.csv"; \
+		export VERSION=$(COMPAT); ./bin/compareMax.awk "$$$$summary_src.csv" "$$$$sgb_src.csv" > "$$$$lmax_dst.csv"; \
 	done
 
 $$(LMAX_$(1)).csv: $$(LMAX_DEFAULT_$(1)).csv

@@ -1,4 +1,4 @@
-Dec,n_0,C_min,Npred_0,CpredBound,Lambda_min,Jitter,JitterRatio
+Dec,n_0,C_min,Npred_0,Cbound,Lambda_min,Jitter,JitterRatio
 0,4,1.921812,4,2.870137,-4.010913e-01,0.000000,0.000000e+00
 0,5,2.590290,5,4.266093,-4.989286e-01,0.000000,0.000000e+00
 0,6,2.140268,6,6.218875,-1.066658e+00,0.000000,0.000000e+00
