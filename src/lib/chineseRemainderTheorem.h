@@ -44,22 +44,25 @@ extern "C" {
 // -----------------------------------------------------------------------------
 // allowed_prime_deficit
 //
-// Computes the “effective small-prime deficit” for an integer n over a window
+// Computes the "effective small-prime deficit" for an integer n over a window
 // of width w_in, using a CRT-informed model with partial exposures. Internally,
 // it commits full contributions up to the largest odd primorial that fits in
 // uint64_t (3·5·7·…·53) and performs a single fractional-exposure pass if the
-// window doesn’t span a prime’s threshold.
+// window doesn't span a prime's threshold.
 //
 // Parameters:
 //   n              : input integer (>= 3 yields meaningful results)
 //   w_in           : window width (long double); only floor(w_in) is used
-//   single_residue : if true, uses log(p-1); otherwise uses log(p-2)
+//   residue        : how many residues :  typically 2 residues for goldbach pairs, 1 for simple primes
+//   positive       : if true, if the remainder is add to the total, false if subtracted
+//   exposure_count : maximum number of exposure passes (typically 5)
+//   allow_iterations : maximum number of iterations (-1 for unlimited)
 //
 // Returns:
 //   long double exp(sum of adjusted logs), i.e., the multiplicative deficit.
 // -----------------------------------------------------------------------------
 CRT_API long double
-allowed_prime_deficit(uint64_t n, long double w_in, bool single_residue);
+allowed_prime_deficit(uint64_t n, long double w_in, uint64_t residue, bool positive, int exposure_count, bool allow_iterations);
 
 // -----------------------------------------------------------------------------
 // Reference implementation: Exact Chinese Remainder Theorem

@@ -175,12 +175,13 @@ public:
         HLCorrState &maxState,
         HLCorrState &minNormState,
         HLCorrState &maxNormState,
-        HLCorrState &alignNormState
+        HLCorrState &alignMinNormState,
+        HLCorrState &alignMaxNormState
     ) {
         hlCorrAvg = 0.5L*(evenState(n_geom_even,delta_even)+oddState(n_geom_odd,delta_odd));
         pairCountAvg *= hlCorrAvg;
         cAvg *= hlCorrAvg;
-        applyHLCorr(minState, maxState, minNormState, maxNormState, alignNormState);
+        applyHLCorr(minState, maxState, minNormState, maxNormState, alignMinNormState, alignMaxNormState);
     }
     
     void applyHLCorr(
@@ -188,7 +189,8 @@ public:
         HLCorrState &maxState,
         HLCorrState &minNormState,
         HLCorrState &maxNormState,
-        HLCorrState &alignNormState
+        HLCorrState &alignMinNormState,
+        HLCorrState &alignMaxNormState
     ) {
         // Note: pairCountMinima should NOT call applyHLCorrStateMin because that method
         // has swapping logic designed for alignment calculations, not regular minimum tracking.
@@ -200,12 +202,13 @@ public:
         }
         pairCountMaxima.applyHLCorrStateMax(maxState);
         // Apply alignment-normalized correction when comparing pairCountAlignMaxima.current extrema
-        // pairCountAlignMaxima.applyHLCorrStateMax(alignNormState);
+        // pairCountAlignMaxima.applyHLCorrStateMax(alignMinNormState);
         cMinima.applyHLCorrStateMin(minNormState);
         cMaxima.applyHLCorrStateMax(maxNormState);
-        alignMinima.applyHLCorrStateMin(alignNormState);
+        alignMinima.applyHLCorrStateMin(alignMinNormState);
+        alignMaxima.applyHLCorrStateMax(alignMaxNormState);
         // Conservative bound: do NOT apply HLCorr (already using raw values)
-        // alignNoHLCorrMinima.applyHLCorrStateMin(alignNormState, c_alignFirst, c_alignLast);
+        // alignNoHLCorrMinima.applyHLCorrStateMin(alignMinNormState, c_alignFirst, c_alignLast);
     }
 
     void outputCps(

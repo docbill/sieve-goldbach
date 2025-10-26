@@ -290,7 +290,7 @@ FNR==1 {
         # v0.2.0 format: include align/bound columns
         print "START","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
-            "n_geom","C_avg","Cpred_avg","Align","Cpred","n_v","Calign_min","n_u","Calign_max","n_a","Cbound"
+            "n_geom","C_avg","Cpred_avg","n_v","Calign_min","n_u","Calign_max","n_a","Cbound"
     }
     else {
         # v0.1.5 format: original 12 columns only
@@ -350,28 +350,28 @@ FNR==1 {
     # Use stored label for output (preserves scientific notation)
     output_label = sum_label[key]
     
-    # Use actual alignment values from HLA full output
-    if (col_calign > 0) {
-        # Use actual alignment values from HLA output (even if zero)
-        align = c_align  # Use C_align as the alignment value
-        cpred_align = c_align  # Use C_align as the corrected prediction
-    } else {
-        # No alignment column available - this shouldn't happen with v0.1.5+ output
-        n0_val = sum_n0[key]
-        cpmin_val = cpmin
-
-        align = 2* R(sqrt(2*n0p)) 
-        log_n0p = (n0p >= 2.72 ? log(n0p) : 1.0)
-        cpred_align = 2.6406472634;
-        # Guard against n0p too small for log(log(n0p))
-        if (log_n0p > 1.0) {
-            loglog_n0p = log(log_n0p)
-            align = 2.0 * sqrt(n0p) / (loglog_n0p * loglog_n0p)
-            cpred_align = cpmin_val;
-        }
-        cpred_align -= align * (log_n0p * log_n0p) / (n0p)  # Simplified without alpha
-        if (cpred_align < 0.0) cpred_align = 0.0
-    }
+    # # Use actual alignment values from HLA full output
+    # if (col_calign > 0) {
+    #     # Use actual alignment values from HLA output (even if zero)
+    #     align = c_align  # Use C_align as the alignment value
+    #     cpred_align = c_align  # Use C_align as the corrected prediction
+    # } else {
+    #     # No alignment column available - this shouldn't happen with v0.1.5+ output
+    #     n0_val = sum_n0[key]
+    #     cpmin_val = cpmin
+    #
+    #     align = 2* R(sqrt(2*n0p)) 
+    #     log_n0p = (n0p >= 2.72 ? log(n0p) : 1.0)
+    #     cpred_align = 2.6406472634;
+    #     # Guard against n0p too small for log(log(n0p))
+    #     if (log_n0p > 1.0) {
+    #         loglog_n0p = log(log_n0p)
+    #         align = 2.0 * sqrt(n0p) / (loglog_n0p * loglog_n0p)
+    #         cpred_align = cpmin_val;
+    #     }
+    #     cpred_align -= align * (log_n0p * log_n0p) / (n0p)  # Simplified without alpha
+    #     if (cpred_align < 0.0) cpred_align = 0.0
+    # }
     
     # Use actual conservative bound values from HLA full output
     if (col_ccbound > 0) {
@@ -385,10 +385,10 @@ FNR==1 {
     # Use VERSION environment variable for data output
     if (VERSION == "v0.2.0") {
         # v0.2.0 format: include align/bound columns
-        printf "%s,%d,%.6f,%d,%.6f,%d,%.8f,%d,%.8f,%.0f,%.9f,%.9f,%.6f,%.6f,%d,%.6f,%d,%.6f,%d,%.6f\n",
+        printf "%s,%d,%.6f,%d,%.6f,%d,%.8f,%d,%.8f,%.0f,%.9f,%.9f,%d,%.6f,%d,%.6f,%d,%.6f\n",
             output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
             sum_n1[key], sum_cmax[key], n1p, cpmax,
-            sum_ng[key], sum_cavg[key], cpavg, align, cpred_align,
+            sum_ng[key], sum_cavg[key], cpavg, 
             sum_n_align[key], sum_c_align[key], sum_n_alignmax[key], sum_c_alignmax[key], sum_n_cbound[key], sum_c_cbound[key]
     } else {
         # v0.1.5 format: original 12 columns only

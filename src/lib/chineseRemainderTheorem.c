@@ -23,41 +23,70 @@
 #include <limits.h>
 #include "chineseRemainderTheorem.h"
 
+
 // ---- small log cache up to 99 ----
-static inline long double ln_small_upto99(unsigned x){
-    if (x < 100u){
-        static long double T[100];
-        static int init = 0;
-        if (!init){
-            T[0] = 0.0L;
-            for (unsigned i=1;i<100u;++i) {
-                T[i] = logl((long double)i);
-            }
-            init = 1;
-        }
-        return T[x];
+static const long double LN_CACHE[100] = {
+    // ln(0-9) // 0 is of course undefined, but we return 0.0L for convenience
+    0.0L, 0.0L, 0.6931471805599453094L, 1.0986122886681096914L, 1.3862943611198906188L,
+    1.6094379124341003746L, 1.7917594692280550008L, 1.9459101490553133051L, 2.0794415416798359283L, 2.1972245773362193828L,
+    
+    // ln(10-19)
+    2.3025850929940456840L, 2.3978952727983705441L, 2.4849066497880003102L, 2.5649493574615367361L, 2.6390573296152586149L,
+    2.7080502011022100660L, 2.7725887222397812377L, 2.8332133440562160802L, 2.8903717578961646922L, 2.9444389791664402350L,
+    
+    // ln(20-29)
+    2.9957322735539909934L, 3.0445224377234229965L, 3.0910424533583158558L, 3.1354942159291496908L, 3.1780538303479456196L,
+    3.2188758248682007492L, 3.2580965380214820470L, 3.2958368660043290742L, 3.3322045101752039233L, 3.3672958299864740272L,
+    
+    // ln(30-39)
+    3.4011973816621553754L, 3.4339872044851462458L, 3.4657359027997265471L, 3.4965075614664802355L, 3.5263605246161613897L,
+    3.5553480614894136797L, 3.5835189384561100016L, 3.6109179126442244444L, 3.6375861597263858774L, 3.6635616461296464274L,
+    
+    // ln(40-49)
+    3.6888794541139363057L, 3.7135720667043080031L, 3.7376696182833683192L, 3.7612001156935624235L, 3.7841896339182611645L,
+    3.8066624897703197574L, 3.8286413964890950000L, 3.8501476017100585868L, 3.8712010109078909291L, 3.8918202981106265870L,
+    
+    // ln(50-59)
+    3.9120230054281460586L, 3.9318256327243257286L, 3.9512437185814274838L, 3.9702919135521218341L, 3.9889840465642745402L,
+    4.0073331852324711998L, 4.0253516907351498778L, 4.0430512678345501514L, 4.0604430105464197753L, 4.0775374439057194505L,
+    
+    // ln(60-69)
+    4.0943445622221006848L, 4.1108738641733113906L, 4.1271343850450914162L, 4.1431347263915326874L, 4.1588830833596718576L,
+    4.1743872698956378097L, 4.1896547420264252631L, 4.2046926193909660597L, 4.2195077051761071428L, 4.2341065045972593988L,
+    
+    // ln(70-79)
+    4.2484952420493593784L, 4.2626798770413151528L, 4.2766661190160552578L, 4.2904594411483911291L, 4.3040650932041702517L,
+    4.3174881135363102755L, 4.3307333402863310698L, 4.3438054218536842113L, 4.3567088266895917179L, 4.3694478524670214952L,
+    
+    // ln(80-89)
+    4.3820266346738811953L, 4.3944491546724387656L, 4.4067192472642533985L, 4.4188406077965983245L, 4.4308167988433133996L,
+    4.4426512564903160608L, 4.4543472962535078625L, 4.4659081186545836786L, 4.4773368144782064604L, 4.4886363697321398383L,
+    
+    // ln(90-99)
+    4.4998096703302650515L, 4.5108595065168497878L, 4.5217885770490406270L, 4.5325994931532563985L, 4.5432947822700038803L,
+    4.5538768916005408346L, 4.5643481914678361102L, 4.5747109785033828221L, 4.5849674786705722577L, 4.5951198501345897122L
+};
+
+static inline long double ln_small_upto99(const uint64_t x){
+    if (x < (uint64_t)(sizeof(LN_CACHE)/sizeof(LN_CACHE[0]))){
+        return LN_CACHE[x];
     }
     return logl((long double)x);
 }
 
-static inline long double ln_p_adjust(unsigned p, bool single_residue){
-    const unsigned k = single_residue ? (p-1u) : (p-2u);
-    return ln_small_upto99(k);
-}
-
 static inline long double expose_next_log_fast(
-    uint64_t w, unsigned p_next, uint64_t q,
-    bool single_residue)
+    const uint64_t w, const uint64_t p_next, const uint64_t q,
+    const uint64_t residue)
 {
-    long double s = ((long double)(w % q))/(long double)q;
-    return s * ln_p_adjust(p_next, single_residue);
+    const long double s = ((long double)(w % q))/(long double)q;
+    return s * ln_small_upto99(p_next-residue);
 }
 
-static const unsigned PRIMES[] = { 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53 };
+static const uint64_t PRIMES[] = { 5ULL, 7ULL, 11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 31ULL, 37ULL, 41ULL, 43ULL, 47ULL, 53ULL };
 
 static const size_t PRIMES_COUNT = sizeof(PRIMES)/sizeof(PRIMES[0]);
 
-static const long double ODD_PRIMORIAL_LD = 16294579238595022365.0L;
+static const uint64_t ODD_PRIMORIAL_U64 = 16294579238595022365ULL;
 
 /*
  * ============================================================================
@@ -102,84 +131,98 @@ static const long double ODD_PRIMORIAL_LD = 16294579238595022365.0L;
  * ============================================================================
  */
 // with divisibility checks
-static long double allowed_prime_deficit_internal(uint64_t n, long double w_in, bool single_residue, size_t start_index)
+static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr, uint64_t residue, bool positive, size_t *prime_pos_ptr, int exposure_count)
 {
-    if (w_in < 3.0L) {
-        return (w_in < 1.0L) ? 0.0L : 1.0L;
+    const uint64_t w_int = *w_intptr;
+    if (w_int < 3ULL) {
+        *prime_pos_ptr = PRIMES_COUNT;
+        return 0.0L;
     }
 
     long double sumlog = 0.0L;
 
     // If w spans 3·5·…·53, every nondividing prime fully contributes
-    if (w_in >= ODD_PRIMORIAL_LD) {
+    if (w_int >= ODD_PRIMORIAL_U64) {
         for (size_t i = 0; i < PRIMES_COUNT; ++i) {
-            unsigned p = PRIMES[i];
-            if ((n % (uint64_t)p) != 0ULL)
-                sumlog += ln_p_adjust(p, single_residue);
+            const uint64_t p = PRIMES[i];
+            if ((n % p) != 0ULL)
+                sumlog += ln_small_upto99(p-residue);
         }
         return expl(sumlog);
     }
 
-    const uint64_t w_int = (uint64_t)floorl(w_in);
 
-    // q = product of NONDIVIDING primes (transition primes included)
-    uint64_t q = 1ULL;
     // q_committed = product of committed primes (transition primes not included)
     uint64_t q_committed = 1ULL;
 
     // greedy estimate, we compute the smallest q with the maximum possibe contribution
-    size_t i = start_index;
-    for (; i < PRIMES_COUNT; ++i, q_committed = q) {
-        const unsigned p = PRIMES[i];
+    size_t i = *prime_pos_ptr;
+    // q = product of NONDIVIDING primes (transition primes included)
+    for (uint64_t q = q_committed; i < PRIMES_COUNT; ++i, q_committed = q) {
+        const uint64_t p = PRIMES[i];
         if(p > w_int) {
+            // we have exceeded the window, so we return the sum of logs
+            // and set the window to 0
+            *prime_pos_ptr = PRIMES_COUNT;
+            *w_intptr = 0ULL;
             return expl(sumlog);
         }
-        // ignore primes dividing n
-        if ((n % (uint64_t)p) == 0ULL) {
+        uint64_t r = residue;
+        // Ignore primes dividing n when negative. As per CRT this would not contribue, and 
+        // we are greedly trying to produce the smallest interval with the largest product.
+        // However, we know that these primes will contribute when positive with a reduced residue.
+        if ((n % p) == 0ULL && (--r <= 0ULL || ! positive)) {
             continue;
         }
 
-        q *= (uint64_t)p;                // commit (transition prime is committed too)
-
-        if (w_int < q) {
-            // not spanned → exposure at current q (which already includes p)
-            sumlog += expose_next_log_fast(w_int, p, q, single_residue);
+        q *= p;
+        if (w_int <= q) {
             break;
         }
         // fully spanned → full contribution
-        sumlog += ln_p_adjust(p, single_residue);
+        sumlog += ln_small_upto99(p - r);
     }
-    start_index = i;
+    *prime_pos_ptr = i;
+
     // The greed estimate was good, but only accounted for small primes and a single transition.
     // We'll estimate the contribution of smaller terms with more transitions.
     // exposure tail: extend q by subsequent NONDIVIDING primes; stop after 5 exposures total
     // already exposed the transition prime
-    for (int exposed = 1; ++i < PRIMES_COUNT && exposed < 5;) {
-        const unsigned p = PRIMES[i];
+    int exposed = 0;
+    for (uint64_t q=q_committed; i < PRIMES_COUNT && exposed < exposure_count;++exposed) {
+        const uint64_t p = PRIMES[i++];
         if(p > w_int) {
             break;
         }
-        if ((n % (uint64_t)p) == 0ULL) {
-            continue;  // skip divisors of n
+        uint64_t r = residue;
+        if ((n % p) == 0ULL && (--r <= 0ULL || ! positive)) {
+            continue;  // skip divisors of n when negative, or when the residue is 0
         }
-        q *= (uint64_t)p;
-        sumlog += expose_next_log_fast(w_int, p, q, single_residue);
-        ++exposed;
+        sumlog += expose_next_log_fast(w_int, p, (q*=p), r);
     }
+    *w_intptr = w_int - q_committed;
     return expl(sumlog);
-    // We have shifted all the committed primes remainders into the interval q_committed.  
-    // However non-committed primes may still contribute in the unused portion of the interval.
-    // I am not sure if this is redundant with having the transition primes already accounted for.
-    // Maybe we should only account for the transition primes once, and then only account for the non-committed primes.
-    // But this is a more conservative estimate on the maximum possible contribution.
-    // When I do a formal proof, I should learn if this is overly conservative.
-    //return expl(sumlog)+allowed_prime_deficit_internal(n, w_int-q_committed, single_residue, start_index);
 }
 
 // with divisibility checks
-long double allowed_prime_deficit(uint64_t n, long double w_in, bool single_residue)
+long double allowed_prime_deficit(uint64_t n, long double w_in, uint64_t residue, bool positive, int exposure_count, bool allow_iterations)
 {
-    return allowed_prime_deficit_internal(n, w_in, single_residue, 0);
+    uint64_t w_int = (uint64_t)floorl(w_in);
+    long double result = 0.0L;
+    for(size_t prime_pos = 0;prime_pos < PRIMES_COUNT;) {
+        result += allowed_prime_deficit_internal(n, &w_int, residue, positive, &prime_pos, exposure_count);
+        // We have shifted all the committed primes remainders into the interval q_committed. 
+        // However non-committed primes may still contribute in the unused portion of the interval.
+        // We allow additional iterations to account for this. A negative value means no limit.
+        if( allow_iterations-- != 0) {
+            break;
+        }
+        // I am not sure if this is redundant with having the transition primes already accounted for.
+        // Maybe we should only account for the transition primes once, and then only account for the non-committed primes.
+        // But this is a more conservative estimate on the maximum possible contribution.
+        // When I do a formal proof, I should learn if this is overly conservative.
+    }
+    return (positive) ? result : -result;
 }
 
 
