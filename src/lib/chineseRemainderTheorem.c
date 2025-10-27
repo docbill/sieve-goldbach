@@ -21,8 +21,9 @@
 #include <stddef.h>
 #include <math.h>
 #include <limits.h>
-#include "chineseRemainderTheorem.h"
 
+#include "chineseRemainderTheorem.h"
+#include <stdio.h>
 
 // ---- small log cache up to 99 ----
 static const long double LN_CACHE[100] = {
@@ -74,11 +75,17 @@ static inline long double ln_small_upto99(const uint64_t x){
     return logl((long double)x);
 }
 
+// if we use integer arithmetic, this will give spikes not observed in
+// empirical results.  The reason being is we split an interval size S
+// into small w parts.  If those are truncated, we sum of our short 
+// intervals will be less than the full interval size.   The correct
+// part to do integer math would be a floor on the (p-residue)^s term.
+// However, this is faster and more conservative.
 static inline long double expose_next_log_fast(
-    const uint64_t w, const uint64_t p_next, const uint64_t q,
+    const long double w, const uint64_t p_next, long double q,
     const uint64_t residue)
 {
-    const long double s = ((long double)(w % q))/(long double)q;
+    const long double s = fmodl(w, q)/q;
     return s * ln_small_upto99(p_next-residue);
 }
 
@@ -131,16 +138,11 @@ static const uint64_t ODD_PRIMORIAL_U64 = 16294579238595022365ULL;
  * ============================================================================
  */
 // with divisibility checks
-static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr, uint64_t residue, bool positive, size_t *prime_pos_ptr, int exposure_count)
+static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr, long double w, uint64_t residue, bool positive, size_t *prime_pos_ptr, int exposure_count)
 {
     const uint64_t w_int = *w_intptr;
-    if (w_int < 3ULL) {
-        *prime_pos_ptr = PRIMES_COUNT;
-        return 0.0L;
-    }
 
     long double sumlog = 0.0L;
-
     // If w spans 3·5·…·53, every nondividing prime fully contributes
     if (w_int >= ODD_PRIMORIAL_U64) {
         for (size_t i = 0; i < PRIMES_COUNT; ++i) {
@@ -152,20 +154,24 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
     }
 
 
+    int exposed = 0;
     // q_committed = product of committed primes (transition primes not included)
     uint64_t q_committed = 1ULL;
-
+    const uint64_t p_max = 2ULL*n;
     // greedy estimate, we compute the smallest q with the maximum possibe contribution
     size_t i = *prime_pos_ptr;
     // q = product of NONDIVIDING primes (transition primes included)
     for (uint64_t q = q_committed; i < PRIMES_COUNT; ++i, q_committed = q) {
         const uint64_t p = PRIMES[i];
         if(p > w_int) {
-            // we have exceeded the window, so we return the sum of logs
-            // and set the window to 0
-            *prime_pos_ptr = PRIMES_COUNT;
-            *w_intptr = 0ULL;
-            return expl(sumlog);
+            if(p >= p_max) {
+                // we have exceeded the window, so we return the sum of logs
+                // and set the window to 0
+                *prime_pos_ptr = PRIMES_COUNT;
+                *w_intptr = 0ULL;
+                return expl(sumlog);
+            }
+            break;
         }
         uint64_t r = residue;
         // Ignore primes dividing n when negative. As per CRT this would not contribue, and 
@@ -176,7 +182,7 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
         }
 
         q *= p;
-        if (w_int <= q) {
+        if (w_int < q) {
             break;
         }
         // fully spanned → full contribution
@@ -188,45 +194,54 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
     // We'll estimate the contribution of smaller terms with more transitions.
     // exposure tail: extend q by subsequent NONDIVIDING primes; stop after 5 exposures total
     // already exposed the transition prime
-    int exposed = 0;
     for (uint64_t q=q_committed; i < PRIMES_COUNT && exposed < exposure_count;++exposed) {
         const uint64_t p = PRIMES[i++];
-        if(p > w_int) {
+        if(p > p_max) {
             break;
         }
         uint64_t r = residue;
         if ((n % p) == 0ULL && (--r <= 0ULL || ! positive)) {
             continue;  // skip divisors of n when negative, or when the residue is 0
         }
-        sumlog += expose_next_log_fast(w_int, p, (q*=p), r);
+        sumlog += expose_next_log_fast(w, (long double)p, (q*=p), r);
     }
     *w_intptr = w_int - q_committed;
     return expl(sumlog);
 }
 
-// with divisibility checks
-long double allowed_prime_deficit(uint64_t n, long double w_in, uint64_t residue, bool positive, int exposure_count, bool allow_iterations)
+#ifdef CHINESE_REMAINDER_THEOREM_EXPERIMENTAL
+// This is probably not a good idea, but it is here for reference.
+long double allowed_prime_deficit_expirimental(uint64_t n, long double w_in, uint64_t residue, bool positive)
 {
     uint64_t w_int = (uint64_t)floorl(w_in);
+    if(! w_int) {
+        // if the window is only a fractional size, we can assume a single random prime can cancel it fully.
+        return w_in;
+    }
     long double result = 0.0L;
     for(size_t prime_pos = 0;prime_pos < PRIMES_COUNT;) {
-        result += allowed_prime_deficit_internal(n, &w_int, residue, positive, &prime_pos, exposure_count);
+        result += allowed_prime_deficit_internal(n, &w_int, w_in, residue, positive, &prime_pos, 0);
         // We have shifted all the committed primes remainders into the interval q_committed. 
         // However non-committed primes may still contribute in the unused portion of the interval.
         // We allow additional iterations to account for this. A negative value means no limit.
-        if( allow_iterations-- != 0) {
-            break;
-        }
-        // I am not sure if this is redundant with having the transition primes already accounted for.
-        // Maybe we should only account for the transition primes once, and then only account for the non-committed primes.
-        // But this is a more conservative estimate on the maximum possible contribution.
-        // When I do a formal proof, I should learn if this is overly conservative.
+        // Looping is not really supported by CRT, but it is worth trying.
     }
     return (positive) ? result : -result;
 }
+#endif
 
-
-
+// with divisibility checks
+long double allowed_prime_deficit(uint64_t n, long double w_in, uint64_t residue, bool positive, int exposure_count)
+{
+    uint64_t w_int = (uint64_t)floorl(w_in);
+    if(! w_int) {
+        // if the window is only a fractional size, we can assume a single random prime can cancel it fully.
+        return ceill(w_in);
+    }
+    size_t prime_pos = 0;
+    long double result = allowed_prime_deficit_internal(n, &w_int, w_in, residue, positive, &prime_pos, exposure_count);
+    return (positive) ? result : -result;
+}
 
 /*
  * ============================================================================

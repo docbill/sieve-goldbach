@@ -62,7 +62,13 @@ extern "C" {
 //   long double exp(sum of adjusted logs), i.e., the multiplicative deficit.
 // -----------------------------------------------------------------------------
 CRT_API long double
-allowed_prime_deficit(uint64_t n, long double w_in, uint64_t residue, bool positive, int exposure_count, bool allow_iterations);
+allowed_prime_deficit(uint64_t n, long double w_in, uint64_t residue, bool positive, int exposure_count);
+
+// this is an alternative way to try and calculate exposure terms -- not even heiristically verified.
+#ifdef CHINESE_REMAINDER_THEOREM_EXPERIMENTAL
+CRT_API long double
+allowed_prime_deficit_expirimental(uint64_t n, long double w_in, uint64_t residue, bool positive);
+#endif
 
 // -----------------------------------------------------------------------------
 // Reference implementation: Exact Chinese Remainder Theorem

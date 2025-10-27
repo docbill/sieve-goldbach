@@ -55,6 +55,7 @@ BEGIN {
 }
 
 function trim(s){ sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+function absd(x){ return (x<0 ? -x : x) }
 
 # Detect format version based on header
 function detect_format(header) {
@@ -200,8 +201,20 @@ FNR==1 {
     }
 
     # Lambda_min = log(C_min/CpredAlign) in scientific notation; blank if C_min==0
+    # Handle zero difference case: check raw count and use appropriate precision
+    c_diff = (cmn+0) - cpred_align
+    
     if ((cmn+0) > 0 && cpred_align > 0) {
-        printf "%s,%d,%.6f,%d,%.6f,%.6e,%.6f,%.6e\n", label, n, cmn, np_0, cpred_align, log((cmn+0)/cpred_align), jitter, jitter_ratio
+        lambda_val = log((cmn+0)/cpred_align)
+        
+        # If difference is zero and raw count is 0, omit the data point
+        if (absd(c_diff) < 1e-10 && (cmn+0) == 0) {
+            # Skip this data point - nothing to report
+        } else {
+            # Report with appropriate precision based on whether this is an average or not
+            # For non-average cases, use 1e-6 precision; for average use 1e-8
+            printf "%s,%d,%.6f,%d,%.6f,%.6e,%.6f,%.6e\n", label, n, cmn, np_0, cpred_align, lambda_val, jitter, jitter_ratio
+        }
     }
     seen[key]++
 }

@@ -56,6 +56,7 @@ PROGRAMS := primesieve_bitmap printprimes storeprimes \
 LIBDIR  := lib
 LIBSRC  := $(wildcard $(LIBDIR)/*.c)
 LIBOBJ  := $(LIBSRC:.c=.o)
+LIBHDR  := $(wildcard $(LIBDIR)/*.h)
 LIBFILE := $(LIBDIR)/libprime.a
 
 # Ensure chineseRemainderTheorem.c is included in the library
@@ -85,6 +86,7 @@ $(PROGRAMS): %: $(LIBFILE)
 		CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" \
 		CPPFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" \
 		LIBFILE="../$(LIBFILE)"
+	@echo "Built $@"
 
 # Optional: per-program cleans (useful for selective cleanup)
 $(PROGRAMS:%=%.clean):

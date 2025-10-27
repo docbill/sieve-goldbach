@@ -1107,13 +1107,13 @@ respectively.
   table[x={n_a}, y={Cbound}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
 
-\addplot[mypred, thick, brown!70!black, dashed, sharp plot]
+\addplot[mypred, thick, brown!70!black, dotted, sharp plot]
   table[x={n_v}, y={Calign_min}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\talign} \)}
 
-\addplot[mypred, thick, orange!70!black, dashed, sharp plot]
-  table[x={n_u}, y={Cpred_max}] {\pairdata};
-\addlegendentry{\( \Cpred_{\max}^{\talign} \)}
+\addplot[mypred, thick, brown!70!black, dotted, sharp plot]
+  table[x={n_u}, y={Calign_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\talign} \)}
 
 \addplot[mypred, thick, blue!70!black, dashed, sharp plot]
   table[x={Npred_0}, y={Cpred_min}] {\pairdata};
@@ -1125,7 +1125,7 @@ respectively.
 
 \addplot[mypred, red!70!black, sharp plot]
   table[x={n_1}, y={Cpred_max}] {\pairdata};
-\addlegendentry{\( \Cpred_{\max} \)}
+\addlegendentry{\( \Cpred{\max} \)}
 
 % style
 \pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
@@ -1190,13 +1190,13 @@ respectively.
   table[x={n_a}, y={Cbound}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
 
-\addplot[mypred, thick, brown!70!black, dashed, sharp plot]
+\addplot[mypred, thick, brown!70!black, dotted, sharp plot]
   table[x={n_v}, y={Calign_min}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\talign} \)}
 
-\addplot[mypred, thick, orange!70!black, dashed, sharp plot]
-  table[x={n_u}, y={Cpred_max}] {\pairdata};
-\addlegendentry{\( \Cpred_{\max}^{\talign} \)}
+\addplot[mypred, thick, brown!70!black, dotted, sharp plot]
+  table[x={n_u}, y={Calign_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\talign} \)}
 
 \addplot[mypred, thick, blue!70!black, dashed, sharp plot]
   table[x={Npred_0}, y={Cpred_min}] {\pairdata};
@@ -1208,7 +1208,7 @@ respectively.
 
 \addplot[mypred, red!70!black, sharp plot]
   table[x={n_1}, y={Cpred_max}] {\pairdata};
-\addlegendentry{\( \Cpred_{\max} \)}
+\addlegendentry{\( \Cpred{\max} \)}
 
 % style
 \pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
@@ -1242,7 +1242,7 @@ respectively.
   xmin=10,
   xmax=2e8,
   ymin=0,
-  ymax=15,
+  ymax=50,
   grid=both, tick align=outside,
   legend style={at={(0.5,1.05)}, anchor=south, legend columns=-1},
   unbounded coords=discard, filter discard warning=false,
@@ -1275,13 +1275,13 @@ respectively.
   table[x={n_a}, y={Cbound}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
 
-\addplot[mypred, thick, brown!70!black, dashed, sharp plot]
+\addplot[mypred, thick, brown!70!black, dotted, sharp plot]
   table[x={n_v}, y={Calign_min}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\talign} \)}
 
-\addplot[mypred, thick, orange!70!black, dashed, sharp plot]
-  table[x={n_u}, y={Cpred_max}] {\pairdata};
-\addlegendentry{\( \Cpred_{\max}^{\talign} \)}
+\addplot[mypred, thick, brown!70!black, dotted, sharp plot]
+  table[x={n_u}, y={Calign_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\talign} \)}
 
 \addplot[mypred, thick, blue!70!black, dashed, sharp plot]
   table[x={Npred_0}, y={Cpred_min}] {\pairdata};
@@ -1293,7 +1293,7 @@ respectively.
 
 \addplot[mypred, red!70!black, sharp plot]
   table[x={n_1}, y={Cpred_max}] {\pairdata};
-\addlegendentry{\( \Cpred_{\max} \)}
+\addlegendentry{\( \Cpred{\max} \)}
 
 % style
 \pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}

@@ -50,7 +50,7 @@ LIBFILE = ../lib/libprime.a
 
 all: $(TARGET)
 
-$(TARGET): $(SRC) $(INCL)
+$(TARGET): $(SRC) $(INCL) $(LIBFILE)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $(SRC) $(LIBFILE) $(LDFLAGS) $(LDLIBS)
 
 clean:

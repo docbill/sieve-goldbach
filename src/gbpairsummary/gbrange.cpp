@@ -408,6 +408,8 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
         return;
     }
     GBLongIntervalSummary &summary = interval.summary;
+    long double logN = logl((long double)(agg.right - 1));
+    long double logNlogN = logN*logN;
     if(! useLegacy) {
         fprintf_both(interval.out,interval.trace,
             (model == Model::Empirical) 
@@ -427,11 +429,11 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
             fprintf_both(interval.out,interval.trace,
                 "%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.6Lf\n",
                 summary.alignMinima.n_last,
-                (summary.alignMinima.c_last > 0.0L ? summary.alignMinima.c_last : 0.0L),
+                std::min(2.0L*logNlogN,std::max(0.0L,summary.alignMinima.c_last)),
                 summary.alignMaxima.n_last,
-                (summary.alignMaxima.c_last > 0.0L ? summary.alignMaxima.c_last : 0.0L),
+                std::min(2.0L*logNlogN,std::max(0.0L,summary.alignMaxima.c_last)),
                 summary.alignNoHLCorrMinima.n_last,
-                (summary.alignNoHLCorrMinima.c_last > 0.0L ? summary.alignNoHLCorrMinima.c_last : 0.0L),
+                std::min(2.0L*logNlogN,std::max(0.0L,summary.alignNoHLCorrMinima.c_last)),
                 summary.jitterLast
             );
         }
@@ -486,6 +488,8 @@ void GBRange::outputNorm(GBAggregate &agg,GBLongInterval &interval) {
                 summary.cAvg );
         }
         else {
+            long double logN = logl((long double)(agg.right - 1));
+            long double logNlogN = logN*logN;
             std::fprintf(interval.norm,
                 "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.9Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf\n",
                 agg.left, agg.right -1,
@@ -495,11 +499,11 @@ void GBRange::outputNorm(GBAggregate &agg,GBLongInterval &interval) {
                 agg.n_geom,
                 summary.cAvg,
                 summary.alignMinima.n_last,
-                (summary.alignMinima.c_last > 0.0L ? summary.alignMinima.c_last : 0.0L),
+                std::min(2.0L*logNlogN,std::max(0.0L,summary.alignMinima.c_last)),
                 summary.alignMaxima.n_last,
-                (summary.alignMaxima.c_last > 0.0L ? summary.alignMaxima.c_last : 0.0L),
+                std::min(2.0L*logNlogN,std::max(0.0L,summary.alignMaxima.c_last)),
                 summary.alignNoHLCorrMinima.n_last,
-                (summary.alignNoHLCorrMinima.c_last > 0.0L ? summary.alignNoHLCorrMinima.c_last : 0.0L) );
+                std::min(2.0L*logNlogN,std::max(0.0L,summary.alignNoHLCorrMinima.c_last)) );
         }
     }
 }
@@ -755,12 +759,12 @@ int GBRange::addRow(
         // --- Predictive alignment (residue 2) ---
         // Applies to the canonical short interval √(2n)
         const long double w_main = sqrtl(2.0L*dl);
-        const long double pairCountAlignPredictiveNegative = 2.0L * allowed_prime_deficit(n, w_main, 2ULL, false, 5, -1);
-        const long double pairCountAlignPredictivePositive = 2.0L * allowed_prime_deficit(n, w_main, 2ULL, true, 5, -1);
+        const long double pairCountAlignPredictiveNegative = 2.0L * allowed_prime_deficit(n, w_main, 2ULL, false, 15);
+        const long double pairCountAlignPredictivePositive = 2.0L * allowed_prime_deficit(n, w_main, 2ULL, true, 15);
         // const long double j_main = sqrtl(w_main);
         // This is a heuristic for the jitter predictive term, to scale errors to the order of the window width.
         const long double j_main = sqrtl(w_main);
-        const long double jitterPredictive = -2.0L * allowed_prime_deficit(n, j_main, 2ULL, false, 5, -1);
+        const long double jitterPredictive = -2.0L * allowed_prime_deficit(n, j_main, 2ULL, false, 15);
         // const long double j_main_heuristic = sqrtl(w_main*0.5L);
         // const long double jitterPredictive = 2.0L * (long double) j_main_heuristic/logl(logl(j_main_heuristic));
         
@@ -774,7 +778,7 @@ int GBRange::addRow(
         // const long double R1_upper = allowed_prime_deficit(n, w_upper, true);
         // const long double pairCountAlignConservative = 2.0L * (R1_lower + R1_upper); // ×2 for ordered pairs
         // For a residue of 1 we need to account for both positive and negative contributions.
-        const long double pairCountAlignConservative = 4.0L * allowed_prime_deficit(n, w_main , 1ULL, true, 5, -1);
+        const long double pairCountAlignConservative = 4.0L * allowed_prime_deficit(n, w_main , 1ULL, true, 15);
 
         // Short-of-short for jitter: √w on each half
         // const long double wj_lower = sqrtl(w_lower);
@@ -816,15 +820,14 @@ int GBRange::addRow(
             prim_summary.pairCount = pairCount_raw * hlCorrAvg;
             prim_summary.c_of_n = c_corr;
             prim_summary.pairCountAlignMaxima.putMaxima(pairCountAlignPredictivePositive,0.0L,n,delta,hlCorrAvg);
+            prim_summary.alignMaxima.putMaxima(c_corr,pairCountAlignPredictivePositive*norm,n,delta,hlCorrAvg);
             if(norm > 0.0L) {
                 prim_summary.alignMinima.putMinima(c_corr,pairCountAlignPredictiveNegative*norm,n,delta,hlCorrAvg);
-                prim_summary.alignMaxima.putMaxima(c_corr,pairCountAlignPredictivePositive*norm,n,delta,hlCorrAvg);
                 prim_summary.alignNoHLCorrMinima.putMinima(c_raw,-pairCountAlignConservative*norm,n,delta);
                 prim_summary.currentJitter = jitterPredictive*norm;
             }
             else {
                 prim_summary.alignMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvg);
-                prim_summary.alignMaxima.putMaxima(0.0L,0.0L,n,delta,hlCorrAvg);
                 prim_summary.alignNoHLCorrMinima.putMinima(0.0L,0.0L,n,delta);
                 prim_summary.currentJitter = 0.0L;
             }
