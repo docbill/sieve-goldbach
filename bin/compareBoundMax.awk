@@ -1,0 +1,257 @@
+#!/usr/bin/awk -f
+# compareBound - combines summary and HLA full output for conservative bound comparison
+# Copyright (C) 2025 Bill C. Riemers
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# Usage: awk -f compareBound.awk pairrangesummary.csv pairrange2sgbll-full.csv > merged.csv
+# v0.1.5: A=Dec, F=n_1, G=C_max, J=n_geom
+# v0.2.0: A=FIRST, H=n_1, I=C_max(n_1), L=n_geom, Q=n_align, R=C_align, S=n_cBound, T=c_cBound
+# Uses actual conservative bound values from HLA full output instead of computing approximate values
+
+BEGIN {
+    FS=","; OFS=","
+    
+    # Version checking
+    VERSION = ENVIRON["VERSION"]
+    if (VERSION == "") {
+        print "ERROR: VERSION environment variable not set. Use: VERSION=v0.1.5 or VERSION=v0.2.0" > "/dev/stderr"
+        exit 1
+    }
+    if (VERSION != "v0.1.5" && VERSION != "v0.2.0") {
+        print "ERROR: Invalid VERSION '" VERSION "'. Must be v0.1.5 or v0.2.0" > "/dev/stderr"
+        exit 1
+    }
+    
+    # Global variables
+    col_label = 0
+    col_maxat = 0
+    col_n0 = 0
+    col_cmax = 0
+    col_ngeom = 0
+    
+    # Second file variables (HLA full output)
+    col_label2 = 0
+    col_maxat_2 = 0
+    col_n0_2 = 0
+    col_cmax_2 = 0
+    col_ngeom_2 = 0
+    col_nbound = 0
+    col_cbound = 0
+    col_jitter = 0
+}
+
+function trim(s){ sub(/^[ \t\r]+/, "", s); sub(/[ \t\r]+$/, "", s); return s }
+function absd(x){ return (x<0 ? -x : x) }
+
+# Detect format version based on header
+function detect_format(header) {
+    if (index(header, "FIRST") > 0) {
+        return "v0.2.0"
+    } else {
+        return "v0.1.5"
+    }
+}
+
+# Find column position by name
+function find_column(header, name) {
+    split(header, cols, ",")
+    for (i = 1; i <= length(cols); i++) {
+        gsub(/^[ \t\r]+|[ \t\r]+$/, "", cols[i])  # trim whitespace
+        if (cols[i] == name) {
+            return i
+        }
+    }
+    return 0
+}
+
+# ---------- Pass 1: read file1 (join file), stash C_max by key ----------
+FNR==NR {
+    sub(/\r$/, "")
+    if (FNR==1) {
+        # Check if this is a join file (has C_max column)
+        format = "v0.2.0"  # Default assumption
+        if (index($0, "DECADE") > 0 && index($0, "Cbound_max") == 0) {
+            format = "v0.1.5"
+        }
+        
+        if (format == "v0.2.0") {
+            # v0.2.0 summary file: START,n_0,C_min,...,n_1,C_max(n_1),...,n_geom,C_avg
+            col_label = find_column($0, "START")
+            col_n0 = find_column($0, "n_1")
+            # Try C_max first, then C_max(n_1)
+            col_cmax = find_column($0, "C_max")
+            if (col_cmax == 0) {
+                col_cmax = find_column($0, "C_max(n_1)")
+            }
+            col_ngeom = find_column($0, "n_geom")
+        } else {
+            # v0.1.5: DECADE,n_0,C_min,...,n_1,C_max,...,n_geom,C_avg
+            col_label = find_column($0, "DECADE")
+            col_n0 = find_column($0, "n_1")
+            col_cmax = find_column($0, "C_max")
+            col_ngeom = find_column($0, "n_geom")
+        }
+        next  # skip header
+    }
+    
+    # normalize fields we use
+    label  = trim($col_label)
+    n_1_val = trim($col_n0) + 0  # location of the maximum
+    c    = trim($col_cmax) + 0  # value of the maximum
+    ngeo = trim($col_ngeom)
+
+    # build key: (START,n_geom) - unique identifier
+    key = label "\034" ngeo
+    cmax[key] = c
+    n0[key] = n_1_val  # store location for later comparison
+    count1[key]++
+    next
+}
+
+# ---------- Pass 2: file2 (HLA full output), use actual conservative bound values ----------
+FNR==1 {
+    format = detect_format($0)
+    if (format == "v0.2.0") {
+        # Use dynamic column detection for v0.2.0 format
+        col_label2 = find_column($0, "START")
+        col_maxat_2 = find_column($0, "maxAt*")
+        col_n0_2 = find_column($0, "n_1*")
+        col_cmax_2 = find_column($0, "Cpred_max(n_1*)")
+        col_ngeom_2 = find_column($0, "n_geom")
+        col_nbound = find_column($0, "n_b")
+        col_cbound = find_column($0, "CboundMax(n_b)")
+        col_jitter = find_column($0, "jitter")
+        
+        # Validate required columns for v0.2.0
+        missing_columns = 0
+        if (col_label2 == 0) { print "ERROR: START column not found for " VERSION > "/dev/stderr"; missing_columns++ }
+        if (col_n0_2 == 0) { print "ERROR: n_1* column not found for " VERSION > "/dev/stderr"; missing_columns++ }
+        if (col_cmax_2 == 0) { print "ERROR: Cpred_max(n_1*) column not found for " VERSION > "/dev/stderr"; missing_columns++ }
+        if (col_ngeom_2 == 0) { print "ERROR: n_geom column not found for " VERSION > "/dev/stderr"; missing_columns++ }
+        if (col_cbound == 0) { print "ERROR: CboundMax(n_b) column not found for " VERSION > "/dev/stderr"; missing_columns++ }
+        if (missing_columns > 0) {
+            print "ERROR: " missing_columns " required columns missing for " VERSION ". Cannot proceed." > "/dev/stderr"
+            exit 1
+        }
+    } else {
+        # v0.1.5 format: Use dynamic column detection
+        col_label2 = find_column($0, "DECADE")
+        col_maxat_2 = find_column($0, "MAX AT")
+        col_n0_2 = find_column($0, "n_1")
+        col_cmax_2 = find_column($0, "Cpred_max")
+        col_ngeom_2 = find_column($0, "N_geom")
+        col_nbound = find_column($0, "n_b")
+        col_cbound = find_column($0, "CboundMax")
+        col_jitter = find_column($0, "jitter")
+        
+        # Validate required columns for v0.1.5
+        missing_columns = 0
+        if (col_label2 == -1) { print "ERROR: DECADE column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (col_n0_2 == -1) { print "ERROR: n_1 column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (col_cmax_2 == -1) { print "ERROR: Cpred_max column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (col_ngeom_2 == -1) { print "ERROR: N_geom column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+        if (missing_columns > 0) {
+            print "ERROR: " missing_columns " required columns missing for v0.1.5. Cannot proceed." > "/dev/stderr"
+            exit 1
+        }
+    }
+    
+    if(col_label2 == 1) {
+       print "Dec","n_1","C_max","Npred_0","Cbound","Lambda_max","Jitter","JitterRatio"
+    }
+    else {
+       print "START","n_1","C_max","Npred_0","CboundMax","Lambda_max","Jitter","JitterRatio"
+    }
+    next
+}
+
+{
+    sub(/\r$/, "")
+    
+    label  = trim($col_label2)
+    maxA = trim($col_maxat_2)
+    np_0  = trim($col_n0_2) + 0
+    cpred_max = trim($col_cmax_2) + 0
+    ngeo = trim($col_ngeom_2)
+    n_bound = (col_nbound > 0) ? trim($col_nbound) + 0 : 0
+    c_bound = (col_cbound > 0) ? trim($col_cbound) + 0 : 0
+    jitter = (col_jitter > 0) ? trim($col_jitter) + 0 : 0
+
+    key = label "\034" ngeo  # Use START and n_geom for matching
+    cmn = (key in cmax) ? cmax[key] : ""
+    n = (key in n0) ? n0[key] : ""
+
+    if (cmn=="") {
+        # No match from file1 for this row
+        printf("ERROR: unmatched key in file2: START=%s, n_geom=%s%s\n",
+               label, ngeo, (label=="0"?sprintf(", maxAt=%s",maxA):"")) > "/dev/stderr"
+        exit 1
+    }
+
+    # Use actual conservative bound values from HLA full output
+    if (col_cbound > 0) {
+        # Use actual c_cBound value from HLA output (even if zero)
+        cpred_bound = c_bound
+    } else {
+        # No bound column available - this shouldn't happen with v0.1.5+ output
+        cpred_bound = cpred_max
+    }
+
+    # Calculate jitter ratio: (Cmeas - Cbound)/jitter
+    # Jitter is now normalized during generation
+    jitter_ratio = 0.0
+    if (jitter > 0) {
+        c_diff = (cmn+0) - cpred_bound
+        jitter_ratio = c_diff / jitter
+    }
+
+    # Lambda_max = log(C_max/CboundMax) in scientific notation; blank if C_max==0
+    # Handle zero difference case: check raw count and use appropriate precision
+    c_diff = (cmn+0) - cpred_bound
+    
+    if ((cmn+0) > 0 && cpred_bound > 0) {
+        lambda_val = log((cmn+0)/cpred_bound)
+        
+        # If difference is zero and raw count is 0, omit the data point
+        if (absd(c_diff) < 1e-10 && (cmn+0) == 0) {
+            # Skip this data point - nothing to report
+        } else {
+            # Report with appropriate precision based on whether this is an average or not
+            # For non-average cases, use 1e-6 precision; for average use 1e-8
+            printf "%s,%d,%.6f,%d,%.6f,%.6e,%.6f,%.6e\n", label, n, cmn, np_0, cpred_bound, lambda_val, jitter, jitter_ratio
+        }
+    }
+    seen[key]++
+}
+
+END {
+    # Error if file1 had keys that didn't appear in file2
+    for (k in count1) {
+        if (!(k in seen)) {
+            # reconstruct a readable note
+            split(k, p, "\034")
+            if (length(p)==2) {
+                printf("ERROR: key present only in file1: START=%s, n_geom=%s\n",
+                       p[1], p[2]) > "/dev/stderr"
+            } else {
+                printf("ERROR: key present only in file1: START=%s\n",
+                       k) > "/dev/stderr"
+            }
+            exit 1
+        }
+    }
+}

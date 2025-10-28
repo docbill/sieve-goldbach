@@ -86,6 +86,8 @@ BEGIN {
         col_calignmax = 0
         col_ncbound = 0
         col_ccbound = 0
+        col_ncboundmax = 0
+        col_ccboundmax = 0
         
         # Validate required columns for v0.1.5 (using hardcoded positions)
         # For v0.1.5, use dynamic column detection
@@ -216,7 +218,9 @@ FNR==1 {
             col_nalignmax = find_column($0, "n_u")
             col_calignmax = find_column($0, "Calign_max(n_u)")
             col_ncbound = find_column($0, "n_a")
-            col_ccbound = find_column($0, "Cbound")
+            col_ccbound = find_column($0, "CboundMin(n_a)")
+            col_ncboundmax = find_column($0, "n_b")
+            col_ccboundmax = find_column($0, "CboundMax(n_b)")
         } else {
             # v0.1.5 primorial format: FIRST,LAST,START,minAt,G(minAt),maxAt,G(maxAt),n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg
             col_label2 = find_column($0, "START")
@@ -232,6 +236,8 @@ FNR==1 {
             col_calignmax = 0
             col_ncbound = 0
             col_ccbound = 0
+            col_ncboundmax = 0
+            col_ccboundmax = 0
         }
         
         # Validate required columns based on format
@@ -242,7 +248,9 @@ FNR==1 {
             if (col_nalignmax == -1) { print "ERROR: n_u column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
             if (col_calignmax == -1) { print "ERROR: Calign_max(n_u) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
             if (col_ncbound == -1) { print "ERROR: n_a column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
-            if (col_ccbound == -1) { print "ERROR: Cbound column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_ccbound == -1) { print "ERROR: CboundMin(n_a) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_ncboundmax == -1) { print "ERROR: n_b column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_ccboundmax == -1) { print "ERROR: CboundMax(n_b) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
         } else {
             if (col_label2 == -1) { print "ERROR: START column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
             if (col_n0_2 == -1) { print "ERROR: n_0 column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
@@ -290,7 +298,7 @@ FNR==1 {
         # v0.2.0 format: include align/bound columns
         print "START","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
-            "n_geom","C_avg","Cpred_avg","n_v","Calign_min","n_u","Calign_max","n_a","Cbound"
+            "n_geom","C_avg","Cpred_avg","n_v","Calign_min","n_u","Calign_max","n_a","Cbound_min","n_b","Cbound_max"
     }
     else {
         # v0.1.5 format: original 12 columns only
@@ -318,6 +326,8 @@ FNR==1 {
     c_alignmax = (col_calignmax > 0) ? trim($col_calignmax) + 0 : 0
     n_cbound = (col_ncbound > 0) ? trim($col_ncbound) + 0 : 0
     c_cbound = (col_ccbound > 0) ? trim($col_ccbound) + 0 : 0
+    n_cboundmax = (col_ncboundmax > 0) ? trim($col_ncboundmax) + 0 : 0
+    c_cboundmax = (col_ccboundmax > 0) ? trim($col_ccboundmax) + 0 : 0
     
     # For v0.2.0 files, use n_geom as the key (it's unique)
     # For v0.1.5 files, use label + n_geom as the key
@@ -334,6 +344,8 @@ FNR==1 {
     sum_c_alignmax[key] = c_alignmax
     sum_n_cbound[key] = n_cbound
     sum_c_cbound[key] = c_cbound
+    sum_n_cboundmax[key] = n_cboundmax
+    sum_c_cboundmax[key] = c_cboundmax
 
     if (!(key in sum_n0)) {
         if (VERSION == "v0.1.5") {
@@ -385,11 +397,11 @@ FNR==1 {
     # Use VERSION environment variable for data output
     if (VERSION == "v0.2.0") {
         # v0.2.0 format: include align/bound columns
-        printf "%s,%d,%.6f,%d,%.6f,%d,%.8f,%d,%.8f,%.0f,%.9f,%.9f,%d,%.6f,%d,%.6f,%d,%.6f\n",
+        printf "%s,%d,%.6f,%d,%.6f,%d,%.8f,%d,%.8f,%.0f,%.9f,%.9f,%d,%.6f,%d,%.6f,%d,%.6f,%d,%.6f\n",
             output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
             sum_n1[key], sum_cmax[key], n1p, cpmax,
             sum_ng[key], sum_cavg[key], cpavg, 
-            sum_n_align[key], sum_c_align[key], sum_n_alignmax[key], sum_c_alignmax[key], sum_n_cbound[key], sum_c_cbound[key]
+            sum_n_align[key], sum_c_align[key], sum_n_alignmax[key], sum_c_alignmax[key], sum_n_cbound[key], sum_c_cbound[key], sum_n_cboundmax[key], sum_c_cboundmax[key]
     } else {
         # v0.1.5 format: original 12 columns only
         printf "%s,%d,%.6f,%d,%.8f,%d,%.6f,%d,%.8f,%.0f,%.6f,%.8f\n",

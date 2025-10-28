@@ -34,7 +34,7 @@ public:
     std::uint64_t n_end = 5;
     std::uint64_t base = 1;
     long double n_geom = 0.0L;
-    HLCorrState oddCalc, evenCalc, minCalc, maxCalc, minNormCalc, maxNormCalc, alignNormMinCalc, alignNormMaxCalc;
+    HLCorrState oddCalc, evenCalc, minCalc, maxCalc, minNormCalc, maxNormCalc, alignNormMinCalc, alignNormMaxCalc, boundNormMinCalc, boundNormMaxCalc;
 
     GBAggregate();
 

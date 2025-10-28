@@ -65,7 +65,8 @@ public:
     ExtremaValues pairCountAlignMaxima;
     ExtremaValues alignMinima;
     ExtremaValues alignMaxima;
-    ExtremaValues alignNoHLCorrMinima;
+    ExtremaValues boundMinima;
+    ExtremaValues boundMaxima;
     ExtremaValues cMinima;
     ExtremaValues cMaxima;
     long double cminus_of_n0First = 0.0L;
@@ -124,10 +125,10 @@ public:
             pairCountTotal     += pairCount;
             pairCountTotalNorm += c_of_n;
         }
-        if(n == alignNoHLCorrMinima.n_last) {
+        if(n == boundMinima.n_last) {
             jitterLast = currentJitter;
         }
-        if(n == alignNoHLCorrMinima.n_first) {
+        if(n == boundMinima.n_first) {
             jitterFirst = currentJitter;
         }
         if(n == cMinima.n_last) {
@@ -176,12 +177,14 @@ public:
         HLCorrState &minNormState,
         HLCorrState &maxNormState,
         HLCorrState &alignMinNormState,
-        HLCorrState &alignMaxNormState
+        HLCorrState &alignMaxNormState,
+        HLCorrState &boundMinNormState,
+        HLCorrState &boundMaxNormState
     ) {
         hlCorrAvg = 0.5L*(evenState(n_geom_even,delta_even)+oddState(n_geom_odd,delta_odd));
         pairCountAvg *= hlCorrAvg;
         cAvg *= hlCorrAvg;
-        applyHLCorr(minState, maxState, minNormState, maxNormState, alignMinNormState, alignMaxNormState);
+        applyHLCorr(minState, maxState, minNormState, maxNormState, alignMinNormState, alignMaxNormState, boundMinNormState, boundMaxNormState);
     }
     
     void applyHLCorr(
@@ -190,7 +193,9 @@ public:
         HLCorrState &minNormState,
         HLCorrState &maxNormState,
         HLCorrState &alignMinNormState,
-        HLCorrState &alignMaxNormState
+        HLCorrState &alignMaxNormState,
+        HLCorrState &boundMinNormState,
+        HLCorrState &boundMaxNormState
     ) {
         // Note: pairCountMinima should NOT call applyHLCorrStateMin because that method
         // has swapping logic designed for alignment calculations, not regular minimum tracking.
@@ -207,8 +212,8 @@ public:
         cMaxima.applyHLCorrStateMax(maxNormState);
         alignMinima.applyHLCorrStateMin(alignMinNormState);
         alignMaxima.applyHLCorrStateMax(alignMaxNormState);
-        // Conservative bound: do NOT apply HLCorr (already using raw values)
-        // alignNoHLCorrMinima.applyHLCorrStateMin(alignMinNormState, c_alignFirst, c_alignLast);
+        boundMinima.applyHLCorrStateMin(boundMinNormState);
+        boundMaxima.applyHLCorrStateMax(boundMaxNormState);
     }
 
     void outputCps(
