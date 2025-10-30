@@ -68,7 +68,7 @@ static const long double LN_CACHE[100] = {
     4.5538768916005408346L, 4.5643481914678361102L, 4.5747109785033828221L, 4.5849674786705722577L, 4.5951198501345897122L
 };
 
-static inline long double ln_small_upto99(const uint64_t x){
+static inline long double ln_small_upto99(const uint64_t x) {
     if (x < (uint64_t)(sizeof(LN_CACHE)/sizeof(LN_CACHE[0]))){
         return LN_CACHE[x];
     }
@@ -81,12 +81,9 @@ static inline long double ln_small_upto99(const uint64_t x){
 // intervals will be less than the full interval size.   The correct
 // part to do integer math would be a floor on the (p-residue)^s term.
 // However, this is faster and more conservative.
-static inline long double expose_next_log_fast(
-    const long double w, const uint64_t p_next, long double q,
-    const uint64_t residue)
-{
+static inline long double expose_next_log_fast( const long double w, const uint64_t remainder, long double q) {
     const long double s = fmodl(w, q)/q;
-    return s * ln_small_upto99(p_next-residue);
+    return s * ln_small_upto99(remainder);
 }
 
 static const uint64_t PRIMES[] = { 5ULL, 7ULL, 11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 31ULL, 37ULL, 41ULL, 43ULL, 47ULL, 53ULL };
@@ -95,6 +92,19 @@ static const size_t PRIMES_COUNT = sizeof(PRIMES)/sizeof(PRIMES[0]);
 
 static const uint64_t ODD_PRIMORIAL_U64 = 16294579238595022365ULL;
 
+// Asymmetric remainder stepping, all unsigned
+// m = p - r   (with 0 < r < p)
+
+static inline uint64_t cap_tent(uint64_t n, uint64_t p, uint64_t r) {
+    uint64_t m = p - r;                 // cap
+    uint64_t t = (n + r) % p;           // phase with residue shift
+    uint64_t k = t + 1;                 // 1..p
+    return (k < m ? k : m);             // min(t+1, m)
+}
+
+static inline uint64_t min_u64(uint64_t a, uint64_t b) {
+    return (a < b) ? a : b;
+}
 /*
  * ============================================================================
  *  EXPERIMENTAL: Unproven CRT-inspired approximation
@@ -138,7 +148,7 @@ static const uint64_t ODD_PRIMORIAL_U64 = 16294579238595022365ULL;
  * ============================================================================
  */
 // with divisibility checks
-static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr, long double w, uint64_t residue, bool positive, size_t *prime_pos_ptr, int exposure_count)
+static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr, long double w, uint64_t residue, bool tenting, size_t *prime_pos_ptr, int exposure_count)
 {
     const uint64_t w_int = *w_intptr;
 
@@ -177,19 +187,45 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
         // Ignore primes dividing n when negative. As per CRT this would not contribue, and 
         // we are greedly trying to produce the smallest interval with the largest product.
         // However, we know that these primes will contribute when positive with a reduced residue.
-        if ((n % p) == 0ULL && (--r <= 0ULL || ! positive)) {
-            continue;
+        if ((n % p) == 0ULL) {
+            if(r-- <= 1ULL) {
+                continue;
+            }
         }
-
+#if 0
         q *= p;
-        if (w_int < q) {
+        if ( q > w_int) {
             break;
         }
         // fully spanned → full contribution
         sumlog += ln_small_upto99(p - r);
+#else 
+        q *= p;
+        if ( q > w_int) {
+            break;
+        }
+        if(! tenting) {
+            // this is more conservative, finding absolute bounds.
+            sumlog += ln_small_upto99(p-r);
+        }
+        else {
+            // this is for finding constructive extremas, for tracing maximums
+            sumlog += ln_small_upto99(cap_tent(n, p, r));
+            //sumlog += ln_small_upto99(min_u64(p-r, (n%p)+1ULL));
+        }
+//        sumlog += ln_small_upto99(p - r - ((n+r) % (p-r)));
+//        long double remainder = (long double)(p-r) - fmodl(w, (long double)(p-r));
+//        if(remainder == 0.0L) {
+//            continue;
+//        }
+//        q *= p;
+//        if ( q >= w) {
+//            break;
+//        }
+//        sumlog += logl(remainder);
+#endif
     }
     *prime_pos_ptr = i;
-
     // The greed estimate was good, but only accounted for small primes and a single transition.
     // We'll estimate the contribution of smaller terms with more transitions.
     // exposure tail: extend q by subsequent NONDIVIDING primes; stop after 5 exposures total
@@ -200,10 +236,18 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
             break;
         }
         uint64_t r = residue;
-        if ((n % p) == 0ULL && (--r <= 0ULL || ! positive)) {
-            continue;  // skip divisors of n when negative, or when the residue is 0
+        if ((n % p) == 0ULL) {
+            if(r-- <= 1ULL) {
+                continue;
+            }
         }
-        sumlog += expose_next_log_fast(w, (long double)p, (q*=p), r);
+        if(! tenting) {
+            sumlog += expose_next_log_fast(w, (long double)(p-r), (q*=p));
+        }
+        else {
+            sumlog += expose_next_log_fast(w, (long double)(cap_tent(n, p, r)), (q*=p));
+            //sumlog += expose_next_log_fast(w, (long double)(min_u64(p-r, (n%p)+1ULL)), (q*=p));
+        }
     }
     *w_intptr = w_int - q_committed;
     return expl(sumlog);
@@ -220,26 +264,26 @@ long double allowed_prime_deficit_expirimental(uint64_t n, long double w_in, uin
     }
     long double result = 0.0L;
     for(size_t prime_pos = 0;prime_pos < PRIMES_COUNT;) {
-        result += allowed_prime_deficit_internal(n, &w_int, w_in, residue, positive, &prime_pos, 0);
+        result += allowed_prime_deficit_internal(n, &w_int, w_in, residue, &prime_pos, 0);
         // We have shifted all the committed primes remainders into the interval q_committed. 
         // However non-committed primes may still contribute in the unused portion of the interval.
         // We allow additional iterations to account for this. A negative value means no limit.
         // Looping is not really supported by CRT, but it is worth trying.
     }
-    return (positive) ? result : -result;
+    return (positive) ? min_ld(result,w_in) : -min_ld(result,w_in);
 }
 #endif
 
 // with divisibility checks
-long double allowed_prime_deficit(uint64_t n, long double w_in, uint64_t residue, bool positive, int exposure_count)
+long double allowed_prime_deficit(uint64_t n, long double w_in, uint64_t residue, bool positive, bool tenting, int exposure_count)
 {
     uint64_t w_int = (uint64_t)floorl(w_in);
-    if(! w_int) {
-        // if the window is only a fractional size, we can assume a single random prime can cancel it fully.
-        return ceill(w_in);
+    // maximum number of odd values in the window.  This is the maximum possible value.
+    long double result = fmaxl(w_in,1.0L);
+    if(w_int) {
+        size_t prime_pos = 0;
+        result = fmaxl(fminl(allowed_prime_deficit_internal(n, &w_int, w_in, residue, tenting, &prime_pos, exposure_count), result), 1.0L);
     }
-    size_t prime_pos = 0;
-    long double result = allowed_prime_deficit_internal(n, &w_int, w_in, residue, positive, &prime_pos, exposure_count);
     return (positive) ? result : -result;
 }
 

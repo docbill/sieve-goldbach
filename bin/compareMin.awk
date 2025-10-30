@@ -154,7 +154,7 @@ FNR==1 {
 
     # Lambda_min = log(C_min/Cpred_min) in scientific notation; blank if C_min==0
     if ((cmn+0) > 0 && (cp+0) > 0) {
-        printf "%s,%d,%.6f,%d,%.6f,%.6e\n", label, n, cmn, np_0, cp, log((cmn+0)/(cp+0))
+        printf "%s,%d,%.6f,%d,%.6f,%.6e\n", label, n, cmn, np_0, cp, log((cmn+1e-12)/(cp+1e-12))
     }
     seen[key]++
 }

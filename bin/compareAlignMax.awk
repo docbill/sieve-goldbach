@@ -153,7 +153,7 @@ FNR==1 {
        print "Dec","n_1","C_max","Npred_1","CpredAlign","Lambda_max","Jitter","JitterRatio"
     }
     else {
-       print "START","n_1","C_max","Npred_1","CpredAlign","Lambda_max","Jitter","JitterRatio"
+       print "START","n_1","C_max","Npred_1","CpredAlign","Lambda_max","Jitter","JitterRatio","Status"
     }
     next
 }
@@ -202,8 +202,17 @@ FNR==1 {
     # Handle zero difference case: check raw count and use appropriate precision
     c_diff = (cmx+0) - cpred_align
     
+    # Determine status based on difference
+    if (absd(c_diff) < 1e-10) {
+        status = "EXACT"
+    } else if (c_diff < 0) {
+        status = "EXPECTED"  # Observed < predicted (below maximum)
+    } else {
+        status = "OUTLIER"   # Observed > predicted (above maximum)
+    }
+    
     if ((cmx+0) > 0 && cpred_align > 0) {
-        lambda_val = log((cmx+0)/cpred_align)
+        lambda_val = log((cmx+1e-12)/(cpred_align+1e-12))
         
         # If difference is zero and raw count is 0, omit the data point
         if (absd(c_diff) < 1e-10 && (cmx+0) == 0) {
@@ -211,7 +220,7 @@ FNR==1 {
         } else {
             # Report with appropriate precision based on whether this is an average or not
             # For non-average cases, use 1e-6 precision; for average use 1e-8
-            printf "%s,%d,%.6f,%d,%.6f,%.6e,%.6f,%.6e\n", label, n, cmx, np_1, cpred_align, lambda_val, jitter, jitter_ratio
+            printf "%s,%d,%.8f,%d,%.8f,%.6e,%.6f,%.6f,%s\n", label, n, cmx, np_1, cpred_align, lambda_val, jitter, jitter_ratio, status
         }
     }
     seen[key]++

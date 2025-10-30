@@ -158,7 +158,7 @@ FNR==1 {
        print "Dec","n_0","C_min","Npred_0","Cbound","Lambda_min","Jitter","JitterRatio"
     }
     else {
-       print "START","n_0","C_min","Npred_0","CboundMin","Lambda_min","Jitter","JitterRatio"
+       print "START","n_0","C_min","Npred_0","CboundMin","Lambda_min","Jitter","JitterRatio","Status"
     }
     next
 }
@@ -207,6 +207,15 @@ FNR==1 {
     # Handle zero difference case: check raw count and use appropriate precision
     c_diff = (cmn+0) - cpred_bound
     
+    # Determine status based on difference (reversed logic for minimum bounds)
+    if (absd(c_diff) < 1e-10) {
+        status = "EXACT"
+    } else if (c_diff < 0) {
+        status = "VIOLATION"  # Observed < predicted (violates lower bound)
+    } else {
+        status = "EXPECTED"  # Observed > predicted (above minimum)
+    }
+    
     if ((cmn+0) > 0 && cpred_bound > 0) {
         lambda_val = log((cmn+0)/cpred_bound)
         
@@ -216,7 +225,7 @@ FNR==1 {
         } else {
             # Report with appropriate precision based on whether this is an average or not
             # For non-average cases, use 1e-6 precision; for average use 1e-8
-            printf "%s,%d,%.6f,%d,%.6f,%.6e,%.6f,%.6e\n", label, n, cmn, np_0, cpred_bound, lambda_val, jitter, jitter_ratio
+            printf "%s,%d,%.6f,%d,%.6f,%.6e,%.6f,%.6e,%s\n", label, n, cmn, np_0, cpred_bound, lambda_val, jitter, jitter_ratio, status
         }
     }
     seen[key]++

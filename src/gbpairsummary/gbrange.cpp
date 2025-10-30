@@ -25,18 +25,6 @@
 #include "chineseRemainderTheorem.h"
 #include "gbrange.hpp"
 
-#if 0
-static constexpr unsigned SMALL_PRIMES[] = {
-    5,7,11,13,17,19,23,29,31,37,41,43,47,53
-};
-
-// largest odd primorial fitting uint64_t: 3*5*7*...*53
-static constexpr std::uint64_t ODD_PRIMORIAL_U64 = 16294579238595022365ULL;
-
-// If you also want the long-double primorial value handy:
-static constexpr long double ODD_PRIMORIAL_LD = 1.6294579238595022365e19L;
-#endif
-
 // ----- Small helpers -----
 static inline std::uint64_t maxPrefEven(long double value, std::uint64_t minValue) {
     std::uint64_t retval = (~1ULL) & (std::uint64_t)ceill(value);
@@ -61,198 +49,6 @@ static inline void vfprintf_both(FILE* a, FILE* b, const char* fmt, va_list ap) 
         std::fflush(b);
     }
 }
-
-#if 0
-static inline long double expose_next_log_fast(
-    long double w, long double p_next, long double q_next, bool next_aligns, bool single_residue=false, bool require_span=false)
-{
-    if (!next_aligns || (require_span && w < p_next)) return 0.0L;
-    // fractional part of w/q_next in [0,1)
-    long double t = w / q_next;
-    t -= floorl(t);
-    return t * (single_residue ? logl(p_next - 1.0L) : logl(p_next-2.0L));   // add to sum of logs
-}
-
-long double allowed_prime_deficit(uint64_t n, long double w,bool single_residue=false)
-{
-    if (n < 3ULL) {
-        return (n == 0ULL) ? 0.0L : 1.0L;
-    }
-    
-    std::uint64_t w = (std::uint64_t)floorl(w);
-
-    // seed with mod-3 admissible fraction
-    long double sumlog = 0.0L
-    std::uint64_t q = (n % 3ULL == 0ULL) ? 3ULL : 1ULL;
-
-    // --- up to p=5 ---
-    static constexpr long double PR5 = 3.0L*5.0L;
-    const bool a5 = (n % 5ULL) != 0ULL;
-    std::uint64_t q_next *= 5.0ULL;
-    if (w < q_next) {
-        sumlog += expose_next_log_fast(w, 5.0L, PR5, a5, single_residue, true);
-        return expl(sumlog);
-    }
-    if (a5) {
-        sumlog += (single_residue ? logl(5.0L - 1.0L) : logl(5.0L - 2.0L)); // *3
-        q = q_next;
-    }
-    // --- up to p=7/11/13/17/19 ---
-    static constexpr long double PR7  = 7.0L*PR5;
-    static constexpr long double PR11 = 11.0L*PR7;
-    static constexpr long double PR13 = 13.0L*PR11;
-    static constexpr long double PR17 = 17.0L*PR13;
-    static constexpr long double PR19 = 19.0L*PR17;
-
-    const bool a7  = (n %  7ULL) != 0ULL;
-    const bool a11 = (n % 11ULL) != 0ULL;
-    const bool a13 = (n % 13ULL) != 0ULL;
-    const bool a17 = (n % 17ULL) != 0ULL;
-    const bool a19 = (n % 19ULL) != 0ULL;
-    q_next *= 7.0ULL;
-    if (w < q_next) {
-        sumlog += expose_next_log_fast(w,  7.0L, PR7,  a7,  single_residue);
-        sumlog += expose_next_log_fast(w, 11.0L, PR11, a11, single_residue);
-        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, single_residue);
-        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue, true);
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue, true);
-        return expl(sumlog);
-    }
-    if (a7) {
-        sumlog += (single_residue ? logl(7.0L - 1.0L) : logl(7.0L - 2.0L));   // *5
-        q = q_next;
-    }
-
-    // --- up to p=23 ---
-    static constexpr long double PR23 = 23.0L*PR19;
-    const bool a23 = (n % 23ULL) != 0ULL;
-    q_next *= 11.0ULL;
-    if (w < q_next) {
-        sumlog += expose_next_log_fast(w, 11.0L, PR11, a11, single_residue);
-        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, single_residue);
-        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue);
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
-        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
-        return expl(sumlog);
-    }
-    if (a11) {
-        sumlog += (single_residue ? logl(11.0L - 1.0L) : logl(11.0L - 2.0L)); // *9
-        q = q_next;
-    }
-
-    // --- up to p=29 ---
-    static constexpr long double PR29 = 29.0L*PR23;
-    const bool a29 = (n % 29ULL) != 0ULL;
-    q_next *= 13.0ULL;
-    if (w < q_next) {
-        sumlog += expose_next_log_fast(w, 13.0L, PR13, a13, single_residue);
-        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue);
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
-        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
-        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
-        return expl(sumlog);
-    }
-    if (a13) {
-        sumlog += (single_residue ? logl(13.0L - 1.0L) : logl(13.0L - 2.0L)); // *11
-        q = q_next;
-    }
-
-    // --- up to p=31 ---
-    static constexpr long double PR31 = 31.0L*PR29;
-    const bool a31 = (n % 31ULL) != 0ULL;
-    q_next *= 17.0ULL;
-    if (w < q_next) {
-        sumlog += expose_next_log_fast(w, 17.0L, PR17, a17, single_residue);
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
-        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
-        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
-        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
-        return expl(sumlog);
-    }
-    if (a17) {
-        sumlog += logl(17.0L - 2.0L); // *15
-        q = q_next;
-    }
-
-    // --- up to p=37 ---
-    static constexpr long double PR37 = 37.0L*PR31;
-    const bool a37 = (n % 37ULL) != 0ULL;
-    q_next *= 19.0ULL;
-    if (w < q_next) {
-        sumlog += expose_next_log_fast(w, 19.0L, PR19, a19, single_residue);
-        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
-        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
-        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
-        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
-        return expl(sumlog);
-    }
-    if (a19) {
-        sumlog += (single_residue ? logl(19.0L - 1.0L) : logl(19.0L - 2.0L)); // *17
-        q = q_next;
-    }
-
-    // --- up to p=41,43,47,53 (likely never reached, but cheap if we do) ---
-    static constexpr long double PR41 = 41.0L*PR37;
-    static constexpr long double PR43 = 43.0L*PR41;
-    static constexpr long double PR47 = 47.0L*PR43;
-    static constexpr long double PR53 = 53.0L*PR47;
-
-    const bool a41 = (n % 41ULL) != 0ULL;
-    const bool a43 = (n % 43ULL) != 0ULL;
-    const bool a47 = (n % 47ULL) != 0ULL;
-    const bool a53 = (n % 53ULL) != 0ULL;
-
-    q_next *= 23.0ULL;
-    if (w < q_next) {
-        sumlog += expose_next_log_fast(w, 23.0L, PR23, a23, single_residue);
-        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
-        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
-        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
-        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
-        return expl(sumlog);
-    }
-    if (a23) {
-        sumlog += (single_residue ? logl(23.0L - 1.0L) : logl(23.0L - 2.0L)); // 23-2
-        q = q_next;
-    }
-
-    q_next *= 29.0ULL;
-    if (w < q_next) {
-        sumlog += expose_next_log_fast(w, 29.0L, PR29, a29, single_residue);
-        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
-        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
-        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
-        sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, single_residue);
-        return expl(sumlog);
-    }
-    if (a29) {
-        sumlog += (single_residue ? logl(29.0L - 1.0L) : logl(29.0L - 2.0L)); // 29-2
-        q = q_next;
-    }
-
-    q_next *= 31.0ULL;
-    if (w < q_next) {
-        sumlog += expose_next_log_fast(w, 31.0L, PR31, a31, single_residue);
-        sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
-        sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
-        sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, single_residue);
-        sumlog += expose_next_log_fast(w, 47.0L, PR47, a47, single_residue);
-        return expl(sumlog);
-    }
-    if (a31) {
-        sumlog += (single_residue ? logl(31.0L - 1.0L) : logl(31.0L - 2.0L)); // 31-2
-        q = q_next;
-    }
-    // Tail (practically negligible, but harmless if reached)
-    sumlog += expose_next_log_fast(w, 37.0L, PR37, a37, single_residue);
-    sumlog += expose_next_log_fast(w, 41.0L, PR41, a41, single_residue);
-    sumlog += expose_next_log_fast(w, 43.0L, PR43, a43, single_residue);
-    sumlog += expose_next_log_fast(w, 47.0L, PR47, a47, single_residue);
-    sumlog += expose_next_log_fast(w, 53.0L, PR53, a53, single_residue);
-    return expl(sumlog);
-}
-#endif
-
 
 static inline void fprintf_both(FILE* a, FILE* b, const char* fmt, ...) {
     va_list ap; va_start(ap, fmt);
@@ -427,7 +223,7 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
         );
         if (model != Model::Empirical) {
             fprintf_both(interval.out,interval.trace,
-                "%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%.6LF\n",
+                "%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.6LF\n",
                 summary.alignMinima.n_last,
                 std::min(2.0L*logNlogN,std::max(0.0L,summary.alignMinima.c_last)),
                 summary.alignMaxima.n_last,
@@ -753,13 +549,13 @@ int GBRange::addRow(
         // --- Predictive alignment (residue 2) ---
         // Applies to the canonical short interval √(2n)
         const long double w_main_predictive = sqrtl(dl);
-        const long double w_main_conservative = sqrtl(2.0L*dl);
-        const long double pairCountAlignPredictiveNegative = 2.0L *allowed_prime_deficit(n, w_main_predictive, 2ULL, false, 15);
-        const long double pairCountAlignPredictivePositive = 2.0L * allowed_prime_deficit(n, w_main_predictive, 2ULL, true, 15);
-        const long double pairCountAlignConservativeNegative = 2.0L * allowed_prime_deficit(n, w_main_conservative, 1ULL, false, 15);
-        const long double pairCountAlignConservativePositive = 2.0L * allowed_prime_deficit(n, w_main_conservative, 1ULL, true, 15);
+        const long double w_main_conservative = sqrtl(2.0L)*w_main_predictive;
+        const long double pairCountAlignPredictiveNegative = 2.0L *allowed_prime_deficit(n, w_main_predictive, 2ULL, false, true, 10);
+        const long double pairCountAlignPredictivePositive = 2.0L * allowed_prime_deficit(n, w_main_predictive, 2ULL, true, true, 10);
+        const long double pairCountAlignConservativeNegative = 2.0L * allowed_prime_deficit(n, w_main_conservative, 1ULL, false, false, 10);
+        const long double pairCountAlignConservativePositive = 2.0L * allowed_prime_deficit(n, w_main_conservative, 1ULL, true, false, 10);
         // This is a heuristic for the jitter predictive term, to scale errors to the order of the window width.
-        const long double jitterPredictive = -2.0L * allowed_prime_deficit(n, w_main_predictive, 2ULL, false, 15);
+        const long double jitterPredictive = -2.0L * allowed_prime_deficit(n, w_main_predictive, 2ULL, false, false, 10);
         
         // Each half covers a different short interval:
         // lower: √(n−1), upper: √(n+δ)
@@ -771,7 +567,7 @@ int GBRange::addRow(
         // const long double R1_upper = allowed_prime_deficit(n, w_upper, true);
         // const long double pairCountAlignConservative = 2.0L * (R1_lower + R1_upper); // ×2 for ordered pairs
         // For a residue of 1 we need to account for both positive and negative contributions.
-        // const long double pairCountAlignConservative = 4.0L * allowed_prime_deficit(n, w_main , 1ULL, true, 15);
+        // const long double pairCountAlignConservative = 4.0L * allowed_prime_deficit(n, w_main , 1ULL, true, 10);
 
         // Short-of-short for jitter: √w on each half
         // const long double wj_lower = sqrtl(w_lower);

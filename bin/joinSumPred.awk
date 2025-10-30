@@ -397,7 +397,7 @@ FNR==1 {
     # Use VERSION environment variable for data output
     if (VERSION == "v0.2.0") {
         # v0.2.0 format: include align/bound columns
-        printf "%s,%d,%.6f,%d,%.6f,%d,%.8f,%d,%.8f,%.0f,%.9f,%.9f,%d,%.6f,%d,%.6f,%d,%.6f,%d,%.6f\n",
+        printf "%s,%d,%.6f,%d,%.6f,%d,%.8f,%d,%.8f,%.0f,%.9f,%.9f,%d,%.6f,%d,%.8f,%d,%.6f,%d,%.8f\n",
             output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
             sum_n1[key], sum_cmax[key], n1p, cpmax,
             sum_ng[key], sum_cavg[key], cpavg, 
