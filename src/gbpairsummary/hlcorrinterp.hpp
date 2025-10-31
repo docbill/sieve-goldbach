@@ -24,6 +24,15 @@
 #include <cmath>
 #include "hlcorrstate.hpp"
 
+// Inline min/max for uint64_t to avoid template deduction issues
+static inline std::uint64_t min_u64(std::uint64_t a, std::uint64_t b) {
+    return (a < b) ? a : b;
+}
+
+static inline std::uint64_t max_u64(std::uint64_t a, std::uint64_t b) {
+    return (a > b) ? a : b;
+}
+
 // Interpolation-based HLCorr: pre-scan to sample exact values, then interpolate
 class HLCorrInterpolator {
 private:
@@ -61,7 +70,7 @@ public:
         this->n_end = n_end;
         this->range_size = n_end - n_start;
         // Use sqrt(sqrt(range_size)) is too small a sample size in most cases, so we cap at 31
-        this->sample_interval = std::min(31ULL, std::max(3ULL, (std::uint64_t)std::ceil(1.0L + std::sqrt(std::sqrt((long double)range_size)))));
+        this->sample_interval = min_u64(31ULL, max_u64(3ULL, (std::uint64_t)std::ceil(1.0L + std::sqrt(std::sqrt((long double)range_size)))));
         this->sample_size = (range_size + sample_interval - 1) / sample_interval;
         //fprintf(stderr, "DEBUG: hlcorrinterp: init(n_start=%llu, n_end=%llu, range_size=%llu, sample_interval=%llu, sample_size=%llu)\n", (unsigned long long)n_start, (unsigned long long)n_end, (unsigned long long)range_size, (unsigned long long)sample_interval, (unsigned long long)sample_size);
     }

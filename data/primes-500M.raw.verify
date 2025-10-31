@@ -1,0 +1,3 @@
+OK: verified complete prime sequence from 2..500039677
+count=26357875  last=500039677  fnv1a64=0x116ccc4c1c333c13  segments=126
+sha256=fc9f5c4048f288ba8ba48f8693bd0f3e49e4047d6e1a6ca361ae313afb9ba3c4

@@ -86,7 +86,10 @@ static inline long double expose_next_log_fast( const long double w, const uint6
     return s * ln_small_upto99(remainder);
 }
 
-static const uint64_t PRIMES[] = { 5ULL, 7ULL, 11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 31ULL, 37ULL, 41ULL, 43ULL, 47ULL, 53ULL };
+static const uint64_t PRIMES[] = {
+    5ULL, 7ULL, 11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 31ULL, 37ULL, 41ULL, 43ULL,
+    47ULL, 53ULL, 59ULL, 61ULL, 67ULL, 71ULL, 73ULL, 79ULL, 83ULL, 89ULL, 97ULL
+};
 
 static const size_t PRIMES_COUNT = sizeof(PRIMES)/sizeof(PRIMES[0]);
 
@@ -98,8 +101,10 @@ static const uint64_t ODD_PRIMORIAL_U64 = 16294579238595022365ULL;
 static inline uint64_t cap_tent(uint64_t n, uint64_t p, uint64_t r) {
     uint64_t m = p - r;                 // cap
     uint64_t t = (n + r) % p;           // phase with residue shift
+//    uint64_t t = n % p;                  // phase, no residue shift
     uint64_t k = t + 1;                 // 1..p
     return (k < m ? k : m);             // min(t+1, m)
+//    return (n % (p-r)) + 1ULL;
 }
 
 static inline uint64_t min_u64(uint64_t a, uint64_t b) {
