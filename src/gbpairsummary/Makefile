@@ -27,6 +27,9 @@ CPPFLAGS  ?=
 LDFLAGS   ?=
 LDLIBS    ?= -lm
 
+# HLCorr exact calculation flag (set to 1 to use exact calculations)
+HLCORR_USE_EXACT ?=
+
 # --- OS detection for portability ---
 UNAME_S := $(shell uname -s)
 
@@ -51,7 +54,7 @@ LIBFILE = ../lib/libprime.a
 all: $(TARGET)
 
 $(TARGET): $(SRC) $(INCL) $(LIBFILE)
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $(SRC) $(LIBFILE) $(LDFLAGS) $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(if $(HLCORR_USE_EXACT),-DHLCORR_USE_EXACT,) -o $@ $(SRC) $(LIBFILE) $(LDFLAGS) $(LDLIBS)
 
 clean:
 	$(RM) $(TARGET)

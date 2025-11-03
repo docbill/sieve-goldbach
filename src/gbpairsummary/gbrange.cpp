@@ -142,6 +142,7 @@ std::uint64_t GBRange::decReset(std::uint64_t n_start) {
     if(decAgg.left >= decAgg.n_end) {
         dec_close();
     }
+#ifndef HLCORR_USE_EXACT
     // Init interpolators for new aggregate range
     if (model == Model::HLA && compat_ver != CompatVer::V015) {
         for(auto &w : windows) {
@@ -150,6 +151,7 @@ std::uint64_t GBRange::decReset(std::uint64_t n_start) {
             }
         }
     }
+#endif // HLCORR_USE_EXACT
     return decAgg.left;
 }
 
@@ -169,6 +171,7 @@ std::uint64_t GBRange::primReset(std::uint64_t n_start) {
         prim_close();
     }
     // Init interpolators for new aggregate range
+#ifndef HLCORR_USE_EXACT
     if (model == Model::HLA && compat_ver != CompatVer::V015) {
         for(auto &w : windows) {
             if(w->is_prim_active()) {
@@ -176,6 +179,7 @@ std::uint64_t GBRange::primReset(std::uint64_t n_start) {
             }
         }
     }
+#endif // HLCORR_USE_EXACT
     return primAgg.left;
 }
 
@@ -550,34 +554,12 @@ int GBRange::addRow(
         // Applies to the canonical short interval √(2n)
         const long double w_main_predictive = sqrtl(dl);
         const long double w_main_conservative = sqrtl(2.0L)*w_main_predictive;
-        const long double pairCountAlignPredictiveNegative = 2.0L *allowed_prime_deficit(n, w_main_predictive, 2ULL, false, true, 10);
-        const long double pairCountAlignPredictivePositive = 2.0L * allowed_prime_deficit(n, w_main_predictive, 2ULL, true, true, 10);
-        const long double pairCountAlignConservativeNegative = 2.0L * allowed_prime_deficit(n, w_main_conservative, 1ULL, false, false, 10);
-        const long double pairCountAlignConservativePositive = 2.0L * allowed_prime_deficit(n, w_main_conservative, 1ULL, true, false, 10);
+        const long double pairCountAlignPredictiveNegative = 2.0L *allowed_prime_deficit(n, w_main_predictive, 2ULL, false, false, 12);
+        const long double pairCountAlignPredictivePositive = 2.0L * allowed_prime_deficit(n, w_main_predictive, 2ULL, true, false, 12);
+        const long double pairCountAlignConservativeNegative = 2.0L * allowed_prime_deficit(n, w_main_conservative, 1ULL, false, false, 12);
+        const long double pairCountAlignConservativePositive = 2.0L * allowed_prime_deficit(n, w_main_conservative, 1ULL, true, false, 12);
         // This is a heuristic for the jitter predictive term, to scale errors to the order of the window width.
-        const long double jitterPredictive = -2.0L * allowed_prime_deficit(n, w_main_predictive, 2ULL, false, false, 10);
-        
-        // Each half covers a different short interval:
-        // lower: √(n−1), upper: √(n+δ)
-        // const long double w_lower = sqrtl(nl - 1.0L);
-        // const long double w_upper = sqrtl(nl + dl);
-
-        // --- Conservative alignment (residue 1) ---
-        // const long double R1_lower = allowed_prime_deficit(n, w_lower, true);
-        // const long double R1_upper = allowed_prime_deficit(n, w_upper, true);
-        // const long double pairCountAlignConservative = 2.0L * (R1_lower + R1_upper); // ×2 for ordered pairs
-        // For a residue of 1 we need to account for both positive and negative contributions.
-        // const long double pairCountAlignConservative = 4.0L * allowed_prime_deficit(n, w_main , 1ULL, true, 10);
-
-        // Short-of-short for jitter: √w on each half
-        // const long double wj_lower = sqrtl(w_lower);
-        // const long double wj_upper = sqrtl(w_upper);
-
-        // // --- Jitter (residue 1, short-of-short) ---
-        // const long double J_lower = allowed_prime_deficit(n, wj_lower, true);
-        // const long double J_upper = allowed_prime_deficit(n, wj_upper, true);
-        // const long double jitter  = 2.0L * (J_lower + J_upper); // ×2 for ordered pairs
-
+        const long double jitterPredictive = -2.0L * allowed_prime_deficit(n, w_main_predictive, 2ULL, false, false, 12);
         
         long double c_raw = twoSGB;
         long double pairCount_raw = 0.0L;
@@ -597,7 +579,11 @@ int GBRange::addRow(
             if(compat_ver != CompatVer::V015) {
                 prim_summary.useHLCorrInst = true;
                 // Use interpolated HLCorr for better accuracy
+#ifndef HLCORR_USE_EXACT
                 hlCorrAvg = prim_summary.hlCorrEstimate(n,delta);
+#else
+                hlCorrAvg = hlcorr(n,delta);
+#endif // HLCORR_USE_EXACT
             }
             else if(primAgg.minor < 5) {
                 prim_summary.useHLCorrInst = true;
@@ -627,7 +613,11 @@ int GBRange::addRow(
             if(compat_ver != CompatVer::V015) {
                 dec_summary.useHLCorrInst = true;
                 // Use interpolated HLCorr for better accuracy
+#ifndef HLCORR_USE_EXACT
                 hlCorrAvg = dec_summary.hlCorrEstimate(n,delta);
+#else
+                hlCorrAvg = hlcorr(n,delta);
+#endif // HLCORR_USE_EXACT
                 dec_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
             }
             else if(n < 10ULL) {
@@ -735,6 +725,7 @@ int GBRange::processRows() {
     std::vector<GBWindow*> dec_windows_to_prescan; 
     std::vector<GBWindow*> prim_windows_to_prescan;
 
+#ifndef HLCORR_USE_EXACT
     if(model == Model::HLA && compat_ver != CompatVer::V015) {
         for(auto & w : windows) {
             if(w->is_dec_active()) {
@@ -747,6 +738,7 @@ int GBRange::processRows() {
             }
         }
     }
+#endif // HLCORR_USE_EXACT
     for (std::uint64_t n = n_start; n < n_end; ) {
         // Reset at the beginning of each new range (needed to fix minAt bug)
         for(auto & w : windows) {
@@ -757,6 +749,7 @@ int GBRange::processRows() {
                 w->prim.summary.reset();
             }
         }
+#ifndef HLCORR_USE_EXACT
         if(model == Model::HLA && compat_ver != CompatVer::V015) {
             if(! dec_windows_to_prescan.empty()) {
                 for(std::uint64_t i = n,next_n; i < n_end; i = next_n) {
@@ -777,6 +770,7 @@ int GBRange::processRows() {
                 prim_windows_to_prescan.clear();
             }
         }
+#endif // HLCORR_USE_EXACT
         const long double twoSGB_n = (model == Model::Empirical ? 0.0L : (long double)twoSGB(n, primeArray, primeArrayEndlen));
         if (twoSGB_n < 0.0L) {
             std::fprintf(stderr, "Failed HL-A prediction at %" PRIu64 "\n", n);

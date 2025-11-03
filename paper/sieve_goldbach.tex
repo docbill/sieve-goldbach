@@ -1104,7 +1104,7 @@ respectively.
 \addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
 
 \addplot[mypred, thick, purple!70!black, dotted, sharp plot]
-  table[x={n_a}, y={Cbound}] {\pairdata};
+  table[x={n_a}, y={Cbound_min}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
 
 \addplot[mypred, thick, brown!70!black, dotted, sharp plot]
@@ -1114,6 +1114,10 @@ respectively.
 \addplot[mypred, thick, brown!70!black, dotted, sharp plot]
   table[x={n_u}, y={Calign_max}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\talign} \)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={n_b}, y={Cbound_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max}^{\tbound} \)}
 
 \addplot[mypred, thick, blue!70!black, dashed, sharp plot]
   table[x={Npred_0}, y={Cpred_min}] {\pairdata};
@@ -1187,7 +1191,7 @@ respectively.
 \addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
 
 \addplot[mypred, thick, purple!70!black, dotted, sharp plot]
-  table[x={n_a}, y={Cbound}] {\pairdata};
+  table[x={n_a}, y={Cbound_min}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
 
 \addplot[mypred, thick, brown!70!black, dotted, sharp plot]
@@ -1197,6 +1201,10 @@ respectively.
 \addplot[mypred, thick, brown!70!black, dotted, sharp plot]
   table[x={n_u}, y={Calign_max}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\talign} \)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={n_b}, y={Cbound_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max}^{\tbound} \)}
 
 \addplot[mypred, thick, blue!70!black, dashed, sharp plot]
   table[x={Npred_0}, y={Cpred_min}] {\pairdata};
@@ -1272,7 +1280,7 @@ respectively.
 \addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
 
 \addplot[mypred, thick, purple!70!black, dotted, sharp plot]
-  table[x={n_a}, y={Cbound}] {\pairdata};
+  table[x={n_a}, y={Cbound_min}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
 
 \addplot[mypred, thick, brown!70!black, dotted, sharp plot]
@@ -1282,6 +1290,10 @@ respectively.
 \addplot[mypred, thick, brown!70!black, dotted, sharp plot]
   table[x={n_u}, y={Calign_max}] {\pairdata};
 \addlegendentry{\( \Cpred_{\min}^{\talign} \)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={n_b}, y={Cbound_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max}^{\tbound} \)}
 
 \addplot[mypred, thick, blue!70!black, dashed, sharp plot]
   table[x={Npred_0}, y={Cpred_min}] {\pairdata};
@@ -1430,14 +1442,7 @@ Under HL-A, predictions and measurements converge to the same limit. For very la
 
 \begin{figure}[h]
   \centering
-  \FigLambdaAbsSignSplit{lambdaalign-23PR.5-1-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min}^{\talign} \rvert \)}{\( |\Lambda_{\min}^{\talign}| \) vs \( n_0 \) }
-  \caption{Scatter plot of \( \lvert \Lambda_{\min}^{\talign} \rvert \) versus \( n_0 \) for \( \alpha=1 \) on a log-log scale.}
-  \label{fig:lambda-alignprim1}
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-  \FigLambdaAbsSignSplit{lambdabound-23PR.5-1-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min}^{\text{bound}} \rvert \)}{\( |\Lambda_{\min}^{\text{bound}}| \) vs \( n_0 \) }
+  \FigLambdaAbsSignSplit{lambdaboundmin-23PR.5-1-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min}^{\text{bound}} \rvert \)}{\( |\Lambda_{\min}^{\text{bound}}| \) vs \( n_0 \) }
   \caption{Scatter plot of \( \lvert \Lambda_{\min}^{\text{bound}} \rvert \) versus \( n_0 \) for \( \alpha=1 \) on a log-log scale.}
   \label{fig:lambda-boundprim1}
 \end{figure}
@@ -1458,15 +1463,7 @@ Under HL-A, predictions and measurements converge to the same limit. For very la
 
 \begin{figure}[h]
   \centering
-  \FigLambdaAbsSignSplit{lambdaalign-23PR.5-0.5-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min}^{\talign} \rvert \)}{\( |\Lambda_{\min}^{\talign}| \) vs \( n_0 \) }
-  \caption{Scatter plot of \( \lvert \Lambda_{\min}^{\talign} \rvert \) versus \( n_0 \) for \( \alpha=0.5 \) on a log-log scale.}
-  \label{fig:lambda-alignprim}
-\end{figure}
-
-
-\begin{figure}[h]
-  \centering
-  \FigLambdaAbsSignSplit{lambdabound-23PR.5-0.5-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min}^{\text{bound}} \rvert \)}{\( |\Lambda_{\min}^{\text{bound}}| \) vs \( n_0 \) }
+  \FigLambdaAbsSignSplit{lambdaboundmin-23PR.5-0.5-v0.2.0.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min}^{\text{bound}} \rvert \)}{\( |\Lambda_{\min}^{\text{bound}}| \) vs \( n_0 \) }
   \caption{Scatter plot of \( \lvert \Lambda_{\min}^{\text{bound}} \rvert \) versus \( n_0 \) for \( \alpha=0.5 \) on a log-log scale.}
   \label{fig:lambda-boundprim}
 \end{figure}
@@ -1561,9 +1558,23 @@ Each primorial step corresponds to introducing a new Euler factor \( \frac{(p-1)
 
 \begin{figure}[h]
   \centering
+  \FigLambdaAbsSignSplit{lambdaboundmax-23PR.5-1-v0.2.0.csv}{n_1}{Lambda_max}{\( n_1 \)}{\( \lvert \Lambda_{\max}^{\tbound} \rvert \)}{\( |\Lambda_{\max}^{\tbound}| \) vs \( n_1 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\max}^{\tbound} \rvert \) versus \( n_1 \) for \( \alpha=1 \) on a log-log scale.}
+  \label{fig:lambda-maxboundprim1}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
   \FigLambdaAbsSignSplit{lambdamax-23PR.5-0.5-v0.2.0.csv}{n_1}{Lambda_max}{\( n_1 \)}{\( \lvert \Lambda_{\max} \rvert \)}{\( |\Lambda_{\max}| \) vs \( n_1 \) }
   \caption{Scatter plot of \( \lvert \Lambda_{\max} \rvert \) versus \( n_1 \) for \( \alpha = 0.5 \) on a log-log scale.}
   \label{fig:lambda-maxprim}
+\end{figure}
+
+\begin{figure}[h]
+  \centering
+  \FigLambdaAbsSignSplit{lambdaboundmax-23PR.5-0.5-v0.2.0.csv}{n_1}{Lambda_max}{\( n_1 \)}{\( \lvert \Lambda_{\max}^{\tbound} \rvert \)}{\( |\Lambda_{\max}^{\tbound}| \) vs \( n_1 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\max}^{\tbound} \rvert \) versus \( n_1 \) for \( \alpha=0.5 \) on a log-log scale.}
+  \label{fig:lambda-maxboundprim}
 \end{figure}
 
 \begin{figure}[h]

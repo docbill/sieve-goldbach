@@ -87,13 +87,35 @@ static inline long double expose_next_log_fast( const long double w, const uint6
 }
 
 static const uint64_t PRIMES[] = {
-    5ULL, 7ULL, 11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 31ULL, 37ULL, 41ULL, 43ULL,
+    3ULL, 5ULL, 7ULL, 11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 31ULL, 37ULL, 41ULL, 43ULL,
     47ULL, 53ULL, 59ULL, 61ULL, 67ULL, 71ULL, 73ULL, 79ULL, 83ULL, 89ULL, 97ULL
 };
 
 static const size_t PRIMES_COUNT = sizeof(PRIMES)/sizeof(PRIMES[0]);
 
-static const uint64_t ODD_PRIMORIAL_U64 = 16294579238595022365ULL;
+// Only indices 0-14 fit in uint64_t (product up to prime 53)
+// Note: PRIMES array starts at 5, so ODD_PRIMORIAL_U64[i+1] = 3 × product(PRIMES[0..i])
+static const uint64_t ODD_PRIMORIAL_U64[] = {
+    3ULL,
+    3ULL*5ULL,
+    3ULL*5ULL*7ULL,
+    3ULL*5ULL*7ULL*11ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL*17ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL*17ULL*19ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL*17ULL*19ULL*23ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL*17ULL*19ULL*23ULL*29ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL*17ULL*19ULL*23ULL*29ULL*31ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL*17ULL*19ULL*23ULL*29ULL*31ULL*37ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL*17ULL*19ULL*23ULL*29ULL*31ULL*37ULL*41ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL*17ULL*19ULL*23ULL*29ULL*31ULL*37ULL*41ULL*43ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL*17ULL*19ULL*23ULL*29ULL*31ULL*37ULL*41ULL*43ULL*47ULL,
+    3ULL*5ULL*7ULL*11ULL*13ULL*17ULL*19ULL*23ULL*29ULL*31ULL*37ULL*41ULL*43ULL*47ULL*53ULL
+};
+static const size_t ODD_PRIMORIAL_U64_COUNT = sizeof(ODD_PRIMORIAL_U64)/sizeof(ODD_PRIMORIAL_U64[0]);
+
+// Largest odd primorial that fits in uint64_t (for backwards compatibility)
+#define ODD_PRIMORIAL_U64_MAX ODD_PRIMORIAL_U64[ODD_PRIMORIAL_U64_COUNT-1]
 
 // Asymmetric remainder stepping, all unsigned
 // m = p - r   (with 0 < r < p)
@@ -159,7 +181,7 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
 
     long double sumlog = 0.0L;
     // If w spans 3·5·…·53, every nondividing prime fully contributes
-    if (w_int >= ODD_PRIMORIAL_U64) {
+    if (w_int >= ODD_PRIMORIAL_U64_MAX) {
         for (size_t i = 0; i < PRIMES_COUNT; ++i) {
             const uint64_t p = PRIMES[i];
             if ((n % p) != 0ULL)
@@ -175,87 +197,65 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
     const uint64_t p_max = 2ULL*n;
     // greedy estimate, we compute the smallest q with the maximum possibe contribution
     size_t i = *prime_pos_ptr;
-    // q = product of NONDIVIDING primes (transition primes included)
-    for (uint64_t q = q_committed; i < PRIMES_COUNT; ++i, q_committed = q) {
-        const uint64_t p = PRIMES[i];
-        if(p > w_int) {
-            if(p >= p_max) {
-                // we have exceeded the window, so we return the sum of logs
-                // and set the window to 0
-                *prime_pos_ptr = PRIMES_COUNT;
-                *w_intptr = 0ULL;
-                return expl(sumlog);
-            }
-            break;
-        }
-        uint64_t r = residue;
-        // Ignore primes dividing n when negative. As per CRT this would not contribue, and 
-        // we are greedly trying to produce the smallest interval with the largest product.
-        // However, we know that these primes will contribute when positive with a reduced residue.
-        if ((n % p) == 0ULL) {
-            if(r-- <= 1ULL) {
-                continue;
+    if(residue > 1ULL && w > (long double)PRIMES[PRIMES_COUNT-1]) {
+        for (uint64_t q = q_committed; i <  ODD_PRIMORIAL_U64_COUNT; ++i, q_committed = q) {
+            if ( (q = ODD_PRIMORIAL_U64[i]) > w_int) {
+                break;
             }
         }
-#if 0
-        q *= p;
-        if ( q > w_int) {
-            break;
+        // q = product of NONDIVIDING primes (transition primes included)
+        // Note: j < i (not j <= i) because i points to the prime AFTER the break
+        for (size_t j=*prime_pos_ptr; j < i; ++j) {
+            const uint64_t p = PRIMES[j];
+            // uint64_t r = ((n % p) == 0ULL) ? residue-1ULL : residue;
+            // sumlog += ln_small_upto99(tenting?cap_tent(n, p, r):(p-r));
+            sumlog += ln_small_upto99(tenting?cap_tent(n, p, residue):(p-residue));
         }
-        // fully spanned → full contribution
-        sumlog += ln_small_upto99(p - r);
-#else 
-        q *= p;
-        if ( q > w_int) {
-            break;
+    }
+    else {
+        for (uint64_t q = q_committed; i < PRIMES_COUNT; ++i, q_committed = q) {
+            const uint64_t p = PRIMES[i];
+            if(p > w_int) {
+                if(p >= p_max) {
+                    // we have exceeded the window, so we return the sum of logs
+                    // and set the window to 0
+                    *prime_pos_ptr = PRIMES_COUNT;
+                    *w_intptr = 0ULL;
+                    return expl(sumlog);
+                }
+                break;
+            }
+//            const uint64_t r = ((n % p) == 0ULL) ? residue-1ULL : residue;
+//            if (! r) {
+//                continue;
+//            }
+            if ( (q = ODD_PRIMORIAL_U64[i]) > w_int) {
+                break;
+            }
+            // sumlog += ln_small_upto99(tenting?cap_tent(n, p, r):(p-r));
+            sumlog += ln_small_upto99(tenting?cap_tent(n, p, residue):(p-residue));
         }
-        if(! tenting) {
-            // this is more conservative, finding absolute bounds.
-            sumlog += ln_small_upto99(p-r);
-        }
-        else {
-            // this is for finding constructive extremas, for tracing maximums
-            sumlog += ln_small_upto99(cap_tent(n, p, r));
-            //sumlog += ln_small_upto99(min_u64(p-r, (n%p)+1ULL));
-        }
-//        sumlog += ln_small_upto99(p - r - ((n+r) % (p-r)));
-//        long double remainder = (long double)(p-r) - fmodl(w, (long double)(p-r));
-//        if(remainder == 0.0L) {
-//            continue;
-//        }
-//        q *= p;
-//        if ( q >= w) {
-//            break;
-//        }
-//        sumlog += logl(remainder);
-#endif
     }
     *prime_pos_ptr = i;
     // The greed estimate was good, but only accounted for small primes and a single transition.
     // We'll estimate the contribution of smaller terms with more transitions.
     // exposure tail: extend q by subsequent NONDIVIDING primes; stop after 5 exposures total
     // already exposed the transition prime
+    long double tailfactor = 0.0L;
     for (uint64_t q=q_committed; i < PRIMES_COUNT && exposed < exposure_count;++exposed) {
         const uint64_t p = PRIMES[i++];
         if(p > p_max) {
             break;
         }
-        uint64_t r = residue;
-        if ((n % p) == 0ULL) {
-            if(r-- <= 1ULL) {
-                continue;
-            }
-        }
-        if(! tenting) {
-            sumlog += expose_next_log_fast(w, (long double)(p-r), (q*=p));
-        }
-        else {
-            sumlog += expose_next_log_fast(w, (long double)(cap_tent(n, p, r)), (q*=p));
-            //sumlog += expose_next_log_fast(w, (long double)(min_u64(p-r, (n%p)+1ULL)), (q*=p));
-        }
+        // const uint64_t r = ((n % p) == 0ULL) ? residue-1ULL : residue;
+        // if (r == 0ULL) {
+        //     continue;
+        // }
+        // tailfactor += ln_small_upto99(tenting?cap_tent(n, p, r):(p-r))/(long double)(q*=p);
+        tailfactor += ln_small_upto99(tenting?cap_tent(n, p, residue):(p-residue))/(long double)(q*=p);
     }
     *w_intptr = w_int - q_committed;
-    return expl(sumlog);
+    return expl(sumlog + w * tailfactor);
 }
 
 #ifdef CHINESE_REMAINDER_THEOREM_EXPERIMENTAL

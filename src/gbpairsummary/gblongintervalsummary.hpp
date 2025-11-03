@@ -98,7 +98,7 @@ public:
     std::uint64_t n2Last = 0;
     std::uint64_t n3First = 0;
     std::uint64_t n3Last = 0;
-    HLCorrInterpolator hlCorrEstimate;
+    HLCorrInterpolator hlCorrEstimate;  // When HLCORR_USE_EXACT is set, this is HLCorrState
 
     void reset() {
         GBLongIntervalSummary temp;
@@ -125,10 +125,10 @@ public:
             pairCountTotal     += pairCount;
             pairCountTotalNorm += c_of_n;
         }
-        if(n == boundMinima.n_last) {
+        if(n == alignMinima.n_last) {
             jitterLast = currentJitter;
         }
-        if(n == boundMinima.n_first) {
+        if(n == alignMinima.n_first) {
             jitterFirst = currentJitter;
         }
         if(n == cMinima.n_last) {
