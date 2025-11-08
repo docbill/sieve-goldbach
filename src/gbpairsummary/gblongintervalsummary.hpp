@@ -20,9 +20,29 @@
 
 #include <cstdint>
 #include <cmath>
+#include <cfloat>
 #include <cstdio>    // for std::vfprintf, std::fflush
 #include "hlcorrstate.hpp"
 #include "hlcorrinterp.hpp"
+
+// Bound status classification
+enum class BoundStatus {
+    EXACT,      // measured == predicted (ratio == 1.0)
+    EXPECTED,   // measured within expected range (ratio < 1.0 for max, ratio > 1.0 for min)
+    VIOLATED,   // measured violates the bound (ratio > 1.0 for max, ratio < 1.0 for min)
+    INVALID     // technical issues: sentinel values, division by zero, bad data
+};
+
+// Helper function to convert BoundStatus to string for output
+inline const char* boundStatusToString(BoundStatus status) {
+    switch (status) {
+        case BoundStatus::EXACT:    return "EXACT";
+        case BoundStatus::EXPECTED: return "EXPECTED";
+        case BoundStatus::VIOLATED: return "VIOLATED";
+        case BoundStatus::INVALID:  return "INVALID";
+        default:                    return "UNKNOWN";
+    }
+}
 
 // Your C library (declared C linkage)
 extern "C" {
@@ -46,13 +66,111 @@ public:
     std::uint64_t delta_last = 0;
     long double hlCorr_first = 1.0L;
     long double hlCorr_last = 1.0L;
+    long double extra_first = 0.0L;
+    long double extra_last = 0.0L;
     void putMinima(long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr=1.0L);
+    void putMinimaRatio(long double c_meas, long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr=1.0L);
     void putMaxima(long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr=1.0L);
+    void putMaximaRatio(long double c_meas, long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr=1.0L);
     void applyHLCorrStateMin(HLCorrState &state);
     void applyHLCorrStateMax(HLCorrState &state);
+    void applyHLCorrStateMinRatio(HLCorrState &state);  // Compare ratios instead of raw values
+    void applyHLCorrStateMaxRatio(HLCorrState &state);  // Compare ratios instead of raw values
+    
+    // Calculate ratio: extra / c (with zero-handling)
+    // Returns ratio of extra_first/c_first or extra_last/c_last
+    // Uses tolerance-based equality check to handle floating-point round-off errors
+    long double getFirstRatio() const;
+    long double getLastRatio() const;
+    
+    // Get lambda value (log of ratio) for this extrema
+    // Note: first and last should have the same ratio (they may have different n values or raw c values)
+    // Lambda uses the sign from the log function: lambda = logl(ratio)
+    // This allows plotting to use the sign to determine color of the plot point
+    // LDBL_MAX means prediction was 0 and measured was not 0 (valid for minimum, violated for maximum)
+    // -LDBL_MAX or negative ratios: treated same as LDBL_MAX for now
+    // ratio = 0 means measured was 0 and prediction was not 0
+    inline long double getLambda() const {
+        long double ratio = getFirstRatio();
+        if (ratio == LDBL_MAX || ratio == -LDBL_MAX || ratio < 0.0L) {
+            // Prediction = 0 and measured > 0, or negative ratio: treat as LDBL_MAX
+            // This represents measured >> predicted
+            return LDBL_MAX;  // Positive sentinel to indicate infinity
+        }
+        if (ratio == 0.0L) {
+            // Measured = 0, prediction > 0: log(0) = -infinity
+            return -LDBL_MAX;  // Negative sentinel
+        }
+        // ratio > 0: lambda = logl(ratio) (sign comes from log function)
+        return std::logl(ratio);
+    }
+    
+    // Get bound status for maximum bound (measured should be <= predicted)
+    // Note: first and last should have the same ratio (they may have different n values or raw c values)
+    // INVALID: technical issues (bad data - none currently)
+    // VIOLATED: ratio > 1.0 or LDBL_MAX or negative (measured > predicted, bound is violated)
+    // EXACT: ratio == 1.0
+    // EXPECTED: ratio < 1.0 (measured < predicted, within bounds)
+    inline BoundStatus getMaxBoundStatus() const {
+        long double ratio = getFirstRatio();
+        // LDBL_MAX, -LDBL_MAX, or negative ratios: treated same as LDBL_MAX (prediction = 0, measured > 0)
+        // This violates the maximum bound
+        if (ratio == LDBL_MAX || ratio == -LDBL_MAX || ratio < 0.0L) {
+            return BoundStatus::VIOLATED;  // measured > 0 when predicted = 0, bound violated
+        }
+        // Handle c_meas = 0 case: ratio = 0, which is < 1.0, so EXPECTED (not a violation)
+        if (ratio == 0.0L) {
+            return BoundStatus::EXPECTED;  // measured = 0 < predicted, within bounds
+        }
+        if (ratio > 1.0L) {
+            return BoundStatus::VIOLATED;  // measured > predicted, bound violated
+        }
+        if (ratio == 1.0L) {
+            return BoundStatus::EXACT;
+        }
+        // 0 < ratio < 1.0L
+        return BoundStatus::EXPECTED;
+    }
+    
+    // Get bound status for minimum bound (measured should be >= predicted)
+    // Note: first and last should have the same ratio (they may have different n values or raw c values)
+    // INVALID: technical issues (bad data - none currently)
+    // VIOLATED: ratio < 1.0 (measured < predicted, bound is violated)
+    // EXACT: ratio == 1.0
+    // EXPECTED: ratio > 1.0 or LDBL_MAX or negative (measured > predicted, within bounds)
+    inline BoundStatus getMinBoundStatus() const {
+        const long double abs_epsilon = 1e-8L;
+        // For minimum bound: if prediction is <= epsilon (near zero or negative), 
+        // any measured value satisfies the bound (measured >= predicted), so EXPECTED
+        if (c_first <= abs_epsilon) {
+            return BoundStatus::EXPECTED;
+        }
+        long double ratio = getFirstRatio();
+        // LDBL_MAX, -LDBL_MAX, or negative ratios: treated same as LDBL_MAX (prediction = 0, measured > 0)
+        // This is EXPECTED for minimum bound (measured > predicted, so we're above the minimum)
+        if (ratio == LDBL_MAX || ratio == -LDBL_MAX || ratio < 0.0L) {
+            return BoundStatus::EXPECTED;  // measured > 0 when predicted = 0, within bounds
+        }
+        // Handle c_meas = 0 case: prediction is positive (since we already handled <= epsilon above)
+        // If measured is 0 and prediction is positive, then 0 < positive, so VIOLATED
+        if (std::abs(ratio) <= abs_epsilon) {
+            // ratio is effectively 0, meaning measured is effectively 0, and prediction is positive
+            return BoundStatus::VIOLATED;  // measured (0) < predicted (positive), bound violated
+        }
+        if (ratio < 1.0L) {
+            return BoundStatus::VIOLATED;  // measured < predicted, bound violated
+        }
+        if (ratio == 1.0L) {
+            return BoundStatus::EXACT;
+        }
+        // ratio > 1.0L
+        return BoundStatus::EXPECTED;
+    }
 private:
     void applyHLCorrFirst(long double hlCorr);
     void applyHLCorrLast(long double hlCorr);
+    void copyFirstToLast();  // Copy all first values to last (including extra_first to extra_last)
+    void copyLastToFirst();  // Copy all last values to first (including extra_last to extra_first)
 };
 
 class GBLongIntervalSummary {
@@ -67,6 +185,8 @@ public:
     ExtremaValues alignMaxima;
     ExtremaValues boundMinima;
     ExtremaValues boundMaxima;
+    ExtremaValues boundRatioMinima;
+    ExtremaValues boundRatioMaxima;
     ExtremaValues cMinima;
     ExtremaValues cMaxima;
     long double cminus_of_n0First = 0.0L;
@@ -91,8 +211,12 @@ public:
     long double cAvg = 0.0L;
     long double hlCorrAvg = 1.0L;
     long double currentJitter = 0.0L;
-    long double jitterLast = 0.0L;
-    long double jitterFirst = 0.0L;
+    long double &jitterLast = alignMinima.extra_last;
+    long double &jitterFirst = alignMinima.extra_first;
+    long double &boundRatioMinima_c_last = boundRatioMinima.extra_last;
+    long double &boundRatioMinima_c_first = boundRatioMinima.extra_first;
+    long double &boundRatioMaxima_c_last = boundRatioMaxima.extra_last;
+    long double &boundRatioMaxima_c_first = boundRatioMaxima.extra_first;
 
     std::uint64_t n2First = 0;
     std::uint64_t n2Last = 0;
@@ -102,7 +226,49 @@ public:
 
     void reset() {
         GBLongIntervalSummary temp;
-        *this = temp;
+        // Copy all non-reference members manually since references can't be reassigned
+        useHLCorrInst = temp.useHLCorrInst;
+        pairCount = temp.pairCount;
+        c_of_n = temp.c_of_n;
+        pairCountMinima = temp.pairCountMinima;
+        pairCountMaxima = temp.pairCountMaxima;
+        pairCountAlignMaxima = temp.pairCountAlignMaxima;
+        alignMinima = temp.alignMinima;
+        alignMaxima = temp.alignMaxima;
+        boundMinima = temp.boundMinima;
+        boundMaxima = temp.boundMaxima;
+        boundRatioMinima = temp.boundRatioMinima;
+        boundRatioMaxima = temp.boundRatioMaxima;
+        cMinima = temp.cMinima;
+        cMaxima = temp.cMaxima;
+        cminus_of_n0First = temp.cminus_of_n0First;
+        cminusAsymp_of_n0First = temp.cminusAsymp_of_n0First;
+        cminus_of_n0Last = temp.cminus_of_n0Last;
+        cminusAsymp_of_n0Last = temp.cminusAsymp_of_n0Last;
+        pairCountTotal = temp.pairCountTotal;
+        pairCountTotalNorm = temp.pairCountTotalNorm;
+        pairCountAvg = temp.pairCountAvg;
+        c_of_n2First = temp.c_of_n2First;
+        c_of_n2Last = temp.c_of_n2Last;
+        cminus_of_n2First = temp.cminus_of_n2First;
+        cminus_of_n2Last = temp.cminus_of_n2Last;
+        cminusAsymp_of_n2First = temp.cminusAsymp_of_n2First;
+        cminusAsymp_of_n2Last = temp.cminusAsymp_of_n2Last;
+        c_of_n3First = temp.c_of_n3First;
+        c_of_n3Last = temp.c_of_n3Last;
+        cminus_of_n3First = temp.cminus_of_n3First;
+        cminus_of_n3Last = temp.cminus_of_n3Last;
+        cminusAsymp_of_n3First = temp.cminusAsymp_of_n3First;
+        cminusAsymp_of_n3Last = temp.cminusAsymp_of_n3Last;
+        cAvg = temp.cAvg;
+        hlCorrAvg = temp.hlCorrAvg;
+        currentJitter = temp.currentJitter;
+        // References are automatically updated when extrema are reset
+        n2First = temp.n2First;
+        n2Last = temp.n2Last;
+        n3First = temp.n3First;
+        n3Last = temp.n3Last;
+        hlCorrEstimate = temp.hlCorrEstimate;
     }
 
     void aggregate(
@@ -179,12 +345,14 @@ public:
         HLCorrState &alignMinNormState,
         HLCorrState &alignMaxNormState,
         HLCorrState &boundMinNormState,
-        HLCorrState &boundMaxNormState
+        HLCorrState &boundMaxNormState,
+        HLCorrState &boundDeltaMinNormState,
+        HLCorrState &boundDeltaMaxNormState
     ) {
         hlCorrAvg = 0.5L*(evenState(n_geom_even,delta_even)+oddState(n_geom_odd,delta_odd));
         pairCountAvg *= hlCorrAvg;
         cAvg *= hlCorrAvg;
-        applyHLCorr(minState, maxState, minNormState, maxNormState, alignMinNormState, alignMaxNormState, boundMinNormState, boundMaxNormState);
+        applyHLCorr(minState, maxState, minNormState, maxNormState, alignMinNormState, alignMaxNormState, boundMinNormState, boundMaxNormState, boundDeltaMinNormState, boundDeltaMaxNormState);
     }
     
     void applyHLCorr(
@@ -195,7 +363,9 @@ public:
         HLCorrState &alignMinNormState,
         HLCorrState &alignMaxNormState,
         HLCorrState &boundMinNormState,
-        HLCorrState &boundMaxNormState
+        HLCorrState &boundMaxNormState,
+        HLCorrState &boundDeltaMinNormState,
+        HLCorrState &boundDeltaMaxNormState
     ) {
         // Note: pairCountMinima should NOT call applyHLCorrStateMin because that method
         // has swapping logic designed for alignment calculations, not regular minimum tracking.
@@ -214,6 +384,8 @@ public:
         alignMaxima.applyHLCorrStateMax(alignMaxNormState);
         boundMinima.applyHLCorrStateMin(boundMinNormState);
         boundMaxima.applyHLCorrStateMax(boundMaxNormState);
+        boundRatioMinima.applyHLCorrStateMinRatio(boundDeltaMinNormState);
+        boundRatioMaxima.applyHLCorrStateMaxRatio(boundDeltaMaxNormState);
     }
 
     void outputCps(
@@ -224,6 +396,10 @@ public:
         std::uint64_t preMertens,
         std::uint64_t preMertensAsymp
     );
+
+    // v0.2.0: Output bound ratio data
+    void outputBoundRatioMin(GBLongInterval &interval);
+    void outputBoundRatioMax(GBLongInterval &interval);
 
 private:
     void outputCpsLine(

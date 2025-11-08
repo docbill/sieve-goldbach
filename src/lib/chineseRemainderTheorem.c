@@ -88,7 +88,9 @@ static inline long double expose_next_log_fast( const long double w, const uint6
 
 static const uint64_t PRIMES[] = {
     3ULL, 5ULL, 7ULL, 11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 31ULL, 37ULL, 41ULL, 43ULL,
-    47ULL, 53ULL, 59ULL, 61ULL, 67ULL, 71ULL, 73ULL, 79ULL, 83ULL, 89ULL, 97ULL
+    47ULL, 53ULL, 59ULL, 61ULL, 67ULL, 71ULL, 73ULL, 79ULL, 83ULL, 89ULL, 97ULL,
+    101ULL, 103ULL, 107ULL, 109ULL, 113ULL, 127ULL, 131ULL, 137ULL, 139ULL, 149ULL, 151ULL,
+    157ULL, 163ULL, 167ULL, 173ULL, 179ULL, 181ULL, 191ULL, 193ULL, 197ULL, 199ULL, 211ULL
 };
 
 static const size_t PRIMES_COUNT = sizeof(PRIMES)/sizeof(PRIMES[0]);
@@ -182,7 +184,9 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
     long double sumlog = 0.0L;
     // If w spans 3·5·…·53, every nondividing prime fully contributes
     if (w_int >= ODD_PRIMORIAL_U64_MAX) {
-        for (size_t i = 0; i < PRIMES_COUNT; ++i) {
+        // we include 3 only when n%3 == 0, otherwise skip it (start at index 1)
+        size_t start = (n % 3ULL == 0ULL) ? 0 : 1;
+        for (size_t i = start; i < PRIMES_COUNT; ++i) {
             const uint64_t p = PRIMES[i];
             if ((n % p) != 0ULL)
                 sumlog += ln_small_upto99(p-residue);
@@ -196,7 +200,11 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
     uint64_t q_committed = 1ULL;
     const uint64_t p_max = 2ULL*n;
     // greedy estimate, we compute the smallest q with the maximum possibe contribution
-    size_t i = *prime_pos_ptr;
+    // we include 3 only when n%3 == 0, otherwise skip it (start at index 1)
+    size_t i = (n % 3ULL == 0ULL) ? 0 : 1;
+    if (i < *prime_pos_ptr) {
+        i = *prime_pos_ptr;  // respect the prime_pos_ptr if it's already past our starting point
+    }
     if(residue > 1ULL && w > (long double)PRIMES[PRIMES_COUNT-1]) {
         for (uint64_t q = q_committed; i <  ODD_PRIMORIAL_U64_COUNT; ++i, q_committed = q) {
             if ( (q = ODD_PRIMORIAL_U64[i]) > w_int) {
@@ -205,7 +213,11 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
         }
         // q = product of NONDIVIDING primes (transition primes included)
         // Note: j < i (not j <= i) because i points to the prime AFTER the break
-        for (size_t j=*prime_pos_ptr; j < i; ++j) {
+        size_t j_start = (n % 3ULL == 0ULL) ? 0 : 1;
+        if (j_start < *prime_pos_ptr) {
+            j_start = *prime_pos_ptr;  // respect the prime_pos_ptr if it's already past our starting point
+        }
+        for (size_t j = j_start; j < i; ++j) {
             const uint64_t p = PRIMES[j];
             // uint64_t r = ((n % p) == 0ULL) ? residue-1ULL : residue;
             // sumlog += ln_small_upto99(tenting?cap_tent(n, p, r):(p-r));
@@ -239,10 +251,11 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
     *prime_pos_ptr = i;
     // The greed estimate was good, but only accounted for small primes and a single transition.
     // We'll estimate the contribution of smaller terms with more transitions.
-    // exposure tail: extend q by subsequent NONDIVIDING primes; stop after 5 exposures total
+    // exposure tail: extend q by subsequent NONDIVIDING primes; stop after exposure_count exposures
+    // or when the next term contribution is < 1e-14 (precision limit for 8 decimal places on ~1e-5 values)
     // already exposed the transition prime
     long double tailfactor = 0.0L;
-    for (uint64_t q=q_committed; i < PRIMES_COUNT && exposed < exposure_count;++exposed) {
+    for (long double q=(long double)q_committed; i < PRIMES_COUNT && exposed < exposure_count;++exposed) {
         const uint64_t p = PRIMES[i++];
         if(p > p_max) {
             break;
@@ -251,8 +264,13 @@ static long double allowed_prime_deficit_internal(uint64_t n, uint64_t *w_intptr
         // if (r == 0ULL) {
         //     continue;
         // }
+        q *= (long double)p;
+        const long double term = ln_small_upto99(tenting?cap_tent(n, p, residue):(p-residue)) / q;
+        tailfactor += term;
+        if (term < 1e-14L) {
+            break;
+        }
         // tailfactor += ln_small_upto99(tenting?cap_tent(n, p, r):(p-r))/(long double)(q*=p);
-        tailfactor += ln_small_upto99(tenting?cap_tent(n, p, residue):(p-residue))/(long double)(q*=p);
     }
     *w_intptr = w_int - q_committed;
     return expl(sumlog + w * tailfactor);
@@ -275,7 +293,8 @@ long double allowed_prime_deficit_expirimental(uint64_t n, long double w_in, uin
         // We allow additional iterations to account for this. A negative value means no limit.
         // Looping is not really supported by CRT, but it is worth trying.
     }
-    return (positive) ? min_ld(result,w_in) : -min_ld(result,w_in);
+    // return (positive) ? min_ld(result,w_in) : -min_ld(result,w_in);
+    return (positive) ? result : -result;
 }
 #endif
 
@@ -284,10 +303,12 @@ long double allowed_prime_deficit(uint64_t n, long double w_in, uint64_t residue
 {
     uint64_t w_int = (uint64_t)floorl(w_in);
     // maximum number of odd values in the window.  This is the maximum possible value.
-    long double result = fmaxl(w_in,1.0L);
+    // long double result = fmaxl(w_in,1.0L);
+    long double result = 0.0L;
     if(w_int) {
         size_t prime_pos = 0;
-        result = fmaxl(fminl(allowed_prime_deficit_internal(n, &w_int, w_in, residue, tenting, &prime_pos, exposure_count), result), 1.0L);
+        result = allowed_prime_deficit_internal(n, &w_int, w_in, residue, tenting, &prime_pos, exposure_count);
+        // result = fmaxl(fminl(allowed_prime_deficit_internal(n, &w_int, w_in, residue, tenting, &prime_pos, exposure_count), result), 1.0L);
     }
     return (positive) ? result : -result;
 }

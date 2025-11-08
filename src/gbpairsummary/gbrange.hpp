@@ -28,6 +28,7 @@
 #include "hlcorrstate.hpp"
 #include "gbdecade.hpp"
 #include "gbprimorial.hpp"
+#include "availabledeficit.hpp"
 
 enum class Model     : int { Empirical = 0, HLA = 1 };
 
@@ -73,7 +74,7 @@ public:
     int decInputCpsSummary(const char* filename);
     int primInputCpsSummary(const char* filename);
 
-    int addRow( GBWindow &w, std::uint64_t n, std::uint64_t delta, const long double logN, const long double logNlogN, std::uint64_t pc, long double twoSGB );
+    int addRow( GBWindow &w, std::uint64_t n, std::uint64_t delta, const long double logN, const long double logNlogN, std::uint64_t empiricalPairCount, std::uint64_t trivialPairCount, long double twoSGB );
 
     int processRows();
 
@@ -81,7 +82,12 @@ private:
     std::uint64_t* primeArray = nullptr;
     const std::uint64_t* primeArrayEndend  = nullptr;
     std::size_t    primeArrayEndlen  = 0;
-    HLCorrState primState, decState; 
+    HLCorrState primState, decState;
+    AvailableDeficit deficitPredictive{2ULL, true, true, 2ULL, true, true, 20, 0ULL};  // residue=2, allow_reductions=true, use_short_interval=true, residue_tail=2, allow_tail_reductions=true, tenting=true, exposure=20
+    AvailableDeficit deficitConservativePos{2ULL, true, true, 2ULL, false, false, 20, 1ULL};  // residue=2, allow_reductions=true, use_short_interval=true, residue_tail=1, allow_tail_reductions=false, tenting=false, exposure=20
+    AvailableDeficit deficitConservativeNeg{2ULL, true, true, 2ULL, false, false, 20, 1ULL};  // residue=2, allow_reductions=true, use_short_interval=true, residue_tail=1, allow_tail_reductions=false, tenting=false, exposure=20 (for minimas we use residue 2)
+    AvailableDeficit deficitJitter{2ULL, true, true, 1ULL, false, false, 20, 0ULL};  // residue=2, allow_reductions=true, use_short_interval=true, residue_tail=1, allow_tail_reductions=false, tenting=false, exposure=20 (separate instance for jitter) 
+    AvailableDeficit deficitPointwise{1ULL, false, false, 1ULL, false, false, 20, 1ULL};  // residue=1, allow_reductions=false, use_short_interval=false, residue_tail=1, tenting=false, exposure=20 (for pointwise values)
 
     void aggregate(
         GBWindow &window,

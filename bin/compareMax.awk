@@ -94,6 +94,13 @@ FNR==NR {
     c    = trim($col_cmax) + 0
     ngeo = trim($col_ngeom)
 
+    # Validate key fields - empty values indicate data corruption
+    if (label == "" || ngeo == "") {
+        printf("ERROR: file1 (summary) has row with empty key fields at line %d: START='%s', n_geom='%s'\n",
+               FNR, label, ngeo) > "/dev/stderr"
+        exit 1
+    }
+
     # build key: (Dec,n_geom)
     key = label "\034" ngeo
     cmax[key] = c

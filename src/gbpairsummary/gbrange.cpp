@@ -22,7 +22,6 @@
 #include <cinttypes> // for SCNu64, PRIu64
 #include <cmath>     // for math functions
 #include <vector>    // for std::vector
-#include "chineseRemainderTheorem.h"
 #include "gbrange.hpp"
 
 // ----- Small helpers -----
@@ -112,6 +111,12 @@ static void printHeaderCpsSummary(FILE *out1,FILE *out2,Model model) {
     }
 }
 
+static void printHeaderBoundRatio(FILE *out) {
+    if(out) {
+        std::fputs("n_first,ratio,c_first,baseline_first,c_of_n_first,lambda,status\n", out);
+    }
+}
+
 void GBRange::printHeaders() {
     for(auto &w : windows) {
         printHeaderFull(w->dec.out,w->dec.trace,(compat_ver == CompatVer::V015),model);
@@ -120,6 +125,12 @@ void GBRange::printHeaders() {
         printHeaderNorm(w->dec.norm,w->prim.norm,model);
         printHeaderCps(w->dec.cps,(compat_ver == CompatVer::V015));
         printHeaderCps(w->prim.cps,false);
+        if(compat_ver != CompatVer::V015) {
+            printHeaderBoundRatio(w->dec.boundRatioMin);
+            printHeaderBoundRatio(w->dec.boundRatioMax);
+            printHeaderBoundRatio(w->prim.boundRatioMin);
+            printHeaderBoundRatio(w->prim.boundRatioMax);
+        }
     }
 }
 
@@ -144,7 +155,7 @@ std::uint64_t GBRange::decReset(std::uint64_t n_start) {
     }
 #ifndef HLCORR_USE_EXACT
     // Init interpolators for new aggregate range
-    if (model == Model::HLA && compat_ver != CompatVer::V015) {
+    if (compat_ver != CompatVer::V015) {
         for(auto &w : windows) {
             if(w->is_dec_active()) {
                 w->dec.summary.hlCorrEstimate.init(decAgg.left, decAgg.right, &decState);
@@ -172,7 +183,7 @@ std::uint64_t GBRange::primReset(std::uint64_t n_start) {
     }
     // Init interpolators for new aggregate range
 #ifndef HLCORR_USE_EXACT
-    if (model == Model::HLA && compat_ver != CompatVer::V015) {
+    if (compat_ver != CompatVer::V015) {
         for(auto &w : windows) {
             if(w->is_prim_active()) {
                 w->prim.summary.hlCorrEstimate.init(primAgg.left, primAgg.right, &primState);
@@ -191,7 +202,10 @@ void GBRange::calcAverage(GBWindow &w,GBLongInterval &interval, GBAggregate &agg
         return;
     }
     if(compat_ver != CompatVer::V015  && summary.useHLCorrInst) {
-        summary.applyHLCorr(agg.minCalc, agg.maxCalc, agg.minNormCalc, agg.maxNormCalc, agg.alignNormMinCalc, agg.alignNormMaxCalc,agg.boundNormMinCalc, agg.boundNormMaxCalc );
+        summary.applyHLCorr(
+            agg.minCalc, agg.maxCalc, agg.minNormCalc, agg.maxNormCalc, 
+            agg.alignNormMinCalc, agg.alignNormMaxCalc,agg.boundNormMinCalc, agg.boundNormMaxCalc, 
+            agg.boundDeltaMinNormCalc, agg.boundDeltaMaxNormCalc );
     }
     else if(! summary.useHLCorrInst) {
         const std::uint64_t n_geom_odd  = (useLegacy ? ((1ULL | (std::uint64_t)floorl(agg.n_geom))) : minPrefOdd(agg.n_geom,agg.right - 1));
@@ -199,7 +213,9 @@ void GBRange::calcAverage(GBWindow &w,GBLongInterval &interval, GBAggregate &agg
         const std::uint64_t n_geom_even  = (compat_ver == CompatVer::V015 ? (1ULL + n_geom_odd) : maxPrefEven(agg.n_geom,agg.left));
         const std::uint64_t delta_even = w.computeDelta(n_geom_even);
         summary.applyHLCorr(n_geom_even, delta_even, n_geom_odd, delta_odd,
-            agg.evenCalc, agg.oddCalc, agg.minCalc, agg.maxCalc, agg.minNormCalc, agg.maxNormCalc, agg.alignNormMinCalc, agg.alignNormMaxCalc, agg.boundNormMinCalc, agg.boundNormMaxCalc );
+            agg.evenCalc, agg.oddCalc, agg.minCalc, agg.maxCalc, agg.minNormCalc, 
+            agg.maxNormCalc, agg.alignNormMinCalc, agg.alignNormMaxCalc, agg.boundNormMinCalc, agg.boundNormMaxCalc, 
+            agg.boundDeltaMinNormCalc, agg.boundDeltaMaxNormCalc );
     }
 }
 
@@ -207,13 +223,17 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
     if(! (interval.out || interval.trace)) {
         return;
     }
+    // Skip output if aggregate is not properly initialized (empty label or zero n_geom)
+    if(agg.label.empty() || agg.n_geom <= 0.0L) {
+        return;
+    }
     GBLongIntervalSummary &summary = interval.summary;
-    long double logN = logl((long double)(agg.right - 1));
-    long double logNlogN = logN*logN;
+    // long double logN = logl((long double)(agg.right - 1));
+    // long double logNlogN = logN*logN;
     if(! useLegacy) {
         fprintf_both(interval.out,interval.trace,
             (model == Model::Empirical) 
-                ? "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf\n"
+                ? "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.0Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf"
                 : "%" PRIu64 ",%" PRIu64 ",%s,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.3Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.0Lf,%.6Lf,%.9Lf,",
             agg.left, agg.right -1,
             agg.label.c_str(),
@@ -229,15 +249,19 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
             fprintf_both(interval.out,interval.trace,
                 "%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.8Lf,%.6LF\n",
                 summary.alignMinima.n_last,
-                std::min(2.0L*logNlogN,std::max(0.0L,summary.alignMinima.c_last)),
+                std::max(0.0L, summary.alignMinima.c_last),  // Clamped for log plot compatibility
                 summary.alignMaxima.n_last,
-                std::min(2.0L*logNlogN,std::max(0.0L,summary.alignMaxima.c_last)),
+                std::max(0.0L, summary.alignMaxima.c_last),  // Clamped for log plot compatibility
                 summary.boundMinima.n_last,
-                std::min(2.0L*logNlogN,std::max(0.0L,summary.boundMinima.c_last)),
+                std::max(0.0L, summary.boundMinima.c_last),  // Clamped for log plot compatibility
                 summary.boundMaxima.n_last,
-                std::min(2.0L*logNlogN,std::max(0.0L,summary.boundMaxima.c_last)),
+                std::max(0.0L, summary.boundMaxima.c_last),  // Clamped for log plot compatibility
                 summary.jitterLast
             );
+        }
+        else {
+            // Empirical v0.2.0 - no prediction columns, just newline
+            fprintf_both(interval.out,interval.trace, "\n");
         }
         return;
     }
@@ -260,6 +284,10 @@ void GBRange::outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegac
 }
 
 void GBRange::outputRaw(GBAggregate &agg,GBLongInterval &interval) {
+    // Skip output if aggregate is not properly initialized (empty label or zero n_geom)
+    if(agg.label.empty() || agg.n_geom <= 0.0L) {
+        return;
+    }
     if(interval.raw) {
         GBLongIntervalSummary &summary = interval.summary;
         std::fprintf(interval.raw,
@@ -277,6 +305,10 @@ void GBRange::outputRaw(GBAggregate &agg,GBLongInterval &interval) {
 }
 
 void GBRange::outputNorm(GBAggregate &agg,GBLongInterval &interval) {
+    // Skip output if aggregate is not properly initialized (empty label or zero n_geom)
+    if(agg.label.empty() || agg.n_geom <= 0.0L) {
+        return;
+    }
     if(interval.norm) {
         GBLongIntervalSummary &summary = interval.summary;
         if (model == Model::Empirical) {
@@ -512,7 +544,8 @@ int GBRange::addRow(
     std::uint64_t delta,
     const long double logN,
     const long double logNlogN,
-    std::uint64_t pc,
+    std::uint64_t empiricalPairCount,
+    std::uint64_t trivialPairCount,
     long double twoSGB
 ) {
     GBLongIntervalSummary &prim_summary = w.prim.summary;
@@ -528,43 +561,15 @@ int GBRange::addRow(
     }
 
     prim_summary.useHLCorrInst = dec_summary.useHLCorrInst = 0;
-
-    if (model == Model::Empirical) {
-        long double cminus = w.calcCminus(n,delta,logNlogN);
-        long double cminusAsymp = w.calcCminusAsymp(logN);
-        long double pairCount = (long double)pc;
-        long double c_of_n = pairCount * norm;
-        prim_summary.pairCount = dec_summary.pairCount = pairCount;
-        prim_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
-        dec_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
-        prim_summary.c_of_n = dec_summary.c_of_n = c_of_n;
-        w.checkCrossing(n,c_of_n <= cminus);
-        w.checkCrossingAsymp(n,c_of_n <= cminusAsymp);
-        w.updateN5percent(n,delta,logNlogN,c_of_n-cminus,c_of_n-cminusAsymp);
-    }
-    else if(w.is_prim_active()|| w.is_dec_active()) { // HLA
-        // --- Small-prime structure and jitter bounds ---
-        // Applies the short-interval residue model on both halves of n ± δ.
-        // Conservative terms use residue 1; predictive term uses residue 2.
-
-        // const long double nl = (long double)n;
-        const long double dl = (long double)delta;
-
-        // --- Predictive alignment (residue 2) ---
-        // Applies to the canonical short interval √(2n)
-        const long double w_main_predictive = sqrtl(dl);
-        const long double w_main_conservative = sqrtl(2.0L)*w_main_predictive;
-        const long double pairCountAlignPredictiveNegative = 2.0L *allowed_prime_deficit(n, w_main_predictive, 2ULL, false, false, 12);
-        const long double pairCountAlignPredictivePositive = 2.0L * allowed_prime_deficit(n, w_main_predictive, 2ULL, true, false, 12);
-        const long double pairCountAlignConservativeNegative = 2.0L * allowed_prime_deficit(n, w_main_conservative, 1ULL, false, false, 12);
-        const long double pairCountAlignConservativePositive = 2.0L * allowed_prime_deficit(n, w_main_conservative, 1ULL, true, false, 12);
-        // This is a heuristic for the jitter predictive term, to scale errors to the order of the window width.
-        const long double jitterPredictive = -2.0L * allowed_prime_deficit(n, w_main_predictive, 2ULL, false, false, 12);
-        
-        long double c_raw = twoSGB;
-        long double pairCount_raw = 0.0L;
-        long double pairCountMinima = 0.0L;
-        if (pc) {
+    const bool needPointwise = (compat_ver != CompatVer::V015 && (w.prim.boundRatioMin || w.prim.boundRatioMax || w.dec.boundRatioMin || w.dec.boundRatioMax));
+    const bool calculateBounds = (model == Model::HLA || needPointwise)&&(w.is_prim_active()|| w.is_dec_active());
+    long double c_raw = twoSGB;
+    long double pairCount_raw = 0.0L;
+    long double pairCountMinima = 0.0L;
+    long double hlCorrAvgPrim = 1.0L;
+    long double hlCorrAvgDec = 1.0L;
+    if(calculateBounds) {
+        if (trivialPairCount > 0) {
             pairCount_raw  = (norm > 0.5L) ? (c_raw / deltaL) : 1.0L;
             c_raw = pairCount_raw * norm;
             pairCountMinima = (norm > 0.5L)? c_raw / deltaL : 1.0L;
@@ -574,75 +579,139 @@ int GBRange::addRow(
             pairCountMinima = c_raw / norm;
         }
         if(w.is_prim_active()) {
-            long double hlCorrAvg = 1.0L;
             prim_summary.useHLCorrInst = false;
             if(compat_ver != CompatVer::V015) {
                 prim_summary.useHLCorrInst = true;
                 // Use interpolated HLCorr for better accuracy
 #ifndef HLCORR_USE_EXACT
-                hlCorrAvg = prim_summary.hlCorrEstimate(n,delta);
+                hlCorrAvgPrim = prim_summary.hlCorrEstimate(n,delta);
 #else
-                hlCorrAvg = hlcorr(n,delta);
+                hlCorrAvgPrim = hlcorr(n,delta);
 #endif // HLCORR_USE_EXACT
             }
             else if(primAgg.minor < 5) {
                 prim_summary.useHLCorrInst = true;
-                hlCorrAvg = hlcorr(n,delta);
+                hlCorrAvgPrim = hlcorr(n,delta);
             }
-            const long double c_corr = c_raw * hlCorrAvg;
-            prim_summary.hlCorrAvg = hlCorrAvg;
-            prim_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
-            prim_summary.pairCount = pairCount_raw * hlCorrAvg;
-            prim_summary.c_of_n = c_corr;
-            prim_summary.pairCountAlignMaxima.putMaxima(pairCountAlignPredictivePositive,0.0L,n,delta,hlCorrAvg);
-            prim_summary.alignMaxima.putMaxima(c_corr,pairCountAlignPredictivePositive*norm,n,delta,hlCorrAvg);
-            prim_summary.boundMaxima.putMaxima(c_corr,pairCountAlignConservativePositive*norm,n,delta,hlCorrAvg);
-            prim_summary.currentJitter = jitterPredictive*norm;
-            if(norm > 0.0L) {
-                prim_summary.alignMinima.putMinima(c_corr,pairCountAlignPredictiveNegative*norm,n,delta,hlCorrAvg);
-                prim_summary.boundMinima.putMinima(c_corr,pairCountAlignConservativeNegative*norm,n,delta,hlCorrAvg);
-            }
-            else {
-                prim_summary.alignMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvg);
-                prim_summary.boundMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvg);
-            }
+            prim_summary.hlCorrAvg = hlCorrAvgPrim;
         }
         if(w.is_dec_active()) {
-            long double hlCorrAvg = 1.0L;
             dec_summary.useHLCorrInst = false;
             if(compat_ver != CompatVer::V015) {
                 dec_summary.useHLCorrInst = true;
-                // Use interpolated HLCorr for better accuracy
-#ifndef HLCORR_USE_EXACT
-                hlCorrAvg = dec_summary.hlCorrEstimate(n,delta);
-#else
-                hlCorrAvg = hlcorr(n,delta);
-#endif // HLCORR_USE_EXACT
-                dec_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
+                hlCorrAvgDec = dec_summary.hlCorrEstimate(n,delta);
             }
             else if(n < 10ULL) {
                 dec_summary.useHLCorrInst = true;
-                hlCorrAvg = hlcorr(n,delta);
-                dec_summary.pairCountMinima.putMinima(pairCountMinima*hlCorrAvg,0.0L,n,delta,hlCorrAvg);
+                hlCorrAvgDec = hlcorr(n,delta);
+            }
+            dec_summary.hlCorrAvg = hlCorrAvgDec;
+        }
+    }
+
+    if (model == Model::Empirical) {
+        long double cminus = w.calcCminus(n,delta,logNlogN);
+        long double cminusAsymp = w.calcCminusAsymp(logN);
+        long double pairCount = (long double)empiricalPairCount;
+        long double c_of_n = pairCount * norm;
+        prim_summary.pairCount = dec_summary.pairCount = pairCount;
+        prim_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
+        dec_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
+        prim_summary.c_of_n = dec_summary.c_of_n = c_of_n;
+        w.checkCrossing(n,c_of_n <= cminus);
+        w.checkCrossingAsymp(n,c_of_n <= cminusAsymp);
+        w.updateN5percent(n,delta,logNlogN,c_of_n-cminus,c_of_n-cminusAsymp);
+        // Only calculate pointwise values if bound ratio output files are specified
+        const long double pairCountAlignPointwise = (calculateBounds && needPointwise) ? 2.0L * deficitPointwise(n, 2ULL*delta, true) : 0.0L;
+        if(calculateBounds && needPointwise && w.is_prim_active()) {
+            // Use normalized c_raw (which equals twoSGB in most cases since includeTrivial is typically false)
+            const long double c_corr = c_raw * hlCorrAvgPrim;
+            // For ratio tracking: we want c_first - baseline_first = S_GB(2n)*HLCorr (c_corr)
+            // and baseline_first = predicted deficit (pairCountAlignConservative*norm)
+            // Since putMaximaRatio stores c_first = c + cBaseline and baseline_first = cBaseline:
+            // c_first - baseline_first = (c + cBaseline) - cBaseline = c = c_corr
+            // So we pass c = c_corr and cBaseline = predicted deficit
+            if(w.prim.boundRatioMax) {
+                prim_summary.boundRatioMaxima.putMaximaRatio(c_of_n,c_corr,norm != 0.0L ? pairCountAlignPointwise*norm : LDBL_MAX,n,delta,hlCorrAvgPrim);
+            }
+            if(w.prim.boundRatioMin) {
+                prim_summary.boundRatioMinima.putMinimaRatio(c_of_n,c_corr,norm != 0.0L ? -pairCountAlignPointwise*norm : -LDBL_MAX,n,delta,hlCorrAvgPrim);
+            }
+        }
+        if(calculateBounds && needPointwise && w.is_dec_active()) {
+            // Use normalized c_raw (which equals twoSGB in most cases since includeTrivial is typically false)
+            const long double c_corr = c_raw * hlCorrAvgDec;
+            // For ratio tracking: we want c_first - baseline_first = S_GB(2n)*HLCorr (c_corr)
+            // and baseline_first = predicted deficit (pairCountAlignConservative*norm)
+            // Since putMaximaRatio stores c_first = c + cBaseline and baseline_first = cBaseline:
+            // c_first - baseline_first = (c + cBaseline) - cBaseline = c = c_corr
+            // So we pass c = c_corr and cBaseline = predicted deficit
+            if(w.dec.boundRatioMax) {
+                dec_summary.boundRatioMaxima.putMaximaRatio(c_of_n,c_corr,norm != 0.0L ? pairCountAlignPointwise*norm : LDBL_MAX,n,delta,hlCorrAvgDec);
+            }
+            if(w.dec.boundRatioMin) {
+                dec_summary.boundRatioMinima.putMinimaRatio(c_of_n,c_corr,norm != 0.0L ? -pairCountAlignPointwise*norm : -LDBL_MAX,n,delta,hlCorrAvgDec);
+            }
+        }
+    }
+    else if(w.is_prim_active()|| w.is_dec_active()) { // HLA
+        // --- Small-prime structure and jitter bounds ---
+        // Applies the short-interval residue model on both halves of n ± δ.
+        // Conservative terms use residue 1; predictive term uses residue 2.
+
+
+        // --- Predictive alignment (residue 2) ---
+        // Applies to the canonical short interval √(2n)
+        const long double pairCountAlignConservativeNegative = 2.0L * deficitConservativeNeg(n, 2ULL*delta, false);
+        const long double pairCountAlignConservativePositive = 2.0L * deficitConservativePos(n, 2ULL*delta, true);
+        //const long double w_main_predictive = sqrtl(0.5L)*w_main_conservative;
+        const long double pairCountAlignPredictiveNegative = 2.0L * deficitPredictive(n, delta, false);
+        const long double pairCountAlignPredictivePositive = 2.0L * deficitPredictive(n, delta, true);
+        // This is a heuristic for the jitter predictive term, to scale errors to the order of the window width.
+        const long double jitterPredictive = -2.0L * deficitJitter(n, 2ULL*delta, false);
+        
+        if(w.is_prim_active()) {
+            const long double c_corr = c_raw * hlCorrAvgPrim;
+            prim_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
+            prim_summary.pairCount = pairCount_raw * hlCorrAvgPrim;
+            prim_summary.c_of_n = c_corr;
+            prim_summary.pairCountAlignMaxima.putMaxima(pairCountAlignPredictivePositive,0.0L,n,delta,hlCorrAvgPrim);
+            prim_summary.alignMaxima.putMaxima(c_corr,pairCountAlignPredictivePositive*norm,n,delta,hlCorrAvgPrim);
+            prim_summary.boundMaxima.putMaxima(c_corr,pairCountAlignConservativePositive*norm,n,delta,hlCorrAvgPrim);
+            prim_summary.currentJitter = jitterPredictive*norm;
+            if(norm > 0.0L) {
+                prim_summary.alignMinima.putMinima(c_corr,pairCountAlignPredictiveNegative*norm,n,delta,hlCorrAvgPrim);
+                prim_summary.boundMinima.putMinima(c_corr,pairCountAlignConservativeNegative*norm,n,delta,hlCorrAvgPrim);
+            }
+            else {
+                prim_summary.alignMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvgPrim);
+                prim_summary.boundMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvgPrim);
+            }
+        }
+        if(w.is_dec_active()) {
+            if(compat_ver != CompatVer::V015) {
+                dec_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
+            }
+            else if(n < 10ULL) {
+                dec_summary.pairCountMinima.putMinima(pairCountMinima*hlCorrAvgDec,0.0L,n,delta,hlCorrAvgDec);
             }
             else {
                 dec_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
             }
-            const long double c_corr = c_raw * hlCorrAvg;
-            dec_summary.hlCorrAvg = hlCorrAvg;
-            dec_summary.pairCount = pairCount_raw * hlCorrAvg;
+            const long double c_corr = c_raw * hlCorrAvgDec;
+            dec_summary.pairCount = pairCount_raw * hlCorrAvgDec;
             dec_summary.c_of_n = c_corr;
-            dec_summary.pairCountAlignMaxima.putMaxima(pairCountAlignPredictivePositive,0.0L,n,delta,hlCorrAvg);
-            dec_summary.alignMaxima.putMaxima(c_corr,pairCountAlignPredictivePositive*norm,n,delta,hlCorrAvg);
-            dec_summary.boundMaxima.putMaxima(c_corr,pairCountAlignConservativePositive*norm,n,delta,hlCorrAvg);
+            dec_summary.pairCountAlignMaxima.putMaxima(pairCountAlignPredictivePositive,0.0L,n,delta,hlCorrAvgDec);
+            dec_summary.alignMaxima.putMaxima(c_corr,pairCountAlignPredictivePositive*norm,n,delta,hlCorrAvgDec);
+            dec_summary.boundMaxima.putMaxima(c_corr,pairCountAlignConservativePositive*norm,n,delta,hlCorrAvgDec);
             dec_summary.currentJitter = jitterPredictive*norm;
             if(norm > 0.0L) {
-                dec_summary.alignMinima.putMinima(c_corr,pairCountAlignPredictiveNegative*norm,n,delta,hlCorrAvg);
-                dec_summary.boundMinima.putMinima(c_corr,pairCountAlignConservativeNegative*norm,n,delta,hlCorrAvg);
+                dec_summary.alignMinima.putMinima(c_corr,pairCountAlignPredictiveNegative*norm,n,delta,hlCorrAvgDec);
+                dec_summary.boundMinima.putMinima(c_corr,pairCountAlignConservativeNegative*norm,n,delta,hlCorrAvgDec);
             }
             else {
-                dec_summary.alignMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvg);
-                dec_summary.boundMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvg);
+                dec_summary.alignMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvgDec);
+                dec_summary.boundMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvgDec);
             }
         }
     }
@@ -689,6 +758,10 @@ int GBRange::processRows() {
             w->dec.out = std::fopen("/dev/null", "w");
             w->dec.active = true;
             dec_is_active = true;
+            // If aggregate wasn't initialized (empty label), reset it now
+            if(decAgg.label.empty() || decAgg.n_geom <= 0.0L) {
+                decReset(decAgg.left);
+            }
         }
         if(w->is_prim_active()) {
             prim_is_active = true;
@@ -697,6 +770,10 @@ int GBRange::processRows() {
             w->prim.out = std::fopen("/dev/null", "w");
             w->prim.active = true;
             prim_is_active = true;
+            // If aggregate wasn't initialized (empty label), reset it now
+            if(primAgg.label.empty() || primAgg.n_geom <= 0.0L) {
+                primReset(primAgg.left);
+            }
         }
     }
 
@@ -726,7 +803,7 @@ int GBRange::processRows() {
     std::vector<GBWindow*> prim_windows_to_prescan;
 
 #ifndef HLCORR_USE_EXACT
-    if(model == Model::HLA && compat_ver != CompatVer::V015) {
+    if(compat_ver != CompatVer::V015) {
         for(auto & w : windows) {
             if(w->is_dec_active()) {
                 w->dec.summary.hlCorrEstimate.init(decAgg.left, decAgg.right, &decState);
@@ -750,7 +827,7 @@ int GBRange::processRows() {
             }
         }
 #ifndef HLCORR_USE_EXACT
-        if(model == Model::HLA && compat_ver != CompatVer::V015) {
+        if(compat_ver != CompatVer::V015) {
             if(! dec_windows_to_prescan.empty()) {
                 for(std::uint64_t i = n,next_n; i < n_end; i = next_n) {
                     next_n = n_end;
@@ -771,13 +848,14 @@ int GBRange::processRows() {
             }
         }
 #endif // HLCORR_USE_EXACT
-        const long double twoSGB_n = (model == Model::Empirical ? 0.0L : (long double)twoSGB(n, primeArray, primeArrayEndlen));
+        const long double twoSGB_n = (model == Model::Empirical && compat_ver == CompatVer::V015) ? 0.0L : (long double)twoSGB(n, primeArray, primeArrayEndlen);
         if (twoSGB_n < 0.0L) {
             std::fprintf(stderr, "Failed HL-A prediction at %" PRIu64 "\n", n);
             return -1;
         }
         int need_trivial = includeTrivial;
-        std::uint64_t pc = 0;
+        std::uint64_t empiricalPairCount = 0;
+        std::uint64_t trivialPairCount = 0;
         // we use pointers here, so we know where we left off.
         const std::uint64_t *lo = nullptr;
         const std::uint64_t *hi = nullptr;
@@ -800,11 +878,11 @@ int GBRange::processRows() {
                     return -1;
                 }
                 if (need_trivial && current > primeArray && current < primeArrayEndend && current[-1] == n) {
-                    pc += 1ULL+_pc;
+                    empiricalPairCount += 1ULL+_pc;
                     need_trivial = 0;
                 }
                 else {
-                    pc += _pc;
+                    empiricalPairCount += _pc;
                 }
             }
             else if (need_trivial) {
@@ -812,14 +890,14 @@ int GBRange::processRows() {
                 // simply called to position the current pointer
                 countRangedPairs(n, n, &current, primeArray, primeArrayEndend);
                 if (current > primeArray && current < primeArrayEndend && current[-1] == n) {
-                    pc = 1;
+                    trivialPairCount = 1;
                 }
             }
             if(logN == 0.0L) {
                 logN = logl((long double)n); 
                 logNlogN = logN*logN;
             }
-            int retval = addRow(*w, n, delta, logN, logNlogN, pc, twoSGB_n);
+            int retval = addRow(*w, n, delta, logN, logNlogN, empiricalPairCount, trivialPairCount, twoSGB_n);
             if(retval != 0) {
                 return retval;
             }
@@ -832,6 +910,10 @@ int GBRange::processRows() {
                 outputRaw(decAgg,w->dec);
                 outputNorm(decAgg,w->dec);
                 w->dec.summary.outputCps(w->dec,w->alpha_n,(compat_ver == CompatVer::V015)?decAgg.decade:-1,n_start,w->preMertens,w->preMertensAsymp);
+                if(compat_ver != CompatVer::V015) {
+                    w->dec.summary.outputBoundRatioMin(w->dec);
+                    w->dec.summary.outputBoundRatioMax(w->dec);
+                }
                 need_decReset = true;
                 if(model == Model::HLA && compat_ver != CompatVer::V015) {
                     dec_windows_to_prescan.push_back(w.get());
@@ -843,6 +925,10 @@ int GBRange::processRows() {
                 outputRaw(primAgg,w->prim);
                 outputNorm(primAgg,w->prim);
                 w->prim.summary.outputCps(w->prim,w->alpha_n,-1,n_start,w->preMertens,w->preMertensAsymp);
+                if(compat_ver != CompatVer::V015) {
+                    w->prim.summary.outputBoundRatioMin(w->prim);
+                    w->prim.summary.outputBoundRatioMax(w->prim);
+                }
                 need_primReset = true;
                 if(model == Model::HLA && compat_ver != CompatVer::V015) {
                     prim_windows_to_prescan.push_back(w.get());

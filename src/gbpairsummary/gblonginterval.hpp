@@ -34,6 +34,8 @@ public:
     FILE *norm = nullptr;
     FILE *trace = nullptr;
     FILE *cps = nullptr;
+    FILE *boundRatioMin = nullptr;  // v0.2.0: bound ratio minimum output
+    FILE *boundRatioMax = nullptr;   // v0.2.0: bound ratio maximum output
     GBLongIntervalSummary summary = GBLongIntervalSummary();
 };
 

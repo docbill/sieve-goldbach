@@ -98,6 +98,13 @@ FNR==NR {
     c    = trim($col_cmin) + 0
     ngeo = trim($col_ngeom)
 
+    # Validate key fields - empty values indicate data corruption
+    if (label == "" || ngeo == "") {
+        printf("ERROR: file1 (summary) has row with empty key fields at line %d: START='%s', n_geom='%s'\n",
+               FNR, label, ngeo) > "/dev/stderr"
+        exit 1
+    }
+
     # build key: (START,n_geom) - unique identifier
     key = label "\034" ngeo
     cmin[key] = c
@@ -203,7 +210,7 @@ FNR==1 {
         jitter_ratio = c_diff / jitter
     }
 
-    # Lambda_min = log(C_min/CboundMin) in scientific notation; blank if C_min==0
+    # Lambda_min = log(C_min/CboundMin) in scientific notation; blank if C_min==0 or CboundMin==0
     # Handle zero difference case: check raw count and use appropriate precision
     c_diff = (cmn+0) - cpred_bound
     
@@ -216,15 +223,23 @@ FNR==1 {
         status = "EXPECTED"  # Observed > predicted (above minimum)
     }
     
+    # Calculate lambda only if both values are > 0
+    lambda_val = ""
     if ((cmn+0) > 0 && cpred_bound > 0) {
         lambda_val = log((cmn+0)/cpred_bound)
-        
-        # If difference is zero and raw count is 0, omit the data point
-        if (absd(c_diff) < 1e-10 && (cmn+0) == 0) {
-            # Skip this data point - nothing to report
+    }
+    
+    # Always output the line, even if lambda cannot be calculated
+    # Skip only if difference is zero and both counts are zero (nothing to report)
+    if (absd(c_diff) < 1e-10 && (cmn+0) == 0 && cpred_bound == 0) {
+        # Skip this data point - nothing to report
+    } else {
+        # Report with appropriate precision based on whether this is an average or not
+        # For non-average cases, use 1e-6 precision; for average use 1e-8
+        # Lambda is empty string if it couldn't be calculated
+        if (lambda_val == "") {
+            printf "%s,%d,%.6f,%d,%.6f,,%.6f,%.6e,%s\n", label, n, cmn, np_0, cpred_bound, jitter, jitter_ratio, status
         } else {
-            # Report with appropriate precision based on whether this is an average or not
-            # For non-average cases, use 1e-6 precision; for average use 1e-8
             printf "%s,%d,%.6f,%d,%.6f,%.6e,%.6f,%.6e,%s\n", label, n, cmn, np_0, cpred_bound, lambda_val, jitter, jitter_ratio, status
         }
     }

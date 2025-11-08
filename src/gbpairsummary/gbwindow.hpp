@@ -48,8 +48,8 @@ public:
     void init(std::uint64_t* const prime_array, const std::uint64_t* const prime_array_end,bool _eulerCap) {
         eulerCap = _eulerCap;
         product_series_right.init(prime_array,prime_array_end);
-        dec.active = (dec.out || dec.trace || dec.raw || dec.norm || dec.cps);
-        prim.active = (prim.out || prim.trace || prim.raw || prim.norm || prim.cps);
+        dec.active = (dec.out || dec.trace || dec.raw || dec.norm || dec.cps || dec.boundRatioMin || dec.boundRatioMax);
+        prim.active = (prim.out || prim.trace || prim.raw || prim.norm || prim.cps || prim.boundRatioMin || prim.boundRatioMax);
     }
 
     ~GBWindow();
