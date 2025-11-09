@@ -978,9 +978,10 @@ clean-$$(SFX_$(1)):
 		$(RM) "$$$$dst.csv"{,.verify,.sha256}; \
 	done; done; done
 	@for a in $(ALPHAS); do for dst in $(call GET,LAVG_TPL,$(1)) $(call GET,LMIN_TPL,$(1)) $(call GET,LMAX_TPL,$(1)) \
-	 $(call GET,LSAVG_TPL,$(1)) $(call GET,LSMIN_TPL,$(1)) $(call GET,LSMAX_TPL,$(1)) $(call GET,CPSLB_TPL,$(1)); do \
+	 $(call GET,LSAVG_TPL,$(1)) $(call GET,LSMIN_TPL,$(1)) $(call GET,LSMAX_TPL,$(1)) $(call GET,CPSLB_TPL,$(1)) $(call GET,JOIN_TPL,$(1)); do \
 		$(RM) "$$$${dst//-=ALPHA=-/$$$$a}".csv{,.sha256}; \
 	done; done
+	@$(RM) "$(call GET,JOIN,$(1))".csv{,.sha256}
 
 clobber-$$(SFX_$(1)): clean-$$(SFX_$(1))
 	for a in $(ALPHAS); do for fmt in $(FORMATS_EMP); do for dst in $(call GET,CPS_SUMMARY,$(1)) $(call GET,SUMMARY_TPL,$(1)) $(call GET,SGB_TPL,$(1)); do \
@@ -1036,10 +1037,15 @@ $$(call GET,SUMMARY_DEFAULT,$(1)).partial.csv: $(SUMMARY_BIN) | $(RAW) $(OUT)
 	for a in $(ALPHAS); do mkdir -p "$(OUT)/alpha-$$$$a"; done ; \
 	trace=(); \
 	dec=(); \
+	out_flag="full"; \
+	if [ "$(COMPAT)" = "v0.1.5" ]; then \
+		out_flag="out"; \
+	fi; \
 	if [ -n "$$(call GET,SUMMARY_TPL,$(1))" ] && [ -n "$$(call GET,START,$(1))" ] && [ -n "$$(call GET,END,$(1))" ]; then \
 		trace=( --trace=decade ); \
 		dec=( --dec-n-start $$(call GET,START,$(1)) --dec-n-end $$(call GET,END,$(1)) \
-			--dec-out="$$(call GET,SUMMARY_TPL,$(1)).partial.csv" \
+			--dec-"$$$$out_flag"="$$(call GET,SUMMARY_TPL,$(1)).partial.csv" \
+			--dec-cps="$$(call GET,SUMMARY_TPL,$(1)).partial.csv" \
 			--dec-cps-summary="$$(call GET,CPS_SUMMARY,$(1)).partial.csv" ); \
 		if [ "$(POINTWISE)" = "1" ]; then \
 			dec=( "$$$${dec[@]}" \
@@ -1051,7 +1057,8 @@ $$(call GET,SUMMARY_DEFAULT,$(1)).partial.csv: $(SUMMARY_BIN) | $(RAW) $(OUT)
 	if [ -n "$$(call GET,SUMMARY_TPL,$(2))" ] && [ -n "$$(call GET,START,$(2))" ] && [ -n "$$(call GET,END,$(2))" ]; then \
 		trace=( --trace=primorial ); \
 		prim=( --prim-n-start $$(call GET,START,$(2)) --prim-n-end $$(call GET,END,$(2)) \
-			--prim-out="$$(call GET,SUMMARY_TPL,$(2)).partial.csv" \
+			--prim-"$$$$out_flag"="$$(call GET,SUMMARY_TPL,$(2)).partial.csv" \
+			--prim-cps="$$(call GET,SUMMARY_TPL,$(2)).partial.csv" \
 			--prim-cps-summary="$$(call GET,CPS_SUMMARY,$(2)).partial.csv" ); \
 		if [ "$(POINTWISE)" = "1" ]; then \
 			prim=( "$$$${prim[@]}" \
@@ -1095,15 +1102,19 @@ $$(call GET,SGB_DEFAULT,$(1)).partial.csv: $(SUMMARY_BIN) | $(RAW) $(OUT)
 	for a in $(ALPHAS); do mkdir -p "$(OUT)/alpha-$$$$a"; done ; \
 	trace=(); \
 	dec=(); \
+	out_flag="full"; \
+	if [ "$(COMPAT)" = "v0.1.5" ]; then \
+		out_flag="out"; \
+	fi; \
 	if [ -n "$$(call GET,SGB_TPL,$(1))" ] && [ -n "$$(call GET,START,$(1))" ] && [ -n "$$(call GET,END,$(1))" ]; then \
 		trace=( --trace=decade ); \
 		dec=( --dec-n-start $$(call GET,START,$(1)) --dec-n-end $$(call GET,END,$(1)) \
-			--dec-out="$$(call GET,SGB_TPL,$(1)).partial.csv" ); \
+			--dec-"$$$$out_flag"="$$(call GET,SGB_TPL,$(1)).partial.csv" ); \
 	fi ; \
 	if [ -n "$$(call GET,SGB_TPL,$(2))" ] && [ -n "$$(call GET,START,$(2))" ] && [ -n "$$(call GET,END,$(2))" ]; then \
 		trace=( --trace=primorial ); \
 		prim=( --prim-n-start $$(call GET,START,$(2)) --prim-n-end $$(call GET,END,$(2)) \
-			--prim-out="$$(call GET,SGB_TPL,$(2)).partial.csv" ); \
+			--prim-"$$$$out_flag"="$$(call GET,SGB_TPL,$(2)).partial.csv" ); \
 	fi ; \
 	if [ $$$${#dec[@]} -gt 0 ] || [ $$$${#prim[@]} -gt 0 ]; then \
 		echo ./$(SUMMARY_BIN) $(ALPHA_ARGS) --compat=$(COMPAT) --model=hl-a \
@@ -1194,6 +1205,10 @@ $$(SUMMARY_DEFAULT_$(1)).csv: \
 				(head -1 "$$$${sources[0]}";for s in "$$$${sources[@]}"; do \
 					tail -n +2 "$$$$s"; \
 				done) > "$$$$dst.csv"; \
+				if [ "$(COMPAT)" != "v0.1.5" ] && [ "full" = "$$$$fmt" ]; then \
+					./bin/full2norm_empirical.awk "$$$$dst.csv" > "$$$${dst/-full-/-norm-}.csv"; \
+					./bin/full2raw_empirical.awk "$$$$dst.csv" > "$$$${dst/-full-/-raw-}.csv"; \
+				fi; \
 			fi; \
 		fi; \
 	done; done
@@ -1269,6 +1284,10 @@ $$(SGB_DEFAULT_$(1)).csv: \
 			(head -1 "$$$${sources[0]}";for s in "$$$${sources[@]}"; do \
 				tail -n +2 "$$$$s"; \
 			done) > "$$$$dst.csv"; \
+			if [ "$(COMPAT)" != "v0.1.5" ] && [ "full" = "$$$$fmt" ]; then \
+				./bin/full2norm_hla.awk "$$$$dst.csv" > "$$$${dst/-full-/-norm-}.csv"; \
+				./bin/full2raw_hla.awk "$$$$dst.csv" > "$$$${dst/-full-/-raw-}.csv"; \
+			fi; \
 		fi; \
 		done; done
 	@touch "$$@"

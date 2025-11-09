@@ -62,12 +62,14 @@ static void print_usage(const char* prog) {
         "  --alpha=VAL          Window half-width multiplier (long double) in [0,1]. Default: 0.5\n"
         "  --trace=MODE         Trace aggregation: decade (default), primorial, or none\n"
         "  --dec-out=FILE       Write decade aggregation CSV to FILE (use \"-\" for stdout)\n"
+        "  --dec-full=FILE      Write decade full format CSV to FILE (use \"-\" for stdout)\n"
         "  --dec-raw=FILE       Write decade unnormalized aggregation CSV to FILE (use \"-\" for stdout)\n"
         "  --dec-norm=FILE      Write decade normaziled aggregation CSV to FILE (use \"-\" for stdout)\n"
         "  --dec-cps=FILE       Write decade cps CSV to FILE (use \"-\" for stdout)\n"
         "  --dec-cps-summary=FILE  Write a summary cps values to a text file (use \"-\" for stdout)\n"
         "  --dec-cps-summary-resume=FILE Resume processing by reading previous cps summary from FILE\n"
         "  --prim-out=FILE      Write primorial aggregation CSV to FILE (use \"-\" for stdout)\n"
+        "  --prim-full=FILE     Write primorial full format CSV to FILE (use \"-\" for stdout)\n"
         "  --prim-raw=FILE      Write primorial unnormalized aggregation CSV to FILE (use \"-\" for stdout)\n"
         "  --prim-norm=FILE     Write primorial normalized aggregation CSV to FILE (use \"-\" for stdout)\n"
         "  --prim-cps=FILE      Write primorial cps CSV to FILE (use \"-\" for stdout)\n"
@@ -207,6 +209,7 @@ int main(int argc, char* argv[]) try {
     std::uint64_t n_end_opt = 0;
     bool write_config = false;
     const char* dec_out_path  = nullptr;
+    const char* dec_full_path  = nullptr;
     const char* dec_raw_path  = nullptr;
     const char* dec_norm_path  = nullptr;
     const char* dec_cps_path  = nullptr;
@@ -215,6 +218,7 @@ int main(int argc, char* argv[]) try {
     const char* dec_boundRatioMin_path = nullptr;  // v0.2.0: bound ratio minimum output
     const char* dec_boundRatioMax_path = nullptr;  // v0.2.0: bound ratio maximum output
     const char* prim_out_path = nullptr;
+    const char* prim_full_path = nullptr;
     const char* prim_raw_path = nullptr;
     const char* prim_norm_path = nullptr;
     const char* prim_cps_path = nullptr;
@@ -233,6 +237,7 @@ int main(int argc, char* argv[]) try {
         {"trace",           required_argument, 0,  0 },
         {"model",           required_argument, 0,  0 },
         {"dec-out",         required_argument, 0,  0 },
+        {"dec-full",        required_argument, 0,  0 },
         {"dec-raw",         required_argument, 0,  0 },
         {"dec-norm",        required_argument, 0,  0 },
         {"dec-cps",         required_argument, 0,  0 },
@@ -241,6 +246,7 @@ int main(int argc, char* argv[]) try {
         {"dec-bound-ratio-min", required_argument, 0,  0 },  // v0.2.0
         {"dec-bound-ratio-max", required_argument, 0,  0 },  // v0.2.0
         {"prim-out",        required_argument, 0,  0 },
+        {"prim-full",       required_argument, 0,  0 },
         {"prim-raw",        required_argument, 0,  0 },
         {"prim-norm",       required_argument, 0,  0 },
         {"prim-cps",        required_argument, 0,  0 },
@@ -293,6 +299,9 @@ int main(int argc, char* argv[]) try {
                 else if (!std::strcmp(name, "dec-out")) {
                     dec_out_path = optarg; // "-" means stdout
                 }
+                else if (!std::strcmp(name, "dec-full")) {
+                    dec_full_path = optarg; // "-" means stdout
+                }
                 else if (!std::strcmp(name, "dec-raw")) {
                     dec_raw_path = optarg; // "-" means stdout
                 }
@@ -316,6 +325,9 @@ int main(int argc, char* argv[]) try {
                 }
                 else if (!std::strcmp(name, "prim-out")) {
                     prim_out_path = optarg; // "-" means stdout
+                }
+                else if (!std::strcmp(name, "prim-full")) {
+                    prim_full_path = optarg; // "-" means stdout
                 }
                 else if (!std::strcmp(name, "prim-raw")) {
                     prim_raw_path = optarg; // "-" means stdout
@@ -529,7 +541,7 @@ int main(int argc, char* argv[]) try {
         range.windows.push_back(std::make_unique<GBWindow>(alpha,range.product_series_left,range.compat_ver));
     }
     if(alphas.size() > 1) {
-        if( ! (dec_out_path || dec_raw_path || dec_norm_path || dec_cps_path || prim_out_path || prim_raw_path || prim_norm_path || prim_cps_path)) {
+        if( ! (dec_out_path || dec_full_path || dec_raw_path || dec_norm_path || dec_cps_path || prim_out_path || prim_full_path || prim_raw_path || prim_norm_path || prim_cps_path)) {
             std::fprintf(stderr, "Multiple alpha values are not support to trace output.\n");
             return 1;
         }
@@ -573,12 +585,20 @@ int main(int argc, char* argv[]) try {
             std::fprintf(stderr, "The %s macro required with multiple alpha values. --dec-bound-ratio-max=%s\n", ALPHA_KEY.c_str(), dec_boundRatioMax_path);
             return 1;
         }
+        if(dec_full_path && !containsKey(dec_full_path,ALPHA_KEY)) {
+            std::fprintf(stderr, "The %s macro required with multiple alpha values. --dec-full=%s\n", ALPHA_KEY.c_str(), dec_full_path);
+            return 1;
+        }
         if(prim_boundRatioMin_path && !containsKey(prim_boundRatioMin_path,ALPHA_KEY)) {
             std::fprintf(stderr, "The %s macro required with multiple alpha values. --prim-bound-ratio-min=%s\n", ALPHA_KEY.c_str(), prim_boundRatioMin_path);
             return 1;
         }
         if(prim_boundRatioMax_path && !containsKey(prim_boundRatioMax_path,ALPHA_KEY)) {
             std::fprintf(stderr, "The %s macro required with multiple alpha values. --prim-bound-ratio-max=%s\n", ALPHA_KEY.c_str(), prim_boundRatioMax_path);
+            return 1;
+        }
+        if(prim_full_path && !containsKey(prim_full_path,ALPHA_KEY)) {
+            std::fprintf(stderr, "The %s macro required with multiple alpha values. --prim-full=%s\n", ALPHA_KEY.c_str(), prim_full_path);
             return 1;
         }
     }
@@ -592,6 +612,13 @@ int main(int argc, char* argv[]) try {
             }
             need_trace = false;
         }
+        if (dec_full_path)  {
+            w->dec.out  = open_stream_from_template(dec_full_path, w->alpha, "full", append_to_file);
+            if(! w->dec.out) {
+                return 1;
+            }
+            need_trace = false;
+        }
         if (dec_raw_path)  {
             w->dec.raw  = open_stream_from_template(dec_raw_path, w->alpha, "raw", append_to_file);
             if(! w->dec.raw) {
@@ -600,14 +627,14 @@ int main(int argc, char* argv[]) try {
             need_trace = false;
         }
         if (dec_norm_path)  {
-            w->dec.norm  = open_stream_from_template(dec_out_path, w->alpha, "norm", append_to_file);
+            w->dec.norm  = open_stream_from_template(dec_norm_path, w->alpha, "norm", append_to_file);
             if(! w->dec.norm) {
                 return 1;
             }
             need_trace = false;
         }
         if (dec_cps_path)  {
-            w->dec.cps  = open_stream_from_template(dec_out_path, w->alpha, "cps", append_to_file);
+            w->dec.cps  = open_stream_from_template(dec_cps_path, w->alpha, "cps", append_to_file);
             if(! w->dec.cps) {
                 return 1;
             }
@@ -638,22 +665,29 @@ int main(int argc, char* argv[]) try {
             }
             need_trace = false;
         }
+        if (prim_full_path) {
+            w->prim.out  = open_stream_from_template(prim_full_path, w->alpha, "full", append_to_file);
+            if(! w->prim.out) {
+                return 1;
+            }
+            need_trace = false;
+        }
         if (prim_raw_path) {
-            w->prim.raw  = open_stream_from_template(prim_out_path, w->alpha, "raw", append_to_file);
+            w->prim.raw  = open_stream_from_template(prim_raw_path, w->alpha, "raw", append_to_file);
             if(! w->prim.raw) {
                 return 1;
             }
             need_trace = false;
         }
         if (prim_norm_path) {
-            w->prim.norm  = open_stream_from_template(prim_out_path, w->alpha, "norm", append_to_file);
+            w->prim.norm  = open_stream_from_template(prim_norm_path, w->alpha, "norm", append_to_file);
             if(! w->prim.norm) {
                 return 1;
             }
             need_trace = false;
         }
         if (prim_cps_path) {
-            w->prim.cps  = open_stream_from_template(prim_out_path, w->alpha, "cps", append_to_file);
+            w->prim.cps  = open_stream_from_template(prim_cps_path, w->alpha, "cps", append_to_file);
             if(! w->prim.cps) {
                 return 1;
             }

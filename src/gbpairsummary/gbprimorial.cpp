@@ -112,16 +112,16 @@ void GBPrimorial::reset(std::uint64_t &n_start,bool) {
         int primorial = isMajor ? major : minor;
         int multiple = (int)((right - 1) / (isMajor ? thresholdMinor : base));
         if( multiple == 1) {
-            snprintf(buf,sizeof(buf),"(%d#)/2",primorial);
+            snprintf(buf,sizeof(buf),"%dPRD2",primorial);
         }
         else if( multiple == 2) {
-            snprintf(buf,sizeof(buf),"(%d#)",primorial);
+            snprintf(buf,sizeof(buf),"%dPR",primorial);
         }
         else if(! (multiple&1)) {
-            snprintf(buf,sizeof(buf),"(%d#)%d",primorial,multiple/2);
+            snprintf(buf,sizeof(buf),"%dPR%d",primorial,multiple/2);
         }
         else {
-            snprintf(buf,sizeof(buf),"(%d#)%d/2",primorial,multiple);
+            snprintf(buf,sizeof(buf),"%dPR%dD2",primorial,multiple);
         }
     }
     label = std::string(buf);
