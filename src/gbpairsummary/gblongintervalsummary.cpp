@@ -304,6 +304,10 @@ void ExtremaValues::copyLastToFirst() {
 }
 
 void ExtremaValues::applyHLCorrStateMin(HLCorrState &state) {
+    // Skip correction if no value was ever assigned (n_first == 0 indicates uninitialized)
+    if(n_first == 0) {
+        return;
+    }
     applyHLCorrFirst(state(n_first, delta_first));
     applyHLCorrLast(state(n_last, delta_last));
     // For alignment calculations: after HLCorr correction, keep the minimum value.
@@ -320,6 +324,10 @@ void ExtremaValues::applyHLCorrStateMin(HLCorrState &state) {
 }
 
 void ExtremaValues::applyHLCorrStateMax(HLCorrState &state) {
+    // Skip correction if no value was ever assigned (n_first == 0 indicates uninitialized)
+    if(n_first == 0) {
+        return;
+    }
     applyHLCorrFirst(state(n_first, delta_first));
     applyHLCorrLast(state(n_last, delta_last));
     // Keep the maximum value
@@ -333,6 +341,10 @@ void ExtremaValues::applyHLCorrStateMax(HLCorrState &state) {
 }
 
 void ExtremaValues::applyHLCorrStateMinRatio(HLCorrState &state) {
+    // Skip correction if no value was ever assigned (n_first == 0 indicates uninitialized)
+    if(n_first == 0) {
+        return;
+    }
     applyHLCorrFirst(state(n_first, delta_first));
     applyHLCorrLast(state(n_last, delta_last));
     // After HLCorr correction, compare ratios to determine the minimum
@@ -351,6 +363,10 @@ void ExtremaValues::applyHLCorrStateMinRatio(HLCorrState &state) {
 }
 
 void ExtremaValues::applyHLCorrStateMaxRatio(HLCorrState &state) {
+    // Skip correction if no value was ever assigned (n_first == 0 indicates uninitialized)
+    if(n_first == 0) {
+        return;
+    }
     applyHLCorrFirst(state(n_first, delta_first));
     applyHLCorrLast(state(n_last, delta_last));
     // After HLCorr correction, compare ratios to determine the maximum
@@ -499,6 +515,7 @@ void GBLongIntervalSummary::outputBoundRatioMin(GBLongInterval &interval) {
     if(! interval.boundRatioMin || boundRatioMinima.n_first == 0) {
         return;
     }
+    // TODO: This function already includes both ratio and lambda - good example to follow for other outputs
     long double ratio = boundRatioMinima.getFirstRatio();
     long double lambda = boundRatioMinima.getLambda();
     BoundStatus status = boundRatioMinima.getMinBoundStatus();
@@ -547,6 +564,7 @@ void GBLongIntervalSummary::outputBoundRatioMax(GBLongInterval &interval) {
     if(! interval.boundRatioMax || boundRatioMaxima.n_first == 0) {
         return;
     }
+    // TODO: This function already includes both ratio and lambda - good example to follow for other outputs
     long double ratio = boundRatioMaxima.getFirstRatio();
     long double lambda = boundRatioMaxima.getLambda();
     BoundStatus status = boundRatioMaxima.getMaxBoundStatus();

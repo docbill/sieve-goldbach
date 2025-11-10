@@ -42,6 +42,7 @@ void GBWindow::closeInterval(GBLongInterval &interval) {
 GBWindow::~GBWindow() {
     closeInterval(dec);
     closeInterval(prim);
+    closeInterval(psi);
 }
 
 std::uint64_t GBWindow::computeDelta(long double n,long double &eulerCapAlpha) {

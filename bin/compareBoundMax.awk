@@ -227,6 +227,7 @@ FNR==1 {
     }
 
     # Lambda_max = log(C_max/CboundMax) in scientific notation; blank if C_max==0
+    # TODO: Consider adding ratio column (cmn/cpred_bound) alongside lambda for easier debugging
     # Handle zero difference case: check raw count and use appropriate precision
     c_diff = (cmn+0) - cpred_bound
     

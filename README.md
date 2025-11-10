@@ -132,6 +132,40 @@ The top-level `Makefile` provides several convenient targets:
 
 Use `make help` to see a summary if available. Always run long jobs inside `screen` or `tmux` for persistence.
 
+### Makefile Options
+
+The Makefile supports several optional flags to control output generation and verification:
+
+* **`TAINTED` (environment variable)** – When set to `1` or `true`, verification failures print warnings instead of exiting with an error. Useful when intentionally generating different outputs (e.g., during development or when testing new algorithms). This is implemented as an environment variable (rather than a make variable) for convenience, allowing AWK scripts to access it without requiring additional parameter passing. Set as an environment variable:
+  ```sh
+  export TAINTED=1
+  make verify
+  ```
+  Or inline:
+  ```sh
+  TAINTED=1 make verify
+  ```
+
+* **`POINTWISE=1` (make variable)** – When set, generates bound ratio files (`boundratiomin-*.csv` and `boundratiomax-*.csv`) that compare pointwise predictions against measured values. When not set, these files are skipped (creating `.stamp` placeholders instead) to save CPU time on large runs. **Note:** This option is not available for the legacy `COMPAT=v0.1.5` version. Example:
+  ```sh
+  make POINTWISE=1 generate
+  ```
+
+* **`PSI=1` (make variable)** – When set, generates Primorial Short Interval (PSI) output files and lambda statistics. PSI files use short interval aggregation for analysis. When not set, PSI file generation is skipped (creating `.stamp` placeholders instead). **Note:** This option is not available for the legacy `COMPAT=v0.1.5` version. Example:
+  ```sh
+  make PSI=1 generate
+  ```
+
+* **`COMPAT=v0.1.5` (make variable)** – When set, uses the legacy v0.1.5 compatibility mode. The default is `v0.2.0`, which supports all current features including `POINTWISE` and `PSI` options. Use this option only when you need to reproduce results from the v0.1.5 version. Example:
+  ```sh
+  make COMPAT=v0.1.5 generate
+  ```
+
+These options can be combined:
+```sh
+TAINTED=1 make PSI=1 POINTWISE=1 verify
+```
+
 ---
 
 ## Reproducibility Workflow

@@ -153,6 +153,7 @@ FNR==1 {
     }
 
     # Lambda_min = log(C_min/Cpred_min) in scientific notation; blank if C_min==0
+    # TODO: Consider adding ratio column (cmn/cp) alongside lambda for easier debugging
     if ((cmn+0) > 0 && (cp+0) > 0) {
         printf "%s,%d,%.6f,%d,%.6f,%.6e\n", label, n, cmn, np_0, cp, log((cmn+1e-12)/(cp+1e-12))
     }

@@ -69,8 +69,15 @@ public:
         this->n_start = n_start;
         this->n_end = n_end;
         this->range_size = n_end - n_start;
-        // Use sqrt(sqrt(range_size)) is too small a sample size in most cases, so we cap at 31
-        this->sample_interval = min_u64(31ULL, max_u64(3ULL, (std::uint64_t)std::ceil(1.0L + std::sqrt(std::sqrt((long double)range_size)))));
+        // For very small intervals: use sample_interval = 1 to get first and last points for linear interpolation
+        // For range_size <= 1: only need one sample point
+        // For larger ranges: use sqrt(sqrt(range_size)) formula, capped at 31
+        if(range_size <= 1) {
+            this->sample_interval = 1ULL;
+        } else {
+            // Clamp sample_interval to [1, 31]: minimum of 1 for small intervals, maximum of 31
+            this->sample_interval = max_u64(1ULL, min_u64(31ULL, (std::uint64_t)std::ceil(1.0L + std::sqrt(std::sqrt((long double)range_size)))));
+        }
         this->sample_size = (range_size + sample_interval - 1) / sample_interval;
         //fprintf(stderr, "DEBUG: hlcorrinterp: init(n_start=%llu, n_end=%llu, range_size=%llu, sample_interval=%llu, sample_size=%llu)\n", (unsigned long long)n_start, (unsigned long long)n_end, (unsigned long long)range_size, (unsigned long long)sample_interval, (unsigned long long)sample_size);
     }

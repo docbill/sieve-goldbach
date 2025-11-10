@@ -28,6 +28,7 @@
 #include "hlcorrstate.hpp"
 #include "gbdecade.hpp"
 #include "gbprimorial.hpp"
+#include "gbpsi.hpp"
 #include "availabledeficit.hpp"
 
 enum class Model     : int { Empirical = 0, HLA = 1 };
@@ -42,6 +43,7 @@ public:
 
     GBDecade decAgg;
     GBPrimorial primAgg;
+    GBPSI psiAgg;
 
     std::vector<std::unique_ptr<GBWindow>> windows;
 
@@ -60,12 +62,14 @@ public:
         }
         decReset(decAgg.left);
         primReset(primAgg.left);
+        psiReset(psiAgg.left);
     }
 
     void printHeaders();
     void printCpsSummaryHeaders();
     std::uint64_t decReset(std::uint64_t n_start);
     std::uint64_t primReset(std::uint64_t n_start);
+    std::uint64_t psiReset(std::uint64_t n_start);
     void outputFull(GBAggregate &agg,GBLongInterval &interval,bool useLegacy);
     void outputNorm(GBAggregate &agg,GBLongInterval &interval);
     void outputRaw(GBAggregate &agg,GBLongInterval &interval);
@@ -82,12 +86,12 @@ private:
     std::uint64_t* primeArray = nullptr;
     const std::uint64_t* primeArrayEndend  = nullptr;
     std::size_t    primeArrayEndlen  = 0;
-    HLCorrState primState, decState;
+    HLCorrState primState, decState, psiState;
     AvailableDeficit deficitPredictive{2ULL, true, true, 2ULL, true, true, 20, 0ULL};  // residue=2, allow_reductions=true, use_short_interval=true, residue_tail=2, allow_tail_reductions=true, tenting=true, exposure=20
     AvailableDeficit deficitConservativePos{2ULL, true, true, 2ULL, false, false, 20, 1ULL};  // residue=2, allow_reductions=true, use_short_interval=true, residue_tail=1, allow_tail_reductions=false, tenting=false, exposure=20
     AvailableDeficit deficitConservativeNeg{2ULL, true, true, 2ULL, false, false, 20, 1ULL};  // residue=2, allow_reductions=true, use_short_interval=true, residue_tail=1, allow_tail_reductions=false, tenting=false, exposure=20 (for minimas we use residue 2)
     AvailableDeficit deficitJitter{2ULL, true, true, 1ULL, false, false, 20, 0ULL};  // residue=2, allow_reductions=true, use_short_interval=true, residue_tail=1, allow_tail_reductions=false, tenting=false, exposure=20 (separate instance for jitter) 
-    AvailableDeficit deficitPointwise{1ULL, false, false, 1ULL, false, false, 20, 1ULL};  // residue=1, allow_reductions=false, use_short_interval=false, residue_tail=1, tenting=false, exposure=20 (for pointwise values)
+    AvailableDeficit deficitPointwise{2ULL, true, true, 2ULL, false, false, 20, 1ULL};  // residue=1, allow_reductions=false, use_short_interval=false, residue_tail=1, tenting=false, exposure=20 (for pointwise values)
 
     void aggregate(
         GBWindow &window,
@@ -103,12 +107,16 @@ private:
         if(window.is_prim_active()&& n >= primAgg.left && n < primAgg.right ) {
             window.prim_aggregate(n, delta, cminus, cminusAsymp);
         }
+        if(window.is_psi_active()&& n >= psiAgg.left && n < psiAgg.right ) {
+            window.psi_aggregate(n, delta, cminus, cminusAsymp);
+        }
     }
 
     void calcAverage(GBWindow &window,GBLongInterval &interval,GBAggregate &agg,bool useLegacy);
 
     void dec_close();
     void prim_close();
+    void psi_close();
     void summary_close();
 };
 

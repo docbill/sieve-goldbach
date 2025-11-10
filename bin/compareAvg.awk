@@ -165,6 +165,7 @@ FNR==1 {
     }
 
     # Lambda_avg = log(C_avg/Cpred_avg) in scientific notation; blank if C_avg==0
+    # TODO: Consider adding ratio column (cav/cp) alongside lambda for easier debugging
     if ((cav+0) > 0 && (cp+0) > 0) {
         printf "%s,%d,%.6f,%.6f,%.6e\n", label, ngeo, cav, cp, log((cav+1e-12)/(cp+1e-12))
     }

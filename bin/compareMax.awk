@@ -157,6 +157,7 @@ FNR==1 {
     }
 
     # Lambda_max = log(C_max/Cpred_max) in scientific notation; blank if C_max==0
+    # TODO: Consider adding ratio column (cmx/cp) alongside lambda for easier debugging
     if ((cmx+0) > 0 && (cp+0) > 0) {
         printf "%s,%d,%.6f,%d,%.6f,%.6e\n", label, n, cmx, np_1, cp, log((cmx+1e-12)/(cp+1e-12))
     }

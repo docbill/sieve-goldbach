@@ -75,6 +75,7 @@ static void print_usage(const char* prog) {
         "  --prim-cps=FILE      Write primorial cps CSV to FILE (use \"-\" for stdout)\n"
         "  --prim-cps-summary=FILE Write a summary cps values to a text file (use \"-\" for stdout)\n"
         "  --prim-cps-summary-resume=FILE Resume processing by reading previous cps summary from FILE\n"
+        "  --prim-psi=FILE      Write primorial short interval (PSI) CSV to FILE (use \"-\" for stdout)\n"
         "  --compat=VERSION     v0.1 (aka v0.1.5) or v0.2/current. Default: v0.2\n"
         "  --model=MODE         empirical (default) or hl-a\n"
         "  --start-n=N          Start n (uint64). Default: 4\n"
@@ -226,6 +227,9 @@ int main(int argc, char* argv[]) try {
     const char* prim_cps_summary_resume_path = nullptr;
     const char* prim_boundRatioMin_path = nullptr;  // v0.2.0: bound ratio minimum output
     const char* prim_boundRatioMax_path = nullptr;  // v0.2.0: bound ratio maximum output
+    const char* psi_full_path = nullptr;
+    const char* psi_boundRatioMin_path = nullptr;  // v0.2.0: bound ratio minimum output
+    const char* psi_boundRatioMax_path = nullptr;  // v0.2.0: bound ratio maximum output
     bool append_to_file  = false;
     std::vector<long double> alphas;
     FILE * dec_trace = nullptr;
@@ -254,12 +258,17 @@ int main(int argc, char* argv[]) try {
         {"prim-cps-summary-resume",required_argument, 0,  0 },
         {"prim-bound-ratio-min", required_argument, 0,  0 },  // v0.2.0
         {"prim-bound-ratio-max", required_argument, 0,  0 },  // v0.2.0
+        {"prim-psi",        required_argument, 0,  0 },
+        {"psi-bound-ratio-min", required_argument, 0,  0 },  // v0.2.0
+        {"psi-bound-ratio-max", required_argument, 0,  0 },  // v0.2.0
         {"n-start",         required_argument, 0,  0 },
         {"prim-n-start",    required_argument, 0,  0 },
         {"dec-n-start",     required_argument, 0,  0 },
+        {"psi-n-start",     required_argument, 0,  0 },
         {"n-end",           required_argument, 0,  0 },
         {"prim-n-end",      required_argument, 0,  0 },
         {"dec-n-end",       required_argument, 0,  0 },
+        {"psi-n-end",       required_argument, 0,  0 },
         {"compat",          required_argument, 0,  0 },
         {"euler-cap",       no_argument,       0,  0 },
         {"no-euler-cap",    no_argument,       0,  0 },
@@ -350,6 +359,15 @@ int main(int argc, char* argv[]) try {
                 else if (!std::strcmp(name, "prim-bound-ratio-max")) {
                     prim_boundRatioMax_path = optarg;  // v0.2.0
                 }
+                else if (!std::strcmp(name, "prim-psi")) {
+                    psi_full_path = optarg; // "-" means stdout
+                }
+                else if (!std::strcmp(name, "psi-bound-ratio-min")) {
+                    psi_boundRatioMin_path = optarg;  // v0.2.0
+                }
+                else if (!std::strcmp(name, "psi-bound-ratio-max")) {
+                    psi_boundRatioMax_path = optarg;  // v0.2.0
+                }
                 else if (!std::strcmp(name, "dec-n-start")) {
                     char* endp = nullptr;
                     unsigned long long tmp = strtoull(optarg, &endp, 10);
@@ -372,6 +390,18 @@ int main(int argc, char* argv[]) try {
                     range.primAgg.left = (std::uint64_t)tmp;
                     if( n_start_opt == 0 || range.primAgg.left < n_start_opt) {
                         n_start_opt = range.primAgg.left;
+                    }
+                }
+                else if (!std::strcmp(name, "psi-n-start")) {
+                    char* endp = nullptr;
+                    unsigned long long tmp = strtoull(optarg, &endp, 10);
+                    if (!endp || *endp != '\0' || tmp < 4ULL) {
+                        std::fprintf(stderr, "Error: --psi-n-start must be an integer >= 4\n");
+                        return 1;
+                    }
+                    range.psiAgg.left = (std::uint64_t)tmp;
+                    if( n_start_opt == 0 || range.psiAgg.left < n_start_opt) {
+                        n_start_opt = range.psiAgg.left;
                     }
                 }
                 else if (!std::strcmp(name, "n-end")) {
@@ -405,6 +435,18 @@ int main(int argc, char* argv[]) try {
                     range.primAgg.n_end = (std::uint64_t)tmp;
                     if( n_end_opt == 0 || range.primAgg.n_end < n_end_opt) {
                         n_end_opt = range.primAgg.n_end;
+                    }
+                }
+                else if (!std::strcmp(name, "psi-n-end")) {
+                    char* endp = nullptr;
+                    unsigned long long tmp = strtoull(optarg, &endp, 10);
+                    if (!endp || *endp != '\0' || tmp < 4ULL) {
+                        std::fprintf(stderr, "Error: --psi-n-end must be an integer >= 4\n");
+                        return 1;
+                    }
+                    range.psiAgg.n_end = (std::uint64_t)tmp;
+                    if( n_end_opt == 0 || range.psiAgg.n_end < n_end_opt) {
+                        n_end_opt = range.psiAgg.n_end;
                     }
                 }
                 else if (!std::strcmp(name, "compat")) {
@@ -708,6 +750,24 @@ int main(int argc, char* argv[]) try {
         if (prim_boundRatioMax_path) {
             w->prim.boundRatioMax = open_stream_from_template(prim_boundRatioMax_path, w->alpha, "bound-ratio-max", append_to_file);
             if(! w->prim.boundRatioMax) {
+                return 1;
+            }
+        }
+        if(psi_full_path) {
+            w->psi.out  = open_stream_from_template(psi_full_path, w->alpha, "psi", append_to_file);
+            if(! w->psi.out) {
+                return 1;
+            }
+        }
+        if(psi_boundRatioMin_path) {
+            w->psi.boundRatioMin = open_stream_from_template(psi_boundRatioMin_path, w->alpha, "bound-ratio-min", append_to_file);
+            if(! w->psi.boundRatioMin) {
+                return 1;
+            }
+        }
+        if(psi_boundRatioMax_path) {
+            w->psi.boundRatioMax = open_stream_from_template(psi_boundRatioMax_path, w->alpha, "bound-ratio-max", append_to_file);
+            if(! w->psi.boundRatioMax) {
                 return 1;
             }
         }

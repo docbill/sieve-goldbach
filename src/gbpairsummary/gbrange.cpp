@@ -113,7 +113,7 @@ static void printHeaderCpsSummary(FILE *out1,FILE *out2,Model model) {
 
 static void printHeaderBoundRatio(FILE *out) {
     if(out) {
-        std::fputs("n_first,ratio,c_first,baseline_first,c_of_n_first,lambda,status\n", out);
+        std::fputs("n,ratio,c_pred,baseline,c_meas,lambda,status\n", out);
     }
 }
 
@@ -121,6 +121,7 @@ void GBRange::printHeaders() {
     for(auto &w : windows) {
         printHeaderFull(w->dec.out,w->dec.trace,(compat_ver == CompatVer::V015),model);
         printHeaderFull(w->prim.out,w->prim.trace,false,model);
+        printHeaderFull(w->psi.out,w->psi.trace,false,model);
         printHeaderRaw(w->dec.raw,w->prim.raw,model);
         printHeaderNorm(w->dec.norm,w->prim.norm,model);
         printHeaderCps(w->dec.cps,(compat_ver == CompatVer::V015));
@@ -130,6 +131,8 @@ void GBRange::printHeaders() {
             printHeaderBoundRatio(w->dec.boundRatioMax);
             printHeaderBoundRatio(w->prim.boundRatioMin);
             printHeaderBoundRatio(w->prim.boundRatioMax);
+            printHeaderBoundRatio(w->psi.boundRatioMin);
+            printHeaderBoundRatio(w->psi.boundRatioMax);
         }
     }
 }
@@ -192,6 +195,34 @@ std::uint64_t GBRange::primReset(std::uint64_t n_start) {
     }
 #endif // HLCORR_USE_EXACT
     return primAgg.left;
+}
+
+std::uint64_t GBRange::psiReset(std::uint64_t n_start) {
+    int need_reset = 0;
+    for(auto &w : windows) {
+        if(w->is_psi_active()) {
+            need_reset = 1;
+            w->psi.summary.reset();
+        }
+    }
+    if(! need_reset) {
+        return n_start;
+    }
+    psiAgg.reset(n_start,false);
+    if(psiAgg.left >= psiAgg.n_end) {
+        psi_close();
+    }
+    // Init interpolators for new aggregate range
+#ifndef HLCORR_USE_EXACT
+    if (compat_ver != CompatVer::V015) {
+        for(auto &w : windows) {
+            if(w->is_psi_active()) {
+                w->psi.summary.hlCorrEstimate.init(psiAgg.left, psiAgg.right, &psiState);
+            }
+        }
+    }
+#endif // HLCORR_USE_EXACT
+    return psiAgg.left;
 }
 
 void GBRange::calcAverage(GBWindow &w,GBLongInterval &interval, GBAggregate &agg,  bool useLegacy) {
@@ -482,10 +513,7 @@ int GBRange::primInputCpsSummary(const char* filename) {
         long double alpha, deltaMertens, etaStat, deltaMertensAsymp, etaStatAsymp;
         
         int parsed = std::sscanf(line, "%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%Lf,%" SCNu64 ",%Lf",
-            &n_start, &n_end, &alpha, &preMertens,
-            &nstar, &deltaMertens, &n_5percent, &nzeroStat, &etaStat,
-            &nstarAsymp, &deltaMertensAsymp, &nzeroStatAsymp, &etaStatAsymp
-        );
+                                &n_start, &n_end, &alpha, &preMertens, &nstar, &deltaMertens, &n_5percent, &nzeroStat, &etaStat, &nstarAsymp, &deltaMertensAsymp, &nzeroStatAsymp, &etaStatAsymp);
         
         if (parsed != 13) {
             std::fprintf(stderr, "Warning: Skipping malformed line %d in %s\n", lineNum, filename);
@@ -497,15 +525,8 @@ int GBRange::primInputCpsSummary(const char* filename) {
         for (auto &w : windows) {
             // Use a small epsilon for floating point comparison
             if (std::abs(w->alpha - alpha) < 1e-12L) {
-                // Implement preMertens inheritance logic for out-of-order processing
-                // If we have a resume file, use the preMertens value from it (what actually happened)
-                // Otherwise, initialize to n_start - 1 (assumes never negative in range)
-                // The existing logic will handle updating it based on actual count behavior:
-                // - 0 means most recent value is negative
-                // - n_start - 1 means it was never negative in the range  
-                // - >= n_start means it was negative but turned positive
+                // Update the window values
                 w->preMertens = preMertens;
-                
                 w->prim.nstar = nstar;
                 w->prim.deltaMertens = deltaMertens;
                 w->prim.nstarAsymp = nstarAsymp;
@@ -538,6 +559,7 @@ int GBRange::primInputCpsSummary(const char* filename) {
     return 0;
 }
 
+
 int GBRange::addRow(
     GBWindow &w,
     std::uint64_t n,
@@ -550,6 +572,7 @@ int GBRange::addRow(
 ) {
     GBLongIntervalSummary &prim_summary = w.prim.summary;
     GBLongIntervalSummary &dec_summary = w.dec.summary;
+    GBLongIntervalSummary &psi_summary = w.psi.summary;
 
     const long double deltaL = (long double)delta;
     const long double denom = (includeTrivial ? 0.5L : 0.0L) + deltaL;
@@ -560,14 +583,18 @@ int GBRange::addRow(
         return -1;
     }
 
-    prim_summary.useHLCorrInst = dec_summary.useHLCorrInst = 0;
     const bool needPointwise = (compat_ver != CompatVer::V015 && (w.prim.boundRatioMin || w.prim.boundRatioMax || w.dec.boundRatioMin || w.dec.boundRatioMax));
-    const bool calculateBounds = (model == Model::HLA || needPointwise)&&(w.is_prim_active()|| w.is_dec_active());
+    // Cache active flags to avoid repeated function calls
+    const bool prim_active = w.is_prim_active();
+    const bool dec_active = w.is_dec_active();
+    const bool psi_active = w.is_psi_active();
+    const bool calculateBounds = (model == Model::HLA || needPointwise) && (prim_active || dec_active);
     long double c_raw = twoSGB;
     long double pairCount_raw = 0.0L;
     long double pairCountMinima = 0.0L;
     long double hlCorrAvgPrim = 1.0L;
     long double hlCorrAvgDec = 1.0L;
+    long double hlCorrAvgPsi = 1.0L;
     if(calculateBounds) {
         if (trivialPairCount > 0) {
             pairCount_raw  = (norm > 0.5L) ? (c_raw / deltaL) : 1.0L;
@@ -578,8 +605,7 @@ int GBRange::addRow(
             pairCount_raw = c_raw / norm;
             pairCountMinima = c_raw / norm;
         }
-        if(w.is_prim_active()) {
-            prim_summary.useHLCorrInst = false;
+        if(prim_active) {
             if(compat_ver != CompatVer::V015) {
                 prim_summary.useHLCorrInst = true;
                 // Use interpolated HLCorr for better accuracy
@@ -593,10 +619,12 @@ int GBRange::addRow(
                 prim_summary.useHLCorrInst = true;
                 hlCorrAvgPrim = hlcorr(n,delta);
             }
+            else {
+                prim_summary.useHLCorrInst = false;
+            }
             prim_summary.hlCorrAvg = hlCorrAvgPrim;
         }
-        if(w.is_dec_active()) {
-            dec_summary.useHLCorrInst = false;
+        if(dec_active) {
             if(compat_ver != CompatVer::V015) {
                 dec_summary.useHLCorrInst = true;
                 hlCorrAvgDec = dec_summary.hlCorrEstimate(n,delta);
@@ -605,7 +633,37 @@ int GBRange::addRow(
                 dec_summary.useHLCorrInst = true;
                 hlCorrAvgDec = hlcorr(n,delta);
             }
+            else {
+                dec_summary.useHLCorrInst = false;
+            }
             dec_summary.hlCorrAvg = hlCorrAvgDec;
+        }
+        if(psi_active) {
+            if(compat_ver != CompatVer::V015) {
+                psi_summary.useHLCorrInst = true;
+                // Use interpolated HLCorr for better accuracy
+#ifndef HLCORR_USE_EXACT
+                hlCorrAvgPsi = psi_summary.hlCorrEstimate(n,delta);
+#else
+                hlCorrAvgPsi = hlcorr(n,delta);
+#endif // HLCORR_USE_EXACT
+            }
+            else {
+                psi_summary.useHLCorrInst = false;
+            }
+            psi_summary.hlCorrAvg = hlCorrAvgPsi;
+        }
+    }
+    else {
+        // No bounds calculation needed, ensure useHLCorrInst is false for all
+        if(prim_active) {
+            prim_summary.useHLCorrInst = false;
+        }
+        if(dec_active) {
+            dec_summary.useHLCorrInst = false;
+        }
+        if(psi_active) {
+            psi_summary.useHLCorrInst = false;
         }
     }
 
@@ -614,16 +672,28 @@ int GBRange::addRow(
         long double cminusAsymp = w.calcCminusAsymp(logN);
         long double pairCount = (long double)empiricalPairCount;
         long double c_of_n = pairCount * norm;
-        prim_summary.pairCount = dec_summary.pairCount = pairCount;
-        prim_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
-        dec_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
-        prim_summary.c_of_n = dec_summary.c_of_n = c_of_n;
+        // Only set values for active aggregates to avoid unnecessary work
+        if(prim_active) {
+            prim_summary.pairCount = pairCount;
+            prim_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
+            prim_summary.c_of_n = c_of_n;
+        }
+        if(dec_active) {
+            dec_summary.pairCount = pairCount;
+            dec_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
+            dec_summary.c_of_n = c_of_n;
+        }
+        if(psi_active) {
+            psi_summary.pairCount = pairCount;
+            psi_summary.pairCountMinima.putMinima(pairCount,0.0L,n,delta);
+            psi_summary.c_of_n = c_of_n;
+        }
         w.checkCrossing(n,c_of_n <= cminus);
         w.checkCrossingAsymp(n,c_of_n <= cminusAsymp);
         w.updateN5percent(n,delta,logNlogN,c_of_n-cminus,c_of_n-cminusAsymp);
         // Only calculate pointwise values if bound ratio output files are specified
         const long double pairCountAlignPointwise = (calculateBounds && needPointwise) ? 2.0L * deficitPointwise(n, 2ULL*delta, true) : 0.0L;
-        if(calculateBounds && needPointwise && w.is_prim_active()) {
+        if(calculateBounds && needPointwise && prim_active) {
             // Use normalized c_raw (which equals twoSGB in most cases since includeTrivial is typically false)
             const long double c_corr = c_raw * hlCorrAvgPrim;
             // For ratio tracking: we want c_first - baseline_first = S_GB(2n)*HLCorr (c_corr)
@@ -638,7 +708,7 @@ int GBRange::addRow(
                 prim_summary.boundRatioMinima.putMinimaRatio(c_of_n,c_corr,norm != 0.0L ? -pairCountAlignPointwise*norm : -LDBL_MAX,n,delta,hlCorrAvgPrim);
             }
         }
-        if(calculateBounds && needPointwise && w.is_dec_active()) {
+        if(calculateBounds && needPointwise && dec_active) {
             // Use normalized c_raw (which equals twoSGB in most cases since includeTrivial is typically false)
             const long double c_corr = c_raw * hlCorrAvgDec;
             // For ratio tracking: we want c_first - baseline_first = S_GB(2n)*HLCorr (c_corr)
@@ -654,11 +724,10 @@ int GBRange::addRow(
             }
         }
     }
-    else if(w.is_prim_active()|| w.is_dec_active()) { // HLA
+    else if(prim_active || dec_active || psi_active) { // HLA
         // --- Small-prime structure and jitter bounds ---
         // Applies the short-interval residue model on both halves of n ± δ.
         // Conservative terms use residue 1; predictive term uses residue 2.
-
 
         // --- Predictive alignment (residue 2) ---
         // Applies to the canonical short interval √(2n)
@@ -670,7 +739,7 @@ int GBRange::addRow(
         // This is a heuristic for the jitter predictive term, to scale errors to the order of the window width.
         const long double jitterPredictive = -2.0L * deficitJitter(n, 2ULL*delta, false);
         
-        if(w.is_prim_active()) {
+        if(prim_active) {
             const long double c_corr = c_raw * hlCorrAvgPrim;
             prim_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
             prim_summary.pairCount = pairCount_raw * hlCorrAvgPrim;
@@ -688,7 +757,7 @@ int GBRange::addRow(
                 prim_summary.boundMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvgPrim);
             }
         }
-        if(w.is_dec_active()) {
+        if(dec_active) {
             if(compat_ver != CompatVer::V015) {
                 dec_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
             }
@@ -714,6 +783,24 @@ int GBRange::addRow(
                 dec_summary.boundMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvgDec);
             }
         }
+        if(psi_active) {
+            psi_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
+            const long double c_corr = c_raw * hlCorrAvgPsi;
+            psi_summary.pairCount = pairCount_raw * hlCorrAvgPsi;
+            psi_summary.c_of_n = c_corr;
+            psi_summary.pairCountAlignMaxima.putMaxima(pairCountAlignPredictivePositive,0.0L,n,delta,hlCorrAvgPsi);
+            psi_summary.alignMaxima.putMaxima(c_corr,pairCountAlignPredictivePositive*norm,n,delta,hlCorrAvgPsi);
+            psi_summary.boundMaxima.putMaxima(c_corr,pairCountAlignConservativePositive*norm,n,delta,hlCorrAvgPsi);
+            psi_summary.currentJitter = jitterPredictive*norm;
+            if(norm > 0.0L) {
+                psi_summary.alignMinima.putMinima(c_corr,pairCountAlignPredictiveNegative*norm,n,delta,hlCorrAvgPsi);
+                psi_summary.boundMinima.putMinima(c_corr,pairCountAlignConservativeNegative*norm,n,delta,hlCorrAvgPsi);
+            }
+            else {
+                psi_summary.alignMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvgPsi);
+                psi_summary.boundMinima.putMinima(0.0L,0.0L,n,delta,hlCorrAvgPsi);
+            }
+        }
     }
     aggregate(w, n, delta, w.calcCminus(n,delta,logNlogN), w.calcCminusAsymp(logN));
     return 0;
@@ -735,6 +822,13 @@ void GBRange::prim_close() {
     close(primAgg.cps_summary);
 }
 
+void GBRange::psi_close() {
+    psiAgg.right = 0;
+    for(auto &w : windows) {
+        w->closeInterval(w->psi);
+    }
+}
+
 void GBRange::dec_close() {
     decAgg.right = 0;
     for(auto &w : windows) {
@@ -748,6 +842,7 @@ int GBRange::processRows() {
     const std::uint64_t* current = primeArray;
     bool prim_is_active = false;
     bool dec_is_active = false;
+    bool psi_is_active = false;
     
     // Also check for CPS summary outputs at the aggregate level
     for(auto &w : windows) {
@@ -775,25 +870,27 @@ int GBRange::processRows() {
                 primReset(primAgg.left);
             }
         }
+        if(w->is_psi_active()) {
+            psi_is_active = true;
+        }
     }
 
     std::uint64_t n_start, n_end;
-    if (prim_is_active && dec_is_active) {
-        // Both active - use the wider range
-        n_start = (decAgg.left < primAgg.left) ? decAgg.left : primAgg.left;
-        n_end = (decAgg.n_end > primAgg.n_end) ? decAgg.n_end : primAgg.n_end;
-    } else if (prim_is_active) {
-        // Only primorial active
-        n_start = primAgg.left;
-        n_end = primAgg.n_end;
-    } else if (dec_is_active) {
-        // Only decade active
-        n_start = decAgg.left;
-        n_end = decAgg.n_end;
-    } else {
-        // Neither active - this is an error condition
-        std::fprintf(stderr, "Error: No output streams configured. At least one of decade or primorial output must be specified.\n");
+    // Determine n_start and n_end from all active aggregates
+    bool any_active = dec_is_active || prim_is_active || psi_is_active;
+    if (!any_active) {
+        std::fprintf(stderr, "Error: No output streams configured. At least one of decade, primorial, or psi output must be specified.\n");
         return -1;
+    }
+    n_start = decAgg.left;
+    n_end = decAgg.n_end;
+    if (prim_is_active) {
+        if (n_start > primAgg.left) n_start = primAgg.left;
+        if (n_end < primAgg.n_end) n_end = primAgg.n_end;
+    }
+    if (psi_is_active) {
+        if (n_start > psiAgg.left) n_start = psiAgg.left;
+        if (n_end < psiAgg.n_end) n_end = psiAgg.n_end;
     }
     for(auto &w : windows) {
         w->preMertens = w->preMertensAsymp = n_start - 1;
@@ -801,7 +898,7 @@ int GBRange::processRows() {
     // Prescan now happens in decReset() and primReset() for each aggregate block
     std::vector<GBWindow*> dec_windows_to_prescan; 
     std::vector<GBWindow*> prim_windows_to_prescan;
-
+    std::vector<GBWindow*> psi_windows_to_prescan;
 #ifndef HLCORR_USE_EXACT
     if(compat_ver != CompatVer::V015) {
         for(auto & w : windows) {
@@ -812,6 +909,9 @@ int GBRange::processRows() {
             if(w->is_prim_active()) {
                 w->prim.summary.hlCorrEstimate.init(primAgg.left, primAgg.right, &primState);
                 prim_windows_to_prescan.push_back(w.get());
+            }
+            if(w->is_psi_active()) {
+                w->psi.summary.hlCorrEstimate.init(psiAgg.left, psiAgg.right, &psiState);
             }
         }
     }
@@ -824,6 +924,9 @@ int GBRange::processRows() {
             }
             if (w->is_prim_active() && n == primAgg.left) {
                 w->prim.summary.reset();
+            }
+            if (w->is_psi_active() && n == psiAgg.left) {
+                w->psi.summary.reset();
             }
         }
 #ifndef HLCORR_USE_EXACT
@@ -846,6 +949,15 @@ int GBRange::processRows() {
                 }
                 prim_windows_to_prescan.clear();
             }
+            if(! psi_windows_to_prescan.empty()) {
+                for(std::uint64_t i = n,next_n; i < n_end; i = next_n) {
+                    next_n = n_end;
+                    for(auto &w : psi_windows_to_prescan) {
+                        w->prim.summary.hlCorrEstimate.prescan(i, next_n,[&w](long double n) { return w->computeDelta(n); });
+                    }
+                }
+                psi_windows_to_prescan.clear();
+            }
         }
 #endif // HLCORR_USE_EXACT
         const long double twoSGB_n = (model == Model::Empirical && compat_ver == CompatVer::V015) ? 0.0L : (long double)twoSGB(n, primeArray, primeArrayEndlen);
@@ -863,6 +975,7 @@ int GBRange::processRows() {
         // as twoSGB_n is alpha independant and does not need to be recomputed.
         bool need_decReset = false;
         bool need_primReset = false;
+        bool need_psiReset = false;
         long double logN = 0.0L;
         long double logNlogN = 0.0L;
         long double eulerCapAlpha = 0.0L;
@@ -934,6 +1047,18 @@ int GBRange::processRows() {
                     prim_windows_to_prescan.push_back(w.get());
                 }
             }
+            if (w->is_psi_active() && n == psiAgg.right) {
+                calcAverage(*w,w->psi,psiAgg,false);
+                outputFull(psiAgg,w->psi,false);
+                if(compat_ver != CompatVer::V015) {
+                    w->psi.summary.outputBoundRatioMin(w->psi);
+                    w->psi.summary.outputBoundRatioMax(w->psi);
+                }
+                need_psiReset = true;
+                if(model == Model::HLA && compat_ver != CompatVer::V015) {
+                    psi_windows_to_prescan.push_back(w.get());
+                }
+            }
         }
         if(need_decReset) {
             decReset(decAgg.right);
@@ -942,6 +1067,10 @@ int GBRange::processRows() {
         if(need_primReset) {
             primReset(primAgg.right);
             need_primReset = false;
+        }
+        if(need_psiReset) {
+            psiReset(psiAgg.right);
+            need_psiReset = false;
         }
     }
     return 0;

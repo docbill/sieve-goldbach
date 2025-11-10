@@ -42,6 +42,7 @@ public:
     bool eulerCap = true;
     GBLongInterval dec;
     GBLongInterval prim;
+    GBLongInterval psi;
 
     GBWindow(long double a,EulerProductSeries &productSeries,CompatVer compat_ver);
 
@@ -50,6 +51,7 @@ public:
         product_series_right.init(prime_array,prime_array_end);
         dec.active = (dec.out || dec.trace || dec.raw || dec.norm || dec.cps || dec.boundRatioMin || dec.boundRatioMax);
         prim.active = (prim.out || prim.trace || prim.raw || prim.norm || prim.cps || prim.boundRatioMin || prim.boundRatioMax);
+        psi.active = (psi.out || psi.trace || psi.boundRatioMin || psi.boundRatioMax);
     }
 
     ~GBWindow();
@@ -65,6 +67,10 @@ public:
 
     bool is_prim_active() {
         return prim.active;
+    }
+
+    bool is_psi_active() {
+        return psi.active;
     }
 
     long double calcCminus(std::uint64_t n, std::uint64_t delta,long double logNlogN) {
@@ -110,6 +116,15 @@ public:
         long double cminusAsymp
     ) {
         prim.summary.aggregate(n,delta,cminus,cminusAsymp,false);
+    }
+    
+    void psi_aggregate(
+        std::uint64_t n,
+        std::uint64_t delta,
+        long double cminus,
+        long double cminusAsymp
+    ) {
+        psi.summary.aggregate(n,delta,cminus,cminusAsymp,false);
     }
 
 private:
