@@ -388,8 +388,8 @@ int main(int argc, char* argv[]) try {
                     }
                 }
                 else if (!std::strcmp(name, "compat")) {
-                    if (!std::strcmp(optarg, "v0.1") || !std::strncmp(optarg, "v0.1.5", 6)) {
-                        range.compat_ver = CompatVer::V015;
+                    if (!std::strcmp(optarg, "v0.1") || !std::strncmp(optarg, "v0.1.", 5)) {
+                        range.compat_ver = CompatVer::V01x;
                     } else if (!std::strcmp(optarg,"current") || !std::strcmp(optarg,"v0.2") || !std::strncmp(optarg,"v0.2.",5)) {
                         range.compat_ver = CompatVer::Current;
                     } else {

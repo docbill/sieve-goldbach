@@ -46,7 +46,7 @@ LIMIT        := 500000000
 GBCOUNT      := 10000
 FORMATS_HL_A := full raw norm
 FORMATS_EMP  := full raw norm cps
-COMPAT       := v0.1.5
+COMPAT       := v0.1.6
 COMPAT_LEGACY := v0.1.5
 
 
@@ -748,7 +748,7 @@ endif
 # --- Verifications ---
 
 # SUMMARY verify uses validator + SHA
-$$(SUMMARY_$(1)).csv.verify: $(VALIDATESUMMARY) $$(SUMMARY_$(1)).csv | $(OUT) $(BITMAP) $(RAW)
+$$(SUMMARY_$(1)).csv.verify: $$(SUMMARY_$(1)).csv | $(VALIDATESUMMARY) $(OUT) $(BITMAP) $(RAW)
 	@set -Eeo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
 		echo "Validating alpha-$$$$a empirical $$(call SFX,$(1))..."; \
@@ -764,7 +764,7 @@ $$(SUMMARY_$(1)).csv.verify: $(VALIDATESUMMARY) $$(SUMMARY_$(1)).csv | $(OUT) $(
 	cp "$$(call GET,SUMMARY_DEFAULT,$(1)).csv.verify" "$$(call GET,SUMMARY,$(1)).csv.verify"
 	@touch "$$(call GET,SUMMARY,$(1)).csv.verify"
 
-$$(SGB_$(1)).csv.verify: $(VALIDATESUMMARY) $$(SGB_$(1)).csv | $(OUT) $(RAW) $(BITMAP)
+$$(SGB_$(1)).csv.verify: $$(SGB_$(1)).csv | $(VALIDATESUMMARY) $(OUT) $(RAW) $(BITMAP)
 	@set -Eeo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
 	for a in $(ALPHAS); do \
 		echo "Validating alpha-$$$$a hl-a $$(call SFX,$(1))..."; \
@@ -1028,9 +1028,9 @@ $$(SUMMARY_DEFAULT_$(1)).csv: \
 			else \
 				(head -1 "$$$${sources[0]}";for s in "$$$${sources[@]}"; do \
 					tail -n +2 "$$$$s"; \
-				done) > "$$$$dst.csv"; \
-				if [ "$(COMPAT)" != "v0.1.5" ] && [ "full" = "$$$$fmt" ]; then \
-					./bin/full2norm_empirical.awk "$$$$dst.csv" > "$$$${dst/-full-/-norm-}.csv"; \
+			done) > "$$$$dst.csv"; \
+			if [[ "$(COMPAT)" != v0.1.* ]] && [ "full" = "$$$$fmt" ]; then \
+				./bin/full2norm_empirical.awk "$$$$dst.csv" > "$$$${dst/-full-/-norm-}.csv"; \
 					./bin/full2raw_empirical.awk "$$$$dst.csv" > "$$$${dst/-full-/-raw-}.csv"; \
 				fi; \
 			fi; \
@@ -1108,7 +1108,7 @@ $$(SGB_DEFAULT_$(1)).csv: \
 			(head -1 "$$$${sources[0]}";for s in "$$$${sources[@]}"; do \
 				tail -n +2 "$$$$s"; \
 			done) > "$$$$dst.csv"; \
-			if [ "$(COMPAT)" != "v0.1.5" ] && [ "full" = "$$$$fmt" ]; then \
+			if [[ "$(COMPAT)" != v0.1.* ]] && [ "full" = "$$$$fmt" ]; then \
 				./bin/full2norm_hla.awk "$$$$dst.csv" > "$$$${dst/-full-/-norm-}.csv"; \
 				./bin/full2raw_hla.awk "$$$$dst.csv" > "$$$${dst/-full-/-raw-}.csv"; \
 			fi; \
@@ -1248,15 +1248,15 @@ BITMAP_VERIFY := $(BITMAP).verify
 RAW_VERIFY    := $(RAW).verify
 GBP_VERIFY    := $(GBP).verify
 
-$(BITMAP_VERIFY): $(CERTIFYPRIMES) | $(OUT) $(BITMAP)
+$(BITMAP_VERIFY): $(BITMAP) | $(CERTIFYPRIMES) $(OUT)
 	./$(CERTIFYPRIMES) --bitmap --file "$(BITMAP)" | tee "$@"
 	@(echo -n "sha256=" && sha256sum < "$(BITMAP)" | awk '{print $$1}') | tee -a "$@"
 
-$(RAW_VERIFY): $(CERTIFYPRIMES) | $(OUT) $(RAW)
+$(RAW_VERIFY): $(RAW) | $(CERTIFYPRIMES) $(OUT)
 	./$(CERTIFYPRIMES) --binary --file "$(RAW)" | tee "$@"
 	@(echo -n "sha256=" && sha256sum < "$(RAW)" | awk '{print $$1}') | tee -a "$@"
 
-$(GBP_VERIFY): $(CERTIFYGBPAIRS) $(GBP) | $(OUT) $(BITMAP)
+$(GBP_VERIFY): $(GBP) | $(CERTIFYGBPAIRS) $(OUT) $(BITMAP)
 	./$(CERTIFYGBPAIRS) --bitmap "$(BITMAP)" --file "$(GBP)" | tee "$@"
 	@(echo -n "sha256=" && sha256sum < "$(BITMAP)" | awk '{print $$1}') | tee -a "$@"
 

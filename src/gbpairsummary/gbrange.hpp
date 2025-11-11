@@ -54,7 +54,7 @@ public:
 
         product_series_left.init(primeArray,primeArrayEndend);
         for(auto &w : windows) {
-            bool w_eulerCap = (eulerCap > 0) || (eulerCap < 0 && (compat_ver != CompatVer::V015 || w->alpha > 0.5L));
+            bool w_eulerCap = (eulerCap > 0) || (eulerCap < 0 && (compat_ver != CompatVer::V01x || w->alpha > 0.5L));
             w->init(primeArray,primeArrayEndend,w_eulerCap);
         }
         decReset(decAgg.left);
@@ -91,7 +91,7 @@ private:
         long double cminusAsymp
     ) {
         if(window.is_dec_active() && n >= decAgg.left && n < decAgg.right ) {
-            const bool useHLCorr = (n == 4 && compat_ver == CompatVer::V015);
+            const bool useHLCorr = (n == 4 && compat_ver == CompatVer::V01x);
             window.dec_aggregate(n, delta, cminus, cminusAsymp, useHLCorr);
         }
         if(window.is_prim_active()&& n >= primAgg.left && n < primAgg.right ) {

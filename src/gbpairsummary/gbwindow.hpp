@@ -23,7 +23,7 @@
 #include "gblonginterval.hpp"
 #include "eulerproductseries.hpp"
 
-enum class CompatVer : int { V015 = 0, Current = 1 };
+enum class CompatVer : int { V01x = 0, Current = 1 };
 
 class GBWindow {
 public:

@@ -50,11 +50,12 @@ BEGIN {
     # Version checking
     VERSION = ENVIRON["VERSION"]
     if (VERSION == "") {
-        print "ERROR: VERSION environment variable not set. Use: VERSION=v0.1.5 or VERSION=v0.2.0" > "/dev/stderr"
+        print "ERROR: VERSION environment variable not set. Use: VERSION=v0.1.x or VERSION=v0.2.x" > "/dev/stderr"
         exit 1
     }
-    if (VERSION != "v0.1.5" && VERSION != "v0.2.0") {
-        print "ERROR: Invalid VERSION '" VERSION "'. Must be v0.1.5 or v0.2.0" > "/dev/stderr"
+    # Accept v0.1.x (v0.1.5, v0.1.6, etc.) or v0.2.x versions
+    if (substr(VERSION, 1, 5) != "v0.1." && substr(VERSION, 1, 5) != "v0.2.") {
+        print "ERROR: Invalid VERSION '" VERSION "'. Must be v0.1.x or v0.2.x" > "/dev/stderr"
         exit 1
     }
     
@@ -174,9 +175,9 @@ FNR==NR {
     ngeom = trim($col_ngeom)
     cavg  = trim($col_cavg)
 
-    # For v0.2.0 files, use n_geom as the key (it's unique)
-    # For v0.1.5 files, use label + n_geom as the key
-    if (VERSION == "v0.2.0") {
+    # For v0.2.x files, use n_geom as the key (it's unique)
+    # For v0.1.x files, use label + n_geom as the key
+    if (substr(VERSION, 1, 5) == "v0.2.") {
         key = ngeom
     } else {
         key = label "\034" ngeom
@@ -294,14 +295,14 @@ FNR==1 {
         }
     }
     # Use VERSION environment variable for output format
-    if (VERSION == "v0.2.0") {
-        # v0.2.0 format: include align/bound columns
+    if (substr(VERSION, 1, 5) == "v0.2.") {
+        # v0.2.x format: include align/bound columns
         print "START","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
             "n_geom","C_avg","Cpred_avg","n_v","Calign_min","n_u","Calign_max","n_a","Cbound_min","n_b","Cbound_max"
     }
     else {
-        # v0.1.5 format: original 12 columns only
+        # v0.1.x format: original 12 columns only
         print "DECADE","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
             "n_geom","C_avg","Cpred_avg"
@@ -329,11 +330,11 @@ FNR==1 {
     n_cboundmax = (col_ncboundmax > 0) ? trim($col_ncboundmax) + 0 : 0
     c_cboundmax = (col_ccboundmax > 0) ? trim($col_ccboundmax) + 0 : 0
     
-    # For v0.2.0 files, use n_geom as the key (it's unique)
-    # For v0.1.5 files, use label + n_geom as the key
-    if (VERSION == "v0.2.0") {  # v0.2.0 format
+    # For v0.2.x files, use n_geom as the key (it's unique)
+    # For v0.1.x files, use label + n_geom as the key
+    if (substr(VERSION, 1, 5) == "v0.2.") {  # v0.2.x format
         key = ngeomp
-    } else {  # v0.1.5 format
+    } else {  # v0.1.x format
         key = label "\034" ngeomp
     }
     
@@ -348,7 +349,7 @@ FNR==1 {
     sum_c_cboundmax[key] = c_cboundmax
 
     if (!(key in sum_n0)) {
-        if (VERSION == "v0.1.5") {
+        if (substr(VERSION, 1, 5) == "v0.1.") {
             printf("ERROR: no match for DECADE=%s n_geom=%s in file1\n", label, ngeomp) > "/dev/stderr"
             printf("ERROR: Processing files: file1='%s' file2='%s'\n", file1_name, file2_name) > "/dev/stderr"; exit 1
         }
@@ -395,15 +396,15 @@ FNR==1 {
     }
     
     # Use VERSION environment variable for data output
-    if (VERSION == "v0.2.0") {
-        # v0.2.0 format: include align/bound columns
+    if (substr(VERSION, 1, 5) == "v0.2.") {
+        # v0.2.x format: include align/bound columns
         printf "%s,%d,%.6f,%d,%.6f,%d,%.8f,%d,%.8f,%.0f,%.9f,%.9f,%d,%.6f,%d,%.8f,%d,%.6f,%d,%.8f\n",
             output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
             sum_n1[key], sum_cmax[key], n1p, cpmax,
             sum_ng[key], sum_cavg[key], cpavg, 
             sum_n_align[key], sum_c_align[key], sum_n_alignmax[key], sum_c_alignmax[key], sum_n_cbound[key], sum_c_cbound[key], sum_n_cboundmax[key], sum_c_cboundmax[key]
     } else {
-        # v0.1.5 format: original 12 columns only
+        # v0.1.x format: original 12 columns only
         printf "%s,%d,%.6f,%d,%.8f,%d,%.6f,%d,%.8f,%.0f,%.6f,%.8f\n",
             output_label, sum_n0[key], sum_cmin[key], n0p, cpmin,
             sum_n1[key], sum_cmax[key], n1p, cpmax,

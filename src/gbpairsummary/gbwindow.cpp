@@ -59,7 +59,7 @@ std::uint64_t GBWindow::computeDelta(long double n,long double &eulerCapAlpha) {
             alpha_n = eulerCapAlpha;
         }
     }
-    if (compat_ver != CompatVer::V015 || alpha > 0.5L) {
+    if (compat_ver != CompatVer::V01x || alpha > 0.5L) {
         std::uint64_t max_delta = (n > 3) ? (n - 3) : 1;
         if (delta > max_delta) {
             delta = max_delta;

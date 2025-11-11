@@ -1,11 +1,14 @@
 output/
+*.a
 *.o
 *.log
 *.aux
 *.bbl
 *.blg
 *.toc
+backups/
 src/printprimes/printprimes
 src/storeprimes/storeprimes
 src/validatepairrangesummary/validatepairrangesummary
 src/primesieve_bitmap/primesieve_bitmap
+src/gbpairsummary/gbpairsummary

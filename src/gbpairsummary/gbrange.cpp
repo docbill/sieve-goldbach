@@ -112,11 +112,11 @@ static void printHeaderCpsSummary(FILE *out1,FILE *out2,Model model) {
 
 void GBRange::printHeaders() {
     for(auto &w : windows) {
-        printHeaderFull(w->dec.out,w->dec.trace,(compat_ver == CompatVer::V015),model);
+        printHeaderFull(w->dec.out,w->dec.trace,(compat_ver == CompatVer::V01x),model);
         printHeaderFull(w->prim.out,w->prim.trace,false,model);
         printHeaderRaw(w->dec.raw,w->prim.raw,model);
         printHeaderNorm(w->dec.norm,w->prim.norm,model);
-        printHeaderCps(w->dec.cps,(compat_ver == CompatVer::V015));
+        printHeaderCps(w->dec.cps,(compat_ver == CompatVer::V01x));
         printHeaderCps(w->prim.cps,false);
     }
 }
@@ -136,13 +136,13 @@ std::uint64_t GBRange::decReset(std::uint64_t n_start) {
     if(! need_reset) {
         return n_start;
     }
-    decAgg.reset(n_start, (compat_ver == CompatVer::V015));
+    decAgg.reset(n_start, (compat_ver == CompatVer::V01x));
     if(decAgg.left >= decAgg.n_end) {
         dec_close();
     }
 #ifndef HLCORR_USE_EXACT
     // Init interpolators for new aggregate range
-    if (compat_ver != CompatVer::V015) {
+    if (compat_ver != CompatVer::V01x) {
         for(auto &w : windows) {
             if(w->is_dec_active()) {
                 w->dec.summary.hlCorrEstimate.init(decAgg.left, decAgg.right, &decState);
@@ -170,7 +170,7 @@ std::uint64_t GBRange::primReset(std::uint64_t n_start) {
     }
     // Init interpolators for new aggregate range
 #ifndef HLCORR_USE_EXACT
-    if (compat_ver != CompatVer::V015) {
+    if (compat_ver != CompatVer::V01x) {
         for(auto &w : windows) {
             if(w->is_prim_active()) {
                 w->prim.summary.hlCorrEstimate.init(primAgg.left, primAgg.right, &primState);
@@ -188,14 +188,14 @@ void GBRange::calcAverage(GBWindow &w,GBLongInterval &interval, GBAggregate &agg
     if(model != Model::HLA) {
         return;
     }
-    if(compat_ver != CompatVer::V015  && summary.useHLCorrInst) {
+    if(compat_ver != CompatVer::V01x  && summary.useHLCorrInst) {
         summary.applyHLCorr(
             agg.minCalc, agg.maxCalc, agg.minNormCalc, agg.maxNormCalc );
     }
     else if(! summary.useHLCorrInst) {
         const std::uint64_t n_geom_odd  = (useLegacy ? ((1ULL | (std::uint64_t)floorl(agg.n_geom))) : minPrefOdd(agg.n_geom,agg.right - 1));
         const std::uint64_t delta_odd = w.computeDelta(n_geom_odd);
-        const std::uint64_t n_geom_even  = (compat_ver == CompatVer::V015 ? (1ULL + n_geom_odd) : maxPrefEven(agg.n_geom,agg.left));
+        const std::uint64_t n_geom_even  = (compat_ver == CompatVer::V01x ? (1ULL + n_geom_odd) : maxPrefEven(agg.n_geom,agg.left));
         const std::uint64_t delta_even = w.computeDelta(n_geom_even);
         summary.applyHLCorr(n_geom_even, delta_even, n_geom_odd, delta_odd,
             agg.evenCalc, agg.oddCalc, agg.minCalc, agg.maxCalc, agg.minNormCalc, 
@@ -537,7 +537,7 @@ int GBRange::addRow(
             pairCountMinima = c_raw / norm;
         }
         if(prim_active) {
-            if(compat_ver != CompatVer::V015) {
+            if(compat_ver != CompatVer::V01x) {
                 prim_summary.useHLCorrInst = true;
                 // Use interpolated HLCorr for better accuracy
 #ifndef HLCORR_USE_EXACT
@@ -556,7 +556,7 @@ int GBRange::addRow(
             prim_summary.hlCorrAvg = hlCorrAvgPrim;
         }
         if(dec_active) {
-            if(compat_ver != CompatVer::V015) {
+            if(compat_ver != CompatVer::V01x) {
                 dec_summary.useHLCorrInst = true;
                 hlCorrAvgDec = dec_summary.hlCorrEstimate(n,delta);
             }
@@ -608,7 +608,7 @@ int GBRange::addRow(
             prim_summary.c_of_n = c_corr;
         }
         if(dec_active) {
-            if(compat_ver != CompatVer::V015) {
+            if(compat_ver != CompatVer::V01x) {
                 dec_summary.pairCountMinima.putMinima(pairCountMinima,0.0L,n,delta);
             }
             else if(n < 10ULL) {
@@ -704,7 +704,7 @@ int GBRange::processRows() {
     std::vector<GBWindow*> dec_windows_to_prescan; 
     std::vector<GBWindow*> prim_windows_to_prescan;
 #ifndef HLCORR_USE_EXACT
-    if(compat_ver != CompatVer::V015) {
+    if(compat_ver != CompatVer::V01x) {
         for(auto & w : windows) {
             if(w->is_dec_active()) {
                 w->dec.summary.hlCorrEstimate.init(decAgg.left, decAgg.right, &decState);
@@ -728,7 +728,7 @@ int GBRange::processRows() {
             }
         }
 #ifndef HLCORR_USE_EXACT
-        if(compat_ver != CompatVer::V015) {
+        if(compat_ver != CompatVer::V01x) {
             if(! dec_windows_to_prescan.empty()) {
                 for(std::uint64_t i = n,next_n; i < n_end; i = next_n) {
                     next_n = n_end;
@@ -749,7 +749,7 @@ int GBRange::processRows() {
             }
         }
 #endif // HLCORR_USE_EXACT
-        const long double twoSGB_n = (model == Model::Empirical && compat_ver == CompatVer::V015) ? 0.0L : (long double)twoSGB(n, primeArray, primeArrayEndlen);
+        const long double twoSGB_n = (model == Model::Empirical && compat_ver == CompatVer::V01x) ? 0.0L : (long double)twoSGB(n, primeArray, primeArrayEndlen);
         if (twoSGB_n < 0.0L) {
             std::fprintf(stderr, "Failed HL-A prediction at %" PRIu64 "\n", n);
             return -1;
@@ -806,13 +806,13 @@ int GBRange::processRows() {
         n++;
         for(auto & w : windows) {
             if (w->is_dec_active() && n == decAgg.right) {
-                calcAverage(*w,w->dec,decAgg,(compat_ver == CompatVer::V015));
-                outputFull(decAgg,w->dec,(compat_ver == CompatVer::V015));
+                calcAverage(*w,w->dec,decAgg,(compat_ver == CompatVer::V01x));
+                outputFull(decAgg,w->dec,(compat_ver == CompatVer::V01x));
                 outputRaw(decAgg,w->dec);
                 outputNorm(decAgg,w->dec);
-                w->dec.summary.outputCps(w->dec,w->alpha_n,(compat_ver == CompatVer::V015)?decAgg.decade:-1,n_start,w->preMertens,w->preMertensAsymp);
+                w->dec.summary.outputCps(w->dec,w->alpha_n,(compat_ver == CompatVer::V01x)?decAgg.decade:-1,n_start,w->preMertens,w->preMertensAsymp);
                 need_decReset = true;
-                if(model == Model::HLA && compat_ver != CompatVer::V015) {
+                if(model == Model::HLA && compat_ver != CompatVer::V01x) {
                     dec_windows_to_prescan.push_back(w.get());
                 }
             }
@@ -823,7 +823,7 @@ int GBRange::processRows() {
                 outputNorm(primAgg,w->prim);
                 w->prim.summary.outputCps(w->prim,w->alpha_n,-1,n_start,w->preMertens,w->preMertensAsymp);
                 need_primReset = true;
-                if(model == Model::HLA && compat_ver != CompatVer::V015) {
+                if(model == Model::HLA && compat_ver != CompatVer::V01x) {
                     prim_windows_to_prescan.push_back(w.get());
                 }
             }

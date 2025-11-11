@@ -71,7 +71,8 @@ struct Args {
     std::string csv_path;
     std::string bitmap_path;   // optional (odd-only, 1 = prime)
     std::string raw_path;      // optional (uint64_le primes)
-    bool compat_v015 = false;  // compatibility mode for v0.1.5 format
+    bool compat_v01x = false;  // compatibility mode for v0.1.x format
+    std::string version_string = "v0.2.0";  // actual version string for output
     bool is_empirical = true;  // true for empirical, false for hl-a
     double tolerance = 0.10;   // 10% tolerance for hl-a validation
     double alpha = 0.5;        // alpha parameter for normalization
@@ -87,12 +88,14 @@ static Args parse_args(int argc, char** argv){
         else if(s=="--raw")    a.raw_path    = need(i+1<argc);
         else if(s=="--compat") {
             std::string version = need(i+1<argc);
-            if(version == "v0.1" || version == "v0.1.5") {
-                a.compat_v015 = true;
+            if(version == "v0.1" || version.substr(0, 5) == "v0.1.") {
+                a.compat_v01x = true;
+                a.version_string = version;
             } else if(version == "v0.2" || version == "v0.2.0" || version == "current") {
-                a.compat_v015 = false;
+                a.compat_v01x = false;
+                a.version_string = (version == "current") ? "v0.2.0" : version;
             } else {
-                die("Unknown compatibility version: " + version + " (use v0.1, v0.1.5, v0.2, v0.2.0, or current)");
+                die("Unknown compatibility version: " + version + " (use v0.1.x, v0.2.x, or current)");
             }
         }
         else if(s=="--model") {
@@ -291,7 +294,7 @@ static int get_col_idx(std::unordered_map<std::string,int>& idx, const char * na
     return -1;
 };
 
-static ColIdx parse_header_and_get_indices(std::istream& in, size_t& header_ln, bool /*compat_v015*/, bool& detected_v015){
+static ColIdx parse_header_and_get_indices(std::istream& in, size_t& header_ln, bool /*compat_v01x*/, bool& detected_v015){
     std::string line; header_ln = 0;
     while(std::getline(in,line)){
         ++header_ln; rstrip_cr(line);
@@ -312,7 +315,7 @@ static ColIdx parse_header_and_get_indices(std::istream& in, size_t& header_ln, 
 
     ColIdx ci;
     
-    // Detect header format: v0.1.5 uses "C_min" or "Cpred_min", v0.2.0 uses "C_min(n_0)"
+    // Detect header format: v0.1.x uses "C_min" or "Cpred_min", v0.2.0 uses "C_min(n_0)"
     // Primorial files always use v0.2.0 format regardless of compatibility version
     bool is_primorial = (idx.count("FIRST") > 0 && idx.count("LAST") > 0);
     detected_v015 = !is_primorial && ((idx.count("C_min") > 0 || idx.count("Cpred_min") > 0) && idx.count("C_min(n_0)") == 0);
@@ -378,7 +381,7 @@ int main(int argc, char** argv){
 
     size_t header_ln=0;
     bool detected_v015;
-    ColIdx ci = parse_header_and_get_indices(in, header_ln, a.compat_v015, detected_v015);
+    ColIdx ci = parse_header_and_get_indices(in, header_ln, a.compat_v01x, detected_v015);
 
     std::string line; size_t ln = header_ln;
     size_t rows = 0, checked = 0;
@@ -396,8 +399,8 @@ int main(int argc, char** argv){
         ++rows;
 
         // Sanity: C_min <= C_avg <= C_max at 6dp
-        // Skip this check for line 2 in v0.1.5 mode due to known issue
-        if(!(detected_v015 && a.compat_v015 && ln == 2 && !a.is_empirical)) {
+        // Skip this check for line 2 in v0.1.x mode due to known issue
+        if(!(detected_v015 && a.compat_v01x && ln == 2 && !a.is_empirical)) {
             if(to_micro6(Cavg) < to_micro6(std::min(Cmin, Cmax)) ||
                to_micro6(Cavg) > to_micro6(std::max(Cmin, Cmax))){
                 if(is_tainted()){
@@ -409,15 +412,15 @@ int main(int argc, char** argv){
         }
 
         // Optional endpoint recomputation: n_0 is the location of C_min, n_1 of C_max
-        // Skip this check for line 2 in v0.1.5 mode due to known issue
+        // Skip this check for line 2 in v0.1.x mode due to known issue
         if(do_endpoints){
             u64 GminAt=0, GmaxAt=0;
             u64 Gn0=0, Gn1=0;
             long double Cm0, Cm1;
             
             // Use alpha-dependent normalization if alpha parameter is provided and not 0.5, regardless of compatibility mode
-            if(a.compat_v015 && a.alpha == 0.5L && a.is_empirical) {
-                // v0.1.5 with alpha=0.5: Use old scaling algorithm (matches how v0.1.5 data was generated)
+            if(a.compat_v01x && a.alpha == 0.5L && a.is_empirical) {
+                // v0.1.x with alpha=0.5: Use old scaling algorithm (matches how v0.1.x data was generated)
                 auto scale = [&](u64 n)->long double{
                     if(n < 2) return 0.0L;
                     long double ln_n = logl((long double)n);          // natural log
@@ -444,8 +447,8 @@ int main(int argc, char** argv){
                         delta = cap;
                     }
                     
-                    // Apply the same caps as in data generation: only if not v0.1.5 or alpha > 0.5
-                    if (!a.compat_v015 || a.alpha > 0.5L) {
+                    // Apply the same caps as in data generation: only if not v0.1.x or alpha > 0.5
+                    if (!a.compat_v01x || a.alpha > 0.5L) {
                         u64 max_delta = (n > 3) ? (n - 3) : 1;
                         if (delta > max_delta) {
                             delta = max_delta;
@@ -476,13 +479,13 @@ int main(int argc, char** argv){
                 Cm1 = (long double) Gn1 * norm(n1);
             }
             
-            // Skip validation for line 2 in v0.1.5 mode due to known issue, but still count it
-            bool skip_validation = (a.compat_v015 && a.alpha == 0.5 && ln == 2 && a.is_empirical);
+            // Skip validation for line 2 in v0.1.x mode due to known issue, but still count it
+            bool skip_validation = (a.compat_v01x && a.alpha == 0.5 && ln == 2 && a.is_empirical);
 
             // n_0 corresponds to C_min, n_1 to C_max (by your definition)
             bool cmin_valid, cmax_valid;
             if(skip_validation) {
-                // Skip validation for known issues in v0.1.5, but still count the line
+                // Skip validation for known issues in v0.1.x, but still count the line
                 cmin_valid = true;
                 cmax_valid = true;
             } else if(a.is_empirical) {
@@ -499,7 +502,7 @@ int main(int argc, char** argv){
                     cmin_valid = validate_cmin_hl_a(Cm0,Cmin,GminAt, MINv, a.tolerance);
                     cmax_valid = within_tolerance(Cm1,Cmax,GmaxAt, MAXv, a.tolerance);
                 } else {
-                    // v0.2.0 or v0.1.5 with alpha != 0.5: Use new scale function
+                    // v0.2.0 or v0.1.x with alpha != 0.5: Use new scale function
                     cmin_valid = validate_cmin_hl_a(Cm0,Cmin,GminAt, MINv,a.tolerance);
                     cmax_valid = within_tolerance(Cm1,Cmax,GmaxAt, MAXv,a.tolerance);
                 }
@@ -542,7 +545,7 @@ int main(int argc, char** argv){
     if(rows==0) die("No data rows");
 
     std::cout << "OK: validated pairrangesummary file (" 
-              << (a.compat_v015 ? "v0.1.5" : "v0.2.0") << " format, "
+              << a.version_string << " format, "
               << (a.is_empirical ? "empirical" : "hl-a") << " model)\n"
               << "rows=" << rows
               << "  checked=" << checked;
