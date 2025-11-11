@@ -25,8 +25,7 @@
 // Assumes: *current points to first prime > n, or a lower prime value in sorted buffer of primes.
 // lowest: start of prime buffer
 // highest: end of prime buffer (1 past last valid element)
-int countPairs(uint64_t n, uint64_t **current, uint64_t *lowest, uint64_t *highest)
-{
+int countPairs( uint64_t n, uint64_t **current, uint64_t *lowest, uint64_t *highest) {
     int count = 0;
     uint64_t *lower = *current;
     uint64_t *higher = *current;
