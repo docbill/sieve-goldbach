@@ -6,6 +6,8 @@ output/
 *.bbl
 *.blg
 *.toc
+*.out
+*.synctex.gz
 backups/
 src/printprimes/printprimes
 src/storeprimes/storeprimes

@@ -1473,44 +1473,67 @@ help:
 	@echo "  make clobber-huge        # remove huge data files (XPRIM parts)"
 
 
-# ---- Config ----------------------------------------------------
-PAPER_PROJECT := sieve-goldbach
-DATE    := $(shell date +%Y%m%d)
-PAPER_SRC_DIR := $(PAPER_PROJECT)-src
-PAPER_ZIP     := $(PAPER_PROJECT)-src-$(DATE).zip
-PAPER_SHA256     := $(PAPER_PROJECT)-src-$(DATE).sha256
+# ---- Paper Source Archive Configuration ------------------------
+DATE := $(shell date +%Y%m%d)
 
-# List every file your TeX build needs (add .sty/.cls/.bst if any)
-PAPER_FILES := \
+# List all papers (add new papers here)
+ALL_PAPERS := goldbach-reformulation
+# Example: ALL_PAPERS := goldbach-reformulation another-paper third-paper
+
+# Define files for each paper
+GOLDBACH_REFORMULATION_FILES := \
   LICENSES/CC-BY-4.0.txt \
-  paper/sieve_goldbach.tex \
-  paper/sieve_goldbach.bib \
-  paper/README.txt \
-  paper/Makefile \
-  paper/cpslowerbound-100M.csv \
-  paper/lambdaavg-100M.csv \
-  paper/lambdamax-100M.csv \
-  paper/lambdamin-100M.csv \
-  paper/pairrangejoin-100M.csv
+  papers/goldbach-reformulation/sieve_goldbach.tex \
+  papers/goldbach-reformulation/sieve_goldbach.bib \
+  papers/goldbach-reformulation/README.txt \
+  papers/goldbach-reformulation/Makefile \
+  papers/goldbach-reformulation/cpslowerbound-100M.csv \
+  papers/goldbach-reformulation/lambdaavg-100M.csv \
+  papers/goldbach-reformulation/lambdamax-100M.csv \
+  papers/goldbach-reformulation/lambdamin-100M.csv \
+  papers/goldbach-reformulation/pairrangejoin-100M.csv
 
+# Add more papers here as needed:
+# ANOTHER_PAPER_FILES := \
+#   LICENSES/CC-BY-4.0.txt \
+#   papers/another-paper/main.tex \
+#   ...
+
+.PHONY: zip-goldbach-reformulation clean-goldbach-reformulation
+
+# ---- Build the date-stamped source archive for goldbach-reformulation -----
+zip-goldbach-reformulation:
+	@echo "Creating source archive for goldbach-reformulation..."
+	@rm -rf "$(OUT)/goldbach-reformulation-src"
+	@mkdir -p "$(OUT)/goldbach-reformulation-src"
+	@cp -f $(GOLDBACH_REFORMULATION_FILES) "$(OUT)/goldbach-reformulation-src/."
+	@cd "$(OUT)/goldbach-reformulation-src" && ( \
+	  echo "SHA256 manifest for goldbach-reformulation ($(DATE))" > CHECKSUMS.txt; \
+	  for f in $(notdir $(GOLDBACH_REFORMULATION_FILES)); do sha256sum "$$f" >> CHECKSUMS.txt 2>/dev/null || shasum -a 256 "$$f" >> CHECKSUMS.txt; done )
+	@(cd "$(OUT)" && zip -r -X "goldbach-reformulation-src-$(DATE).zip" "goldbach-reformulation-src" >/dev/null)
+	@rm -rf "$(OUT)/goldbach-reformulation-src"
+	@echo "Created $(OUT)/goldbach-reformulation-src-$(DATE).zip"
+	@(cd "$(OUT)" && shasum -a 256 "goldbach-reformulation-src-$(DATE).zip" | tee "goldbach-reformulation-src-$(DATE).sha256")
+
+# ---- Cleanup goldbach-reformulation archive ----------------------------
+clean-goldbach-reformulation:
+	@rm -rf "$(OUT)/goldbach-reformulation-src-$(DATE).zip" "$(OUT)/goldbach-reformulation-src-$(DATE).sha256"
+
+# ---- Build/clean all papers ----------------------------------------
 .PHONY: zip-src clean-src
-
-# ---- Build the date-stamped source archive ---------------------
 zip-src:
-	@rm -rf "$(OUT)/$(PAPER_SRC_DIR)"
-	@mkdir -p "$(OUT)/$(PAPER_SRC_DIR)"
-	@cp -f $(PAPER_FILES) "$(OUT)/$(PAPER_SRC_DIR)/."
-	@cd "$(OUT)/$(PAPER_SRC_DIR)" && ( \
-	  echo "SHA256 manifest for $(PAPER_PROJECT) ($(DATE))" > CHECKSUMS.txt; \
-	  for f in $(notdir $(PAPER_FILES)); do sha256 "$$f" >> CHECKSUMS.txt; done )
-	@(cd "$(OUT)" && zip -r -X "$(PAPER_ZIP)" "$(PAPER_SRC_DIR)" >/dev/null)
-	@rm -rf "$(OUT)/$(PAPER_SRC_DIR)"
-	@echo Created "$(OUT)/$(PAPER_ZIP)"
-	@(cd "$(OUT)" && shasum -a 256 "$(PAPER_ZIP)"|tee "$(PAPER_SHA256)")
+	@echo "Building source archives for all papers..."
+	@for paper in $(ALL_PAPERS); do \
+		$(MAKE) zip-$$paper; \
+	done
+	@echo "All paper source archives created."
 
-# ---- Cleanup temp folder ---------------------------------------
 clean-src:
-	@rm -rf "$(OUT)/$(PAPER_ZIP)" "$(OUT)/$(PAPER_SHA256)"
+	@echo "Cleaning source archives for all papers..."
+	@for paper in $(ALL_PAPERS); do \
+		$(MAKE) clean-$$paper; \
+	done
+	@echo "All paper source archives cleaned."
 
 test-touch: output/test-touch.stamp
 output/test-touch.stamp:
