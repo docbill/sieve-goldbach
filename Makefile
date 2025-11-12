@@ -634,6 +634,7 @@ SGB_GOLD_$(1)     := $(DATA)/$$(SGB_FILE_$(1)).csv.verify
 SUMMARY_GOLD_$(1) := $(DATA)/$$(SUMMARY_FILE_$(1)).csv.verify
 JOIN_GOLD_$(1)    := $(DATA)/$$(JOIN_FILE_$(1)).csv.sha256
 CPSLB_GOLD_$(1)   := $(DATA)/$$(CPSLB_FILE_$(1)).csv.sha256
+CPS_SUMMARY_GOLD_$(1) := $(DATA)/$$(CPS_SUMMARY_FILE_$(1)).csv.sha256
 LAVG_GOLD_$(1)    := $(DATA)/$$(LAVG_FILE_$(1)).csv.sha256
 LMIN_GOLD_$(1)    := $(DATA)/$$(LMIN_FILE_$(1)).csv.sha256
 LALIGNMIN_GOLD_$(1)  := $(DATA)/$$(LALIGNMIN_FILE_$(1)).csv.sha256
