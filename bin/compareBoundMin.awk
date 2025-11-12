@@ -28,11 +28,11 @@ BEGIN {
     # Version checking
     VERSION = ENVIRON["VERSION"]
     if (VERSION == "") {
-        print "ERROR: VERSION environment variable not set. Use: VERSION=v0.1.5 or VERSION=v0.2.0" > "/dev/stderr"
+        print "ERROR: VERSION environment variable not set. Use: VERSION=v0.1.x or VERSION=v0.2.x" > "/dev/stderr"
         exit 1
     }
-    if (VERSION != "v0.1.5" && VERSION != "v0.2.0") {
-        print "ERROR: Invalid VERSION '" VERSION "'. Must be v0.1.5 or v0.2.0" > "/dev/stderr"
+    if (substr(VERSION, 1, 5) != "v0.1." && substr(VERSION, 1, 5) != "v0.2.") {
+        print "ERROR: Invalid VERSION '" VERSION "'. Must be v0.1.x or v0.2.x" > "/dev/stderr"
         exit 1
     }
     
