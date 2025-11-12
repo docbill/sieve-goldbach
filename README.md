@@ -186,14 +186,24 @@ The Makefile supports several optional flags to control output generation and ve
   TAINTED=1 make verify
   ```
 
-* **`COMPAT=v0.1.5` (make variable)** – When set, uses the legacy v0.1.5 compatibility mode. The default is `v0.1.6`, which supports all current features.  Example:
+* **`POINTWISE=1` (make variable)** – When set, generates bound ratio files (`boundratiomin-*.csv` and `boundratiomax-*.csv`) that compare pointwise predictions against measured values. When not set, these files are skipped (creating `.stamp` placeholders instead) to save CPU time on large runs. **Note:** This option is not available for the legacy `COMPAT=v0.1.5` version. Example:
   ```sh
-  make COMPAT=v0.1.6 generate
+  make POINTWISE=1 generate
+  ```
+
+* **`PSI=1` (make variable)** – When set, generates Primorial Short Interval (PSI) output files and lambda statistics. PSI files use short interval aggregation for analysis. When not set, PSI file generation is skipped (creating `.stamp` placeholders instead). **Note:** This option is not available for the legacy `COMPAT=v0.1.5` version. Example:
+  ```sh
+  make PSI=1 generate
+  ```
+
+* **`COMPAT=v0.1.5` (make variable)** – When set, uses the legacy v0.1.5 compatibility mode. The default is `v0.2.0`, which supports all current features including `POINTWISE` and `PSI` options. Use this option only when you need to reproduce results from the v0.1.5 version. Example:
+  ```sh
+  make COMPAT=v0.1.5 generate
   ```
 
 These options can be combined:
 ```sh
-TAINTED=1 make COMPAT=v0.1.5 verify
+TAINTED=1 make PSI=1 POINTWISE=1 verify
 ```
 
 ---

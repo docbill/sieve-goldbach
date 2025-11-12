@@ -1,4 +1,5 @@
 output/
+parts/
 *.a
 *.o
 *.log
@@ -11,8 +12,13 @@ output/
 *.out
 *.synctex.gz
 backups/
+src/validatepairrangesummary/validatepairrangesummary
+src/certifygbpairs/certifygbpairs
+src/certifyprimes/certifyprimes
+src/cpslowerbound/cpslowerbound
+src/findgbpairs/findgbpairs
+src/primesieve_bitmap/primesieve_bitmap
 src/printprimes/printprimes
 src/storeprimes/storeprimes
-src/validatepairrangesummary/validatepairrangesummary
-src/primesieve_bitmap/primesieve_bitmap
+src/mergecps/mergecps
 src/gbpairsummary/gbpairsummary

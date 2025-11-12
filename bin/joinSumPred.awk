@@ -223,14 +223,14 @@ FNR==1 {
             col_ncboundmax = find_column($0, "n_b")
             col_ccboundmax = find_column($0, "CboundMax(n_b)")
         } else {
-            # v0.1.5 primorial format: FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg
+            # v0.1.5 primorial format: FIRST,LAST,START,minAt,G(minAt),maxAt,G(maxAt),n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg
             col_label2 = find_column($0, "START")
-            col_n0_2 = find_column($0, "n_0*")
-            col_cmin_2 = find_column($0, "Cpred_min(n_0*)")
-            col_n1_2 = find_column($0, "n_1*")
-            col_cmax_2 = find_column($0, "Cpred_max(n_1*)")
+            col_n0_2 = find_column($0, "n_0")
+            col_cmin_2 = find_column($0, "C_min(n_0)")
+            col_n1_2 = find_column($0, "n_1")
+            col_cmax_2 = find_column($0, "C_max(n_1)")
             col_ngeom_2 = find_column($0, "n_geom")
-            col_cavg_2 = find_column($0, "Cpred_avg")
+            col_cavg_2 = find_column($0, "C_avg")
             col_nalign = 0
             col_calign = 0
             col_nalignmax = 0
@@ -295,8 +295,8 @@ FNR==1 {
         }
     }
     # Use VERSION environment variable for output format
-    if (substr(VERSION, 1, 5) == "v0.2.") {
-        # v0.2.x format: include align/bound columns
+    if (VERSION == "v0.2.0") {
+        # v0.2.0 format: include align/bound columns
         print "START","n_0","C_min","Npred_0","Cpred_min",
             "n_1","C_max","Npred_1","Cpred_max",
             "n_geom","C_avg","Cpred_avg","n_v","Calign_min","n_u","Calign_max","n_a","Cbound_min","n_b","Cbound_max"
