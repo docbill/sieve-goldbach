@@ -119,12 +119,12 @@ static void printHeaderBoundRatio(FILE *out) {
 
 void GBRange::printHeaders() {
     for(auto &w : windows) {
-        printHeaderFull(w->dec.out,w->dec.trace,(compat_ver == CompatVer::V015),model);
+        printHeaderFull(w->dec.out,w->dec.trace,(compat_ver == CompatVer::V01x),model);
         printHeaderFull(w->prim.out,w->prim.trace,false,model);
         printHeaderFull(w->psi.out,w->psi.trace,false,model);
         printHeaderRaw(w->dec.raw,w->prim.raw,model);
         printHeaderNorm(w->dec.norm,w->prim.norm,model);
-        printHeaderCps(w->dec.cps,(compat_ver == CompatVer::V015));
+        printHeaderCps(w->dec.cps,(compat_ver == CompatVer::V01x));
         printHeaderCps(w->prim.cps,false);
         if(compat_ver != CompatVer::V01x) {
             printHeaderBoundRatio(w->dec.boundRatioMin);
@@ -214,7 +214,7 @@ std::uint64_t GBRange::psiReset(std::uint64_t n_start) {
     }
     // Init interpolators for new aggregate range
 #ifndef HLCORR_USE_EXACT
-    if (compat_ver != CompatVer::V015) {
+    if (compat_ver != CompatVer::V01x) {
         for(auto &w : windows) {
             if(w->is_psi_active()) {
                 w->psi.summary.hlCorrEstimate.init(psiAgg.left, psiAgg.right, &psiState);
@@ -579,7 +579,7 @@ int GBRange::addRow(
         return -1;
     }
 
-    const bool needPointwise = (compat_ver != CompatVer::V015 && (w.prim.boundRatioMin || w.prim.boundRatioMax || w.dec.boundRatioMin || w.dec.boundRatioMax));
+    const bool needPointwise = (compat_ver != CompatVer::V01x && (w.prim.boundRatioMin || w.prim.boundRatioMax || w.dec.boundRatioMin || w.dec.boundRatioMax));
     // Cache active flags to avoid repeated function calls
     const bool prim_active = w.is_prim_active();
     const bool dec_active = w.is_dec_active();
@@ -635,7 +635,7 @@ int GBRange::addRow(
             dec_summary.hlCorrAvg = hlCorrAvgDec;
         }
         if(psi_active) {
-            if(compat_ver != CompatVer::V015) {
+            if(compat_ver != CompatVer::V01x) {
                 psi_summary.useHLCorrInst = true;
                 // Use interpolated HLCorr for better accuracy
 #ifndef HLCORR_USE_EXACT
@@ -926,7 +926,7 @@ int GBRange::processRows() {
             }
         }
 #ifndef HLCORR_USE_EXACT
-        if(compat_ver != CompatVer::V015) {
+        if(compat_ver != CompatVer::V01x) {
             if(! dec_windows_to_prescan.empty()) {
                 for(std::uint64_t i = n,next_n; i < n_end; i = next_n) {
                     next_n = n_end;
@@ -1014,8 +1014,8 @@ int GBRange::processRows() {
         n++;
         for(auto & w : windows) {
             if (w->is_dec_active() && n == decAgg.right) {
-                calcAverage(*w,w->dec,decAgg,(compat_ver == CompatVer::V015));
-                outputFull(decAgg,w->dec,(compat_ver == CompatVer::V015));
+                calcAverage(*w,w->dec,decAgg,(compat_ver == CompatVer::V01x));
+                outputFull(decAgg,w->dec,(compat_ver == CompatVer::V01x));
                 outputRaw(decAgg,w->dec);
                 outputNorm(decAgg,w->dec);
                 w->dec.summary.outputCps(w->dec,w->alpha_n,(compat_ver == CompatVer::V01x)?decAgg.decade:-1,n_start,w->preMertens,w->preMertensAsymp);
@@ -1039,19 +1039,19 @@ int GBRange::processRows() {
                     w->prim.summary.outputBoundRatioMax(w->prim);
                 }
                 need_primReset = true;
-                if(model == Model::HLA && compat_ver != CompatVer::V015) {
+                if(model == Model::HLA && compat_ver != CompatVer::V01x) {
                     prim_windows_to_prescan.push_back(w.get());
                 }
             }
             if (w->is_psi_active() && n == psiAgg.right) {
                 calcAverage(*w,w->psi,psiAgg,false);
                 outputFull(psiAgg,w->psi,false);
-                if(compat_ver != CompatVer::V015) {
+                if(compat_ver != CompatVer::V01x) {
                     w->psi.summary.outputBoundRatioMin(w->psi);
                     w->psi.summary.outputBoundRatioMax(w->psi);
                 }
                 need_psiReset = true;
-                if(model == Model::HLA && compat_ver != CompatVer::V015) {
+                if(model == Model::HLA && compat_ver != CompatVer::V01x) {
                     psi_windows_to_prescan.push_back(w.get());
                 }
             }
