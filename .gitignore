@@ -4,6 +4,8 @@ output/
 *.log
 *.aux
 *.bbl
+*.fls
+*.fdb_latexmk
 *.blg
 *.toc
 *.out
@@ -14,4 +16,3 @@ src/storeprimes/storeprimes
 src/validatepairrangesummary/validatepairrangesummary
 src/primesieve_bitmap/primesieve_bitmap
 src/gbpairsummary/gbpairsummary
-Makefile

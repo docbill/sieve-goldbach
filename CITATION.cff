@@ -15,7 +15,7 @@ identifiers:
     value: "10.5281/zenodo.16735169"
     description: "Related paper describing results validated by this software."
   - type: doi
-    value: "PENDING"
+    value: "10.5281/zenodo.17585892"
     description: "Repository v0.1.6 Sieve-Goldbach (PENDING archival)"
   - type: doi
     value: "10.5281/zenodo.17161657"
