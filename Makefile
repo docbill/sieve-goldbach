@@ -1489,11 +1489,12 @@ GOLDBACH_REFORMULATION_FILES := \
   papers/goldbach-reformulation/sieve_goldbach.bib \
   papers/goldbach-reformulation/README.txt \
   papers/goldbach-reformulation/Makefile \
-  papers/goldbach-reformulation/cpslowerbound-100M.csv \
-  papers/goldbach-reformulation/lambdaavg-100M.csv \
-  papers/goldbach-reformulation/lambdamax-100M.csv \
-  papers/goldbach-reformulation/lambdamin-100M.csv \
-  papers/goldbach-reformulation/pairrangejoin-100M.csv
+  papers/goldbach-reformulation/cpssummary-23PR.5-v0.1.6.csv \
+  data/cpslowerbound-100M-v0.1.6.csv \
+  data/lambdaavg-100M.csv \
+  data/lambdamax-100M.csv \
+  data/lambdamin-100M.csv \
+  data/pairrangejoin-100M.csv
 
 # Add more papers here as needed:
 # ANOTHER_PAPER_FILES := \
