@@ -18,14 +18,14 @@ The project combines:
 
 ```
 sieve-goldbach/
-├── paper/        # Manuscript (LaTeX, PDF, bibliography) and example CSVs
+├── papers/        # Manuscript (LaTeX, PDF, bibliography) and example CSVs
 ├── bin/          # AWK utilities for analysis and comparison
 ├── data/         # Generated CSVs, certification files, and checksums
 ├── src/          # Source code (C / C++ implementations)
 └── Makefile      # Top-level automation for build, generate, certify, verify
 ```
 
-### `paper/`
+### `papers/`
 
 * `sieve_goldbach.tex` – main LaTeX manuscript.
 * `sieve_goldbach.pdf` – compiled version.
