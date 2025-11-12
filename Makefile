@@ -1381,10 +1381,11 @@ $$(SUMMARY_DEFAULT_$(1)).csv: \
 			else \
 				(head -1 "$$$${sources[0]}";for s in "$$$${sources[@]}"; do \
 					tail -n +2 "$$$$s"; \
-			done) > "$$$$dst.csv"; \
-			if [[ "$(COMPAT)" != v0.1.* ]] && [ "full" = "$$$$fmt" ]; then \
-				./bin/full2norm_empirical.awk "$$$$dst.csv" > "$$$${dst/-full-/-norm-}.csv"; \
-				./bin/full2raw_empirical.awk "$$$$dst.csv" > "$$$${dst/-full-/-raw-}.csv"; \
+				done) > "$$$$dst.csv"; \
+				if [[ "$(COMPAT)" != v0.1.* ]] && [ "full" = "$$$$fmt" ]; then \
+					./bin/full2norm_empirical.awk "$$$$dst.csv" > "$$$${dst/-full-/-norm-}.csv"; \
+					./bin/full2raw_empirical.awk "$$$$dst.csv" > "$$$${dst/-full-/-raw-}.csv"; \
+				fi; \
 			fi; \
 		fi; \
 	done; done
