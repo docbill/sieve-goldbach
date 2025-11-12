@@ -66,6 +66,33 @@ Source code in modular subdirectories:
 * `validatepairrangesummary/` – validator for summary tables.
 * `lib/` – common routines for sieving, counting pairs, and constants.
 
+### `output/` and Alpha-Based Organization
+
+All generated output files are organized by alpha value (the scaling parameter for the short interval analysis). The output directory structure is:
+
+```
+output/
+├── alpha-0.0009765625/    # Results for α = 2^-10
+├── alpha-0.00106494895768/ # Results for α = 2^-10 * 2^(1/8)
+├── ...
+├── alpha-0.25/            # Results for α = 0.25
+├── alpha-0.5/             # Results for α = 0.5 (default)
+├── ...
+└── alpha-1/               # Results for α = 1.0
+```
+
+**Finding results for a specific alpha value:** To find results for a particular alpha value (e.g., α = 0.25), look in the corresponding `output/alpha-0.25/` directory. Each directory contains CSV files for that alpha value, including:
+
+* **Summary files**: `gbpairsummary-*-empirical-full-0.25-v0.2.0.csv` (empirical measurements)
+* **Prediction files**: `gbpairsummary-*-hl-a-full-0.25-v0.2.0.csv` (HLA predictions)
+* **Bound ratio files**: `boundratiomin-*-0.25-v0.2.0.csv`, `boundratiomax-*-0.25-v0.2.0.csv` (when `POINTWISE=1`)
+* **Lambda files**: `lambdaalignmin-*-0.25-v0.2.0.csv`, `lambdaboundmax-*-0.25-v0.2.0.csv`, etc.
+* **Partial files**: `*.partial.csv` (intermediate files during generation)
+
+**Alpha value generation:** Alpha values are generated in a geometric progression: starting from 2^-10 ≈ 0.0009765625, each subsequent value is multiplied by 2^(1/8) ≈ 1.0905077, up to α = 1.0. This provides approximately 80 different alpha values for analysis.
+
+**Default alpha:** The default alpha value is 0.5, and results for this value are also copied to the root `output/` directory (without the alpha suffix in the filename) for convenience.
+
 ---
 
 ## System Requirements
@@ -104,6 +131,15 @@ make
 
 This compiles all binaries into their subdirectories under `src/`. All data files are generated and validated in the `output/` folder, except for the largest summary files (`pairrangesummary-10M.csv` and `pairrangesummary-100M.csv`).
 
+**Parallel builds:** You can speed up compilation and verification by using the `-j` option to run multiple jobs in parallel:
+
+```sh
+make -j 12
+make -j 12 verify
+```
+
+The number after `-j` specifies how many parallel jobs to run (e.g., `-j 12` for 12 parallel jobs). This is especially useful for verification runs that process multiple files independently.
+
 To generate and validate these larger files:
 
 ```sh
@@ -126,11 +162,39 @@ The top-level `Makefile` provides several convenient targets:
 * `make generate` – generate small test datasets (fast to run).
 * `make validate-medium` – build and validate medium datasets (≈12+ hours).
 * `make validate-large` – build and validate large datasets (can run for weeks).
-* `make verify` – compare generated outputs against golden reference `.verify` and `.sha256` files.
+* `make verify` – compare generated outputs against golden reference `.verify` and `.sha256` files.
 * `make clean` – remove temporary certification files (`*.verify`) from `output/`.
 * `make clobber` – perform `clean` and also remove all generated data products (`output/*.csv`, `.raw`, `.bitmap`, etc.), leaving only source and reference data.
+* `make backup` – create a compressed backup of all partial CSV files (`.partial.csv`) in the `backups/` directory. Useful for preserving progress on long-running jobs. Backups are named with a timestamp and compatibility version (e.g., `backup-20251111145800-v0.2.0.tar.bz2`).
+* `make restore` – restore the most recent backup from the `backups/` directory. After restoration, all partial files are automatically touched to prevent unnecessary rebuilds.
 
 Use `make help` to see a summary if available. Always run long jobs inside `screen` or `tmux` for persistence.
+
+**Tip:** Use `make -j N` (where `N` is the number of parallel jobs) to speed up builds and verification. For example, `make -j 12 verify` will run up to 12 verification tasks in parallel.
+
+### Makefile Options
+
+The Makefile supports several optional flags to control output generation and verification:
+
+* **`TAINTED` (environment variable)** – When set to `1` or `true`, verification failures print warnings instead of exiting with an error. Useful when intentionally generating different outputs (e.g., during development or when testing new algorithms). This is implemented as an environment variable (rather than a make variable) for convenience, allowing AWK scripts to access it without requiring additional parameter passing. Set as an environment variable:
+  ```sh
+  export TAINTED=1
+  make verify
+  ```
+  Or inline:
+  ```sh
+  TAINTED=1 make verify
+  ```
+
+* **`COMPAT=v0.1.5` (make variable)** – When set, uses the legacy v0.1.5 compatibility mode. The default is `v0.1.6`, which supports all current features.  Example:
+  ```sh
+  make COMPAT=v0.1.6 generate
+  ```
+
+These options can be combined:
+```sh
+TAINTED=1 make COMPAT=v0.1.5 verify
+```
 
 ---
 
@@ -260,6 +324,12 @@ This project is preserved in Software Heritage.
 
 - **Revision (v0.1.5 commit)**  
   [ `swh:1:rev:f707b77f37...` ](https://archive.softwareheritage.org/swh:1:rev:f707b77f37ae6c331f11bbefb74a5fc405964da2)
+
+- **Tree (v0.1.6)**  
+  PENDING
+
+- **Revision (v0.1.6 commit)**  
+  PENDING
 
 [![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/docbill/sieve-goldbach/)](https://archive.softwareheritage.org/browse/origin/https://github.com/docbill/sieve-goldbach/)
 

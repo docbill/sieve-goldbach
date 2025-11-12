@@ -23,7 +23,7 @@ CC        ?= gcc
 CFLAGS    ?= -O3 -Wall -Wextra -I$(ROOT)/lib
 
 CXX       ?= g++
-CXXFLAGS  ?= -O3 -Wall -Wextra -std=c++17
+CXXFLAGS  ?= -O3 -Wall -Wextra -std=c++17 -I$(ROOT)/lib
 
 CPPFLAGS  ?=
 LDFLAGS   ?=
@@ -49,27 +49,26 @@ AR       ?= ar
 ARFLAGS  ?= rcs
 
 PROGRAMS := primesieve_bitmap printprimes storeprimes \
-            pairrangesummary pairrange2sgbll \
+            gbpairsummary \
             cpslowerbound findgbpairs certifyprimes certifygbpairs \
             validatepairrangesummary
 
 LIBDIR  := lib
-LIBSRC  := $(wildcard $(LIBDIR)/*.c)
-LIBOBJ  := $(LIBSRC:.c=.o)
 LIBFILE := $(LIBDIR)/libprime.a
 
-.PHONY: all clean $(PROGRAMS) $(PROGRAMS:%=%.clean) help
+.PHONY: all clean $(PROGRAMS) $(PROGRAMS:%=%.clean) lib help
 
 # Default rule builds library + all programs
 all: $(LIBFILE) $(PROGRAMS)
 
-# --- Library rules ---
-$(LIBFILE): $(LIBOBJ)
-	$(AR) $(ARFLAGS) $@ $^
-
-# Pattern rule for building .o files in lib
-$(LIBDIR)/%.o: $(LIBDIR)/%.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+# --- Library target ---
+# Delegates to the lib sub-make, similar to how programs are built
+lib $(LIBFILE):
+	$(MAKE) -C $(LIBDIR) \
+		CC="$(CC)" CFLAGS="$(CFLAGS)" \
+		CPPFLAGS="$(CPPFLAGS)" \
+		AR="$(AR)" ARFLAGS="$(ARFLAGS)"
+	@echo "Built $(LIBFILE)"
 
 # --- Per-program targets ---
 # Each top-level program target depends on the static library first,
@@ -81,7 +80,9 @@ $(PROGRAMS): %: $(LIBFILE)
 		CC="$(CC)" CFLAGS="$(CFLAGS)" \
 		CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" \
 		CPPFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" LDLIBS="$(LDLIBS)" \
+		HLCORR_USE_EXACT="$(HLCORR_USE_EXACT)" \
 		LIBFILE="../$(LIBFILE)"
+	@echo "Built $@"
 
 # Optional: per-program cleans (useful for selective cleanup)
 $(PROGRAMS:%=%.clean):
@@ -89,13 +90,14 @@ $(PROGRAMS:%=%.clean):
 
 # Clean everything
 clean:
-	$(RM) $(LIBOBJ) $(LIBFILE)
+	$(MAKE) -C $(LIBDIR) clean
 	for dir in $(PROGRAMS); do $(MAKE) -C $$dir clean; done
 
 # Friendly help
 help:
 	@echo "Targets:"
 	@echo "  all                 Build lib and all programs"
+	@echo "  lib                 Build just the library"
 	@echo "  <program>           Build just that program (and lib if needed)"
 	@echo "  <program>.clean     Clean just that program's build artifacts"
 	@echo "  clean               Clean lib and all sub-projects"

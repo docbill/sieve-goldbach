@@ -54,7 +54,7 @@ static inline double bref_from_y(
     if (y < 3ULL) {
         return 1.0;
     }
-    uint64_t * pr_ptr = primes_le_ptr(odd_pr_begin, odd_pr_end, y);
+    const uint64_t * pr_ptr = primes_le_ptr(odd_pr_begin, odd_pr_end, y);
     return (pr_ptr == odd_pr_begin) ? 1.0 : cum[pr_ptr-odd_pr_begin-1];
 }
 

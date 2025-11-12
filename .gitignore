@@ -1,7 +1,17 @@
 output/
+*.a
 *.o
 *.log
 *.aux
 *.bbl
 *.blg
 *.toc
+*.out
+*.synctex.gz
+backups/
+src/printprimes/printprimes
+src/storeprimes/storeprimes
+src/validatepairrangesummary/validatepairrangesummary
+src/primesieve_bitmap/primesieve_bitmap
+src/gbpairsummary/gbpairsummary
+Makefile

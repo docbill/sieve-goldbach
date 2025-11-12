@@ -24,10 +24,10 @@
 // Move cur to the first prime > n using linear adjustment.
 // lowest .. highest is a half-open range [lowest, highest).
 static inline uint64_t* seek_first_prime_gt_linear(
-    uint64_t n,
-    uint64_t *cur,
-    uint64_t *lowest,
-    uint64_t *highest
+    const uint64_t n,
+    const uint64_t *cur,
+    const uint64_t *lowest,
+    const uint64_t *highest
 ) {
     if (cur <= lowest) {
         cur = lowest;
@@ -51,46 +51,62 @@ static inline uint64_t* seek_first_prime_gt_linear(
 // i.e. pairs in (n_min, 2n - n_min). Excludes the diagonal (n,n).
 // primes: ascending array in [lowest, highest); *current is a moving cursor.
 uint64_t countRangedPairs(
-    uint64_t n,
-    uint64_t n_min,
-    uint64_t **current,
-    uint64_t *lowest,
-    uint64_t *highest
+    const uint64_t n,
+    const uint64_t n_min,
+    const uint64_t **current,
+    const uint64_t *lowest,
+    const uint64_t *highest
+) {
+    const uint64_t *lo = NULL;
+    const uint64_t *hi = NULL;
+    return countRangedPairsIter(n,n_min,current,lowest,highest,&lo,&hi);
+}
+
+// Count ordered Goldbach pairs p+q=2n with p>n_min (equivalently q>n_min),
+// i.e. pairs in (n_min, 2n - n_min). Excludes the diagonal (n,n).
+// primes: ascending array in [lowest, highest); *current is a moving cursor.
+uint64_t countRangedPairsIter(
+    const uint64_t n,
+    const uint64_t n_min,
+    const uint64_t **current,
+    const uint64_t *lowest,
+    const uint64_t *highest,
+    const uint64_t **loPtr,
+    const uint64_t **hiPtr
 ) {
     const uint64_t twoN = n << 1;
 
-    // Align hi to first prime > n (linear adjust around *current)
-    uint64_t *hi = *current = seek_first_prime_gt_linear(n, *current, lowest, highest);
-    if (hi >= highest) { // out of primes to the right
-        *current = highest;
-        return ~0ULL;
-    }
-
-    // lo is the prime just below hi (<= n)
-    if (hi == lowest) { // no smaller prime exists
-        return 0;
-    }
-    uint64_t *lo = hi - 1;
-
-    uint64_t count = 0;
-    while (lo >= lowest && *lo > n_min) {
-        // overflow-safe comparison for *lo + *hi ? twoN
-        uint64_t need = twoN - *lo;
-        if (*hi > need) {
-            --lo;                    // sum > 2n
+    if(*hiPtr == NULL) {
+        // Align hi to first prime > n (linear adjust around *current)
+        *hiPtr = *current = seek_first_prime_gt_linear(n, *current, lowest, highest);
+        if (*hiPtr >= highest) { // out of primes to the right
+            *current = highest;
+            return ~0ULL;
         }
-        else if (*hi < need) {
-            ++hi;                    // sum < 2n
-            if (hi >= highest) {
+
+        // loPtr is the prime just below hiPtr (<= n)
+        if (*hiPtr == lowest) { // no smaller prime exists
+            return 0;
+        }
+        *loPtr = *hiPtr - 1;
+    }
+    uint64_t count = 0;
+    while (*loPtr >= lowest && **loPtr > n_min) {
+        // overflow-safe comparison for **loPtr + **hiPtr ? twoN
+        uint64_t need = twoN - **loPtr;
+        if (**hiPtr > need) {
+            --(*loPtr);                    // sum > 2n
+        }
+        else if (**hiPtr < need) {
+            if(++(*hiPtr) >= highest) {
                 return ~0ULL;
             }
         }
         else {
             // sum == 2n => one unordered pair, two ordered
             count += 2;
-            --lo;
-            ++hi;
-            if (hi >= highest) {
+            --(*loPtr);
+            if(++(*hiPtr) >= highest) {
                 return ~0ULL;
             }
         }

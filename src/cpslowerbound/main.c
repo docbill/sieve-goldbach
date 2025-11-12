@@ -80,9 +80,9 @@ int main(int argc, char* argv[]) {
     }
 
 
-    uint64_t *prime_array_end = prime_array + ((uint64_t)st.st_size/sizeof(uint64_t));
-    uint64_t *prime_array_last = prime_array_end-1;
-    uint64_t *current = prime_array; 
+    const uint64_t *prime_array_end = prime_array + ((uint64_t)st.st_size/sizeof(uint64_t));
+    const uint64_t *prime_array_last = prime_array_end-1;
+    const uint64_t *current = prime_array; 
 
     long double l32 = log((long double)(3.0L/2.0L));
     uint64_t n=0;

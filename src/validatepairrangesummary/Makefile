@@ -16,10 +16,38 @@
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+# --- toolchain defaults (can be overridden via env) ---
+CC        ?= gcc
+CFLAGS    ?= -O3 -Wall -Wextra -I../lib
+
+CXX       ?= g++
+CXXFLAGS  ?= -O3 -Wall -Wextra -std=c++17 -I../lib
+
+CPPFLAGS  ?=
+LDFLAGS   ?=
+LDLIBS    ?= -lm
+
+# --- OS detection for portability ---
+UNAME_S := $(shell uname -s)
+
+# macOS: prefer Homebrew/MacPorts g++-NN if available; add Brew include/lib
+ifeq ($(UNAME_S),Darwin)
+  GXX_VER := $(firstword $(shell command -v g++-{20..10} 2>/dev/null))
+  ifneq ($(GXX_VER),)
+    CXX := $(GXX_VER)
+  endif
+  HB_PREFIX := $(firstword $(wildcard /opt/homebrew /usr/local))
+  ifneq ($(HB_PREFIX),)
+    CPPFLAGS += -I$(HB_PREFIX)/include
+    LDFLAGS  += -L$(HB_PREFIX)/lib
+  endif
+endif
+
 # Assumes LIBFILE is passed from the top Makefile
 
 TARGET = validatepairrangesummary
 SRC = validatepairrangesummary.cpp
+LIBFILE = ../lib/libprime.a
 
 all: $(TARGET)
 
