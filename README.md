@@ -281,7 +281,7 @@ Contributions via pull request are welcome; all contributions must be licensed u
 If you use this code or data, please cite the accompanying manuscript:
 
 > B.C. Riemers, *Sieve-Theoretic Reformulation of Goldbach’s Conjecture*, 2025.&#x20;
-> (Preprint included as `paper/sieve_goldbach.pdf`)
+> (Preprint included as `papers/goldbach-reformulation/sieve_goldbach.pdf`)
 
 ---
 
