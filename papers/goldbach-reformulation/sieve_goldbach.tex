@@ -31,7 +31,15 @@
 \usepackage{mathtools}
 \usepackage{siunitx}
 \usepackage{pgfplots}
+\pgfplotsset{compat=1.18} % or at least 1.11+
+\pgfplotsset{set layers} % enables axis background/foreground layers
+\usepgfplotslibrary{fillbetween} % <-- this is the key line
+\usetikzlibrary{fillbetween}
 \usepackage{pgfplotstable}
+\usepackage{xparse}
+\usepackage[section]{placeins} % floats can't cross section boundaries
+\usepackage{etoolbox}
+
 \pgfplotsset{compat=1.18}
 \pgfplotstableset{empty cells with={nan}} % treat empty CSV cells as NaN
 
@@ -90,20 +98,24 @@
 \theoremstyle{break}
 \newtheorem{definition}{Definition}
 
+\theoremstyle{break}
+\newtheorem{hypothesis}{Hypothesis}
+
 \theoremstyle{inline}
 \newtheorem*{note}{Note}
 
 \newcommand{\sieveprod}{\mathop{\prod\nolimits}}
 \newcommand{\abs}[1]{\left|#1\right|}
 
-\newcommand{\xPreMertens}{5416} % last data point with delta < 0.
-\newcommand{\xMertens}{6353} % threshold for Lemma~\ref{lem:explicit-mertens}
-\newcommand{\xNasymStar}{8777}  % = \nasymstar
-\newcommand{\xNzeroStat}{71633} % lowest minimum past n_5%
-\newcommand{\xEtaStat}{0.2693} % delta at \xNzeroStat
-\newcommand{\xMinGlobal}{7219}       % argmin location of the empirical gap over the verified range
-\newcommand{\xDeltaGlobal}{0.0526}   % min gap value at \xMinGlobal
-\newcommand{\xDeltaMertens}{0.1149}  % gap at the explicit Mertens threshold \xMertens
+\newcommand{\xPreMertens}{5416} % last data point with delta < 0 (from alpha=0.5 table)
+\newcommand{\xMertens}{5557} % threshold for Lemma~\ref{lem:explicit-mertens} (from alpha=0.5 table)
+\newcommand{\xDeltaMertens}{0.306962}  % gap at the explicit Mertens threshold \xMertens (from alpha=0.5 table)
+\newcommand{\xNFivePercent}{41072} % n_5% threshold (from alpha=0.5 table)
+\newcommand{\xNzeroStat}{71633} % lowest minimum past n_5% (OLD VALUE - table needs regeneration)
+\newcommand{\xEtaStat}{0.2693} % delta at \xNzeroStat (OLD VALUE - table needs regeneration)
+\newcommand{\xNasymStar}{7246}  % = \nasymstar (legacy value, may need update)
+\newcommand{\xMinGlobal}{7219}       % argmin location of the empirical gap over the verified range (legacy value, may need update)
+\newcommand{\xDeltaGlobal}{0.0526}   % min gap value at \xMinGlobal (legacy value, may need update)
 \newcommand{\xKemKem}{2.152} % Kem^2 = 
 \newcommand{\xSecondLambdaMinLimit}{1.3\cdot 10^{-2}} % Decade 8, LambdaAvg2ndAbsMax value
 \newcommand{\xSecondLambdaMaxLimit}{1.2\cdot 10^{-3}} % Decade 8, LambdaAvg2ndAbsMax value
@@ -113,19 +125,70 @@
 \newcommand{\xLambdaAvgLimit}{3.2\cdot 10^{-4}} % Decade 8, LambdaAvg2ndAbsAvg value
 
 % tiny tags
+\newcommand{\talign}{{\scriptscriptstyle\mathrm{align}}}
 \newcommand{\tavg}{{\scriptscriptstyle\mathrm{avg}}}
+\newcommand{\tbound}{{\scriptscriptstyle\mathrm{bound}}}
 \newcommand{\tpairs}{{\scriptscriptstyle\mathrm{pairs}}}
 \newcommand{\tsem}{{\scriptscriptstyle\mathrm{sem}}}
 \newcommand{\twin}{{\scriptscriptstyle\mathrm{win}}}
 \newcommand{\tref}{{\scriptscriptstyle\mathrm{ref}}}
 \newcommand{\tana}{{\scriptscriptstyle\mathrm{analytical}}}
 
-% measured vs predicted
-\newcommand{\Cmeas}{C}              % measured (exact)
-\newcommand{\Cpred}{\mathring{C}}   % predicted/model, robust (no double-^ issue)
-\newcommand{\Cminus}{\mathring{C}_{-}}   % predicted/model, robust (no double-^ issue)
-\newcommand{\Nmeas}{n}              % measured (exact)
-\newcommand{\Npred}{\mathring{n}}   % predicted/model, robust (no double-^ issue)
+% --- Bin markers (centralized so you can swap styles later) ---
+\newcommand{\PrimTag}{\scriptscriptstyle{\#}}     % primorial marker
+\newcommand{\DecTag}{\scriptscriptstyle{D}}       % decimal marker
+
+% --- Base (unchanged) ---
+\newcommand{\Cmeas}{C}
+\newcommand{\Cpred}{\mathring{C}}
+\newcommand{\Cminus}{\mathring{C}_{-}}
+\newcommand{\Nmeas}{n}
+\newcommand{\Npred}{\mathring{n}}
+
+% ---------- Measured (subscript first, then superscript with marker) ----------
+\NewDocumentCommand{\NmeasDec}{e{^_}}{%
+  \Nmeas%
+  \IfValueT{#2}{_{#2}}%
+  ^{\DecTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\NmeasPrim}{e{^_}}{%
+  \Nmeas%
+  \IfValueT{#2}{_{#2}}%
+  ^{\PrimTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\CmeasDec}{e{^_}}{%
+  \Cmeas%
+  \IfValueT{#2}{_{#2}}%
+  ^{\DecTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\CmeasPrim}{e{^_}}{%
+  \Cmeas%
+  \IfValueT{#2}{_{#2}}%
+  ^{\PrimTag\IfValueT{#1}{\,#1}}%
+}
+
+% ---------- Predicted (same pattern) ----------
+\NewDocumentCommand{\NpredDec}{e{^_}}{%
+  \mathring{n}%
+  \IfValueT{#2}{_{#2}}%
+  ^{\DecTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\NpredPrim}{e{^_}}{%
+  \mathring{n}%
+  \IfValueT{#2}{_{#2}}%
+  ^{\PrimTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\CpredDec}{e{^_}}{%
+  \mathring{C}%
+  \IfValueT{#2}{_{#2}}%
+  ^{\DecTag\IfValueT{#1}{\,#1}}%
+}
+\NewDocumentCommand{\CpredPrim}{e{^_}}{%
+  \mathring{C}%
+  \IfValueT{#2}{_{#2}}%
+  ^{\PrimTag\IfValueT{#1}{\,#1}}%
+}
+
 \newcommand{\Ssem}{\mathcal{S}_\tsem}
 \newcommand{\SGB}{\mathcal{S}_{\scriptscriptstyle\mathrm{GB}}}
 \newcommand{\Bwin}{\mathcal{B}_\twin}
@@ -147,13 +210,19 @@
 % optional compact args
 \newcommand{\NI}{(n;I)}
 
+% Generic block machinery
+\newcommand{\Bgeom}[2]{\left\lfloor \sqrt{#1\,(#2-1)}\right\rceil} % nearest integer to sqrt(ab-a)
+% Euler-cap macro (roman font, works in text and math)
+\newcommand{\Ecap}{\mathrm{Ecap}}
+
 % \FigLambdaAbsSignSplit{csv}{xcol}{ycol}{title}
 \newcommand{\FigLambdaAbsSignSplit}[6]{%
   \begingroup
   \edef\CSVPATH{\detokenize{#1}}%
-  \pgfplotstableread[col sep=comma]{\CSVPATH}\datatable
+  \pgfplotstableread[col sep=comma,trim cells]{\CSVPATH}\datatable
   \begin{tikzpicture}
   \begin{axis}[
+    xmin=10,
     width=\textwidth, height=0.62\textwidth,
     xmode=log, ymode=log,
     xlabel={#4 (log scale)}, ylabel={#5 (log scale)},
@@ -183,6 +252,14 @@
       ] {\datatable};
     \addlegendentry{\(\Lambda < 0\)}
 
+    % style
+    \pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
+
+   % draw them last, and don't add to legend
+   \foreach \x in {15,105,1155,15015,255255,4849845,111546435}{
+       \addplot[primorial, forget plot] coordinates {(\x,1) (\x,1e-4)};
+   }
+
   \end{axis}
   \end{tikzpicture}%
   \endgroup
@@ -207,7 +284,7 @@ which centers analysis at the midpoint \(n\) and treats offsets \(m\) symmetrica
 
 Unconditionally, a \emph{certified analytic lower bound} on the windowed Goldbach count \(\mathcal{G}(n;M)\) (with \(M=\lfloor n/2\rfloor\)) is proved via explicit Euler-Mertens products \cite{Mertens1874,MontgomeryVaughan2007,RosserSchoenfeld1962,Dusart2010}, valid for all \(n\ge \xMertens\). A \emph{rescaling lemma} shows this bound holds uniformly for every smaller window \(M=\alpha n\) with \(0<\alpha\le \tfrac12\), and a monotonicity corollary extends it to larger windows by set inclusion.
 
-Computationally, windowed Goldbach pairs are exhaustively enumerated for every even \(2n<2\cdot 10^8\). 
+Computationally, windowed Goldbach pairs are exhaustively enumerated for every even \(2n<23\#\) (where \(23\# = 223092870\)). 
 Across seven decades, the normalized deviations from the parameter-free Hardy-Littlewood baseline (HL-A)~\cite{HardyLittlewood1923} decrease steadily. 
 In the seventh decade (\(10^7 \le n < 10^8\)) the \emph{raw decade maxima} already satisfies
 \begin{equation}
@@ -228,6 +305,7 @@ In summary, contributions are: (i) a certified sieve-theoretic lower bound with 
 
 \section{Introduction}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Motivation}
 The Goldbach Conjecture, the Twin Prime Conjecture, and Polignac’s Conjecture each address the distribution of prime pairs in different settings.  
 A natural generalization emerges from considering these problems together: along suitable arithmetic or algebraic paths in the \( (n,m) \)-grid, prime pairs appear with a density consistent with the heuristic \( \#\mathcal{S}_N / \log^2 N \).  
@@ -255,6 +333,7 @@ Conjecture~\ref{conj:gppd} motivates the windowed sieve setup only; no theorem, 
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Contributions and Reduction Overview.}
 To begin, the certified bounds, the large-scale validation of the heuristic baseline, the window-scalability results, the structure of extrema, and the final conditional reduction to short-interval equidistribution, contributions are summarized.
 
@@ -263,7 +342,7 @@ To begin, the certified bounds, the large-scale validation of the heuristic base
   Formalizing the sieve-heuristic baseline on the structured family \(Q_m=n^2-m^2\), introduces a per-term normalization \( C_\star(n;I) \) that is consistent with Conjecture~A and yields asymptotic predictions proportional to \( \SGB(2n) \). This fixes units and removes binning artefacts for all subsequent comparisons.
 
   \item \textbf{Statistical Convergence of Normalized Deviations (validation of HL-A).}
-  Normalized deviations between measured and predicted pair counts are defined as an evaluation across seven decades up to \(2n=2\cdot 10^8\). By the final decade the deviations fall below
+  Normalized deviations between measured and predicted pair counts are defined as an evaluation across seven decades up to \(2n<23\#\). By the final decade the deviations fall below
   \( \xLambdaMinLimit \) (minimum), \( \xLambdaMaxLimit \) (maximum), and \( \xLambdaAvgLimit \) (average), with monotone decay across decades, providing the first large-data validation that windowed counts converge to the HL-A baseline, justifying extrapolation beyond the tested range.
 
   \item \textbf{Certified Analytic (Shifted-Product) Lower Bound (Pairs).}
@@ -325,9 +404,10 @@ Use of the singular series and the \(  \frac{n}{log^2 n} \) scale follows the cl
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Readers’ Guide}
 Section~\ref{sec:framework} sets up the sieve-heuristic framework: the quadratic form \(Q(n,m)\), the window \(M(n)\), and the HL-A baseline and normalizations used throughout. 
-Section~\ref{sec:stats} presents the computational study up to \(2n<2\cdot 10^8\), including decade-wise deviations and the primorial plateaus.
+Section~\ref{sec:stats} presents the computational study up to \(2n<23\#\), including primorial-interval convergence patterns.
 Section~\ref{sec:sgb} contains the core sieve-theoretic results: the reduction lemma (Sec.~\ref{sec:reduction}), the certified lower bound (Thm.~\ref{thm:main}), its conditional corollary under short-interval Bombieri-Vinogradov equidistribution hypothesis (Sec.~\ref{sec:SI-BV}), and the primorial maxima proposition (Sec.~\ref{sec:primorial-prop}).
 Appendices collect technical enclosures and window rescaling.
 
@@ -373,6 +453,27 @@ m^2 \equiv n^2 \mod p
 A convenient \emph{reference sieve product} that captures the idealized effect of
 eliminating two residue classes per odd semi-prime candidate \( Q_m \) in the absence of any
 alignment or discretization artefacts, and is defined as follows:
+
+\begin{definition}[Euler-cap limit and admissible window parameter]
+For a given central value \(n\), define the \emph{Euler cap} by
+\begin{equation}\label{eq:euler_cap}
+\Ecap(n)\ :=\ \frac{(2n+1) - \sqrt{8n+1}}{2n}.
+\end{equation}
+The Euler cap quantifies the fractional portion of a symmetric window
+\([n-M,n+M]\) for which both factors \((n-m)\) and \((n+m)\) remain positive
+and distinct.  Beyond this limit, the correspondence between prime pairs
+\((n-m),(n+m)\) and their semiprime product \((n-m)(n+m)\) no longer holds.
+
+For any window parameter \(\alpha\in(0,1]\), we therefore define
+\begin{equation}
+M\ :=\ \bigl\lfloor\,\min\bigl(\alpha,\Ecap(n)\bigr)\,n\,\bigr\rfloor.
+\end{equation}
+The choice \(\alpha=\Ecap(n)\) gives the maximal window allowed by the Euler-cap constraint,
+while for practical computations we fix \(\alpha\le1\).
+Since \(\Ecap(n)\to1\) as \(n\to\infty\),
+the case \(\alpha=1\) is fully admissible asymptotically
+and can be used safely in tabulated results.
+\end{definition}
 
 \begin{definition}[Reference Sieve Product]
 \label{def:Bref}
@@ -421,17 +522,68 @@ Defining the measured (pairs-scale) constant:
 \(\Cmeas^{(\mathrm{sem})}(n;I):=\frac{\log^2 n}{M}N_M(2n;I)\) with
 \(\Cmeas=2\,\Cmeas^{(\mathrm{sem})}\).)
 
-For a decimal block \(B_{d,k}=[d\cdot10^k,(d+1)\cdot10^k)\),
+\smallskip
+\noindent
+For \textbf{decimal-based binning}, each block is defined as
 \begin{equation}
-\Nmeas_0:=\arg\min_{n\in B_{d,k}}\Cmeas(n;I),\qquad
-\Nmeas_1:=\arg\max_{n\in B_{d,k}}\Cmeas(n;I),
+B_{d,k}=[d\cdot10^k,(d+1)\cdot10^k),
+\qquad 1\le d\le 9,\ k\in\mathbb{Z}.
+\end{equation}
+Within each block,
+\begin{equation}
+\NmeasDec_0:=\arg\min_{n\in B_{d,k}}\Cmeas(n;I),\qquad
+\NmeasDec_1:=\arg\max_{n\in B_{d,k}}\Cmeas(n;I),
 \end{equation}
 \begin{equation}
-\Cmeas_{\min}(d,k):=\Cmeas(\Nmeas_0;I),\quad
-\Cmeas_{\max}(d,k):=\Cmeas(\Nmeas_1;I),\quad
-\Cmeas_{\tavg}(d,k):=\frac{1}{\#B_{d,k}}\sum_{n\in B_{d,k}}\Cmeas(n;I).
+\CmeasDec_{\min}(d,k):=\Cmeas(\NmeasDec_0;I),\quad
+\CmeasDec_{\max}(d,k):=\Cmeas(\NmeasDec_1;I),\quad
+\CmeasDec_{\tavg}(d,k):=\frac{1}{\card{B_{d,k}}}\sum_{n\in B_{d,k}}\Cmeas(n;I).
+\end{equation}
+
+\smallskip
+\noindent
+For \textbf{primorial-based binning}, we treat small values separately:
+for \(n<15\), bins are singletons \([k,k+1)\), \(k=1,\dots,14\); 
+for \(15\le n<30\), a single block \([15,30)\) is used.
+
+For \(n\ge30\), let \(p<q\) be consecutive primes with corresponding primorials \(p\#\) and \(q\#\).
+Each primorial plateau \([p\#,q\#)\) is partitioned into bins of width
+\[
+w_p := \max\!\Bigl(15,\frac{p\#}{2p}\Bigr), \qquad
+L_p := q\# - p\#, \qquad
+K_p := \Bigl\lceil \frac{L_p}{w_p} \Bigr\rceil .
+\]
+Define nodes
+\[
+a_j := p\# + \min(j\,w_p,\,L_p), \qquad j=0,1,\dots,K_p ,
+\]
+so that \(a_0=p\#\) and \(a_{K_p}=q\#\).
+The indexed primorial bins are
+\begin{equation}
+B_{j,p\#} := [\,a_j,\ a_{j+1}\,), \qquad j=0,1,\dots,K_p-1,
+\end{equation}
+forming consecutive intervals of width \(w_p\), with the final bin truncated so that its right endpoint is exactly \(q\#\).
+
+Within each primorial bin \(B_{j,p\#}\),
+\begin{equation}
+\NmeasPrim_0:=\arg\min_{n\in B_{j,p\#}}\Cmeas(n;I),\qquad
+\NmeasPrim_1:=\arg\max_{n\in B_{j,p\#}}\Cmeas(n;I),
+\end{equation}
+\begin{equation}
+\CmeasPrim_{\min}(j,p\#):=\Cmeas(\NmeasPrim_0;I),\quad
+\CmeasPrim_{\max}(j,p\#):=\Cmeas(\NmeasPrim_1;I),\quad
+\CmeasPrim_{\tavg}(j,p\#):=\frac{1}{\card{B_{j,p\#}}}\sum_{n\in B_{j,p\#}}\Cmeas(n;I).
 \end{equation}
 \end{definition}
+
+\begin{remark}
+Both binning schemes provide a consistent means of defining long-interval aggregates,
+which are the only scales on which \(\Cmeas\) is statistically meaningful.
+Primorial-based binning produces smoother results and fewer boundary artifacts,
+and is therefore preferred for analytical plots.
+Decimal-based binning, using one significant digit per block,
+is better suited for comprehensive tabulation owing to its smaller and more uniform number of rows.
+\end{remark}
 
 The \( \Bref \) provides a convenient measure of the probability of a single semiprime reduction.  Crucially, it establishes a baseline for the expected number of semiprimes for a given value \( n \).  Accordingly, \( C_\star \) and related expressions are defined as follows:
 
@@ -480,46 +632,82 @@ so that \(C_\star(n;I)\to \betacal(I)\,S_{\mathrm{GB}}(2n)\) as \(n\to\infty\) w
 Next the \( C_\star \) function is applied in the definitions, providing a clean way to define predicted values consistent with the empirically measured ones.
 
 \begin{definition}[HL-A Normalized Predictions (Goldbach, Pairs)]
-The windowed log effect is absorbed into the prediction via a Hardy-Littlewood circle correction factor:
+The windowed logarithmic effect is absorbed into the prediction via a Hardy--Littlewood circle correction factor:
 \begin{equation}
-\HLCorr(n;I)\ :=\ \frac{\log^2 n}{\lvert \Ipar\rvert}\,
+\HLCorr(n;I)
+\;:=\;
+\frac{\log^2 n}{\card{\Ipar}}\,
 \sum_{m\in \Ipar}\frac{1}{\log(n-m)\,\log(n+m)}\,,
 \end{equation}
-for \(n\) and \(I\) such that \(n\pm m\ge 3\) for all \(m\in\Ipar\).
+for all \(n\) and \(I\) such that \(n\pm m\ge3\) for all \(m\in\Ipar\).
 
-Fix a window \(I\subset\mathbb Z\setminus\{0\}\) with \(M:=\lvert\Ipar\rvert\).
-Let \(C_\star(n;I)\) be the per-term HL-normalized constant (unordered scale).
-Define the \emph{predicted (pairs-scale) constant} by
+Fix a window \(I\subset\mathbb{Z}\setminus\{0\}\) with \(M:=\card{\Ipar}\).
+Let \(C_\star(n;I)\) denote the per-term HL-normalized constant (unordered scale),
+and define the \emph{predicted (pairs-scale) constant}
 \begin{equation}
-\Cpred(n;I)\ :=\ 2\,C_\star(n;I)\,\HLCorr(n;I).
+\Cpred(n;I) \;:=\; 2\,C_\star(n;I)\,\HLCorr(n;I).
 \end{equation}
 
-For decimal blocks
+\medskip
+\noindent
+\textbf{Block formulation.}
+For any finite block \(B=[a,b)\subset\mathbb{N}\) with \(\card{B}\ge1\), define extremizers
+(by \(C_\star\), equivalently by \(\Cpred/\HLCorr\)):
 \begin{equation}
-B_{d,k}:=\big[d\cdot10^k,\,(d+1)\cdot10^k\big),\qquad d\in\{1,\dots,9\},\ k\in\mathbb N,
+\Npred_0(B) := \arg\min_{n\in B} \frac{\Cpred(n;I)}{\HLCorr(n;I)},\qquad
+\Npred_1(B) := \arg\max_{n\in B} \frac{\Cpred(n;I)}{\HLCorr(n;I)}.
 \end{equation}
-select extremizers by \(C_\star\) (equivalently by \(\Cpred/\HLCorr\)):
+Then set
 \begin{equation}
-\begin{aligned}
-\Npred_0 &:= \arg\min_{n\in B_{d,k}} \frac{\Cpred(n;I)}{\HLCorr(n;I)}, \\
-\Npred_1 &:= \arg\max_{n\in B_{d,k}} \frac{\Cpred(n;I)}{\HLCorr(n;I)},
-\end{aligned}
-\qquad
-\begin{aligned}
-\Cpred_{\min}(d,k) &:= \Cpred(\Npred_0;I),\\
-\Cpred_{\max}(d,k) &:= \Cpred(\Npred_1;I).
-\end{aligned}
+\Cpred_{\min}(B):=\Cpred\bigl(\Npred_0(B);I\bigr),\qquad
+\Cpred_{\max}(B):=\Cpred\bigl(\Npred_1(B);I\bigr),
 \end{equation}
-
-For the block average, approximate the slowly varying \(\HLCorr\) by a two-point
-proxy at the geometric center:
+and approximate the block average by a two-point proxy of the slowly varying \(\HLCorr\):
 \begin{equation}
-\Cpred_{\tavg}(d,k)
+\Cpred_{\tavg}(B)
 \;:=\;
-\frac{\HLCorr(\Ngeom;I)+\HLCorr(\Ngeom+1;I)}{2\,\card{B_{d,k}}}
-\sum_{n\in B_{d,k}} \frac{\Cpred(n;I)}{\HLCorr(n;I)},
+\frac{\HLCorr(\Ngeom;I)+\HLCorr(\Ngeom+1;I)}{2\,\card{B}}
+\sum_{n\in B}\frac{\Cpred(n;I)}{\HLCorr(n;I)},
+\qquad
+\Ngeom:=\Bgeom{a}{b}.
 \end{equation}
-where \(\Ngeom\) is the nearest integer (optionally: nearest \emph{odd} integer) to \(10^k\sqrt{d(d+1)}\).
+(Optionally, \(\Ngeom\) may be restricted to the nearest \emph{odd} integer.)
+
+\medskip
+\noindent
+\textbf{Specialization to primorial blocks.}
+Without loss of generality, we take blocks aligned to consecutive primorial plateaus.
+For \(p<q\) consecutive primes, let \(p\#,q\#\) be the corresponding primorials.
+Define the bin width and count
+\[
+w_p := \max\!\Bigl(15,\frac{p\#}{2p}\Bigr), \qquad
+L_p := q\# - p\#, \qquad
+K_p := \Bigl\lceil \frac{L_p}{w_p} \Bigr\rceil,
+\]
+and nodes \(a_j := p\# + \min(j\,w_p,L_p)\), \(j=0,1,\dots,K_p\),
+so that \(a_0=p\#\) and \(a_{K_p}=q\#\).
+The indexed primorial blocks are
+\begin{equation}
+B_{j,p\#}:=[a_j,a_{j+1}), \qquad j=0,1,\dots,K_p-1.
+\end{equation}
+For each block \(B_{j,p\#}\),
+\begin{equation}
+\NpredPrim_0 := \Npred_0(B_{j,p\#}),\qquad
+\NpredPrim_1 := \Npred_1(B_{j,p\#}),
+\end{equation}
+\begin{equation}
+\CpredPrim_{\min}(j,p\#):=\Cpred_{\min}(B_{j,p\#}),\quad
+\CpredPrim_{\max}(j,p\#):=\Cpred_{\max}(B_{j,p\#}),\quad
+\CpredPrim_{\tavg}(j,p\#):=\Cpred_{\tavg}(B_{j,p\#}).
+\end{equation}
+
+\begin{remark}
+This structure generalizes naturally to any block family.
+Primorial-based blocks are preferred, as they align with multiplicative symmetries
+and minimize boundary artifacts.
+Decimal blocks \(B_{d,k}=[d\!\cdot\!10^k,(d+1)\!\cdot\!10^k)\)
+may still be used for tabular summaries where fewer rows are desirable.
+\end{remark}
 \end{definition}
 
 \begin{remark}
@@ -609,6 +797,7 @@ The Hardy-Littlewood Conjecture A (HL-A) is adopted as a modelling assumption fo
 
 To the author’s knowledge, there is no precedent for a systematic in-window statistical analysis of HL-A.  Previous computational efforts (e.g.~\cite{OliveiraESilva2014}) numerically confirmed all even integers up to their computational limit in a global window, while analytic studies examined distributions of primes in short intervals \cite{MontgomerySoundararajan2004,GranvilleSoundararajan2007}.  The present work provides the first statistical locking-down of HL-A within analysis windows, analogous to how earlier computations statistically locked down Goldbach itself.  The rigorous sieve bounds are established independent of this analysis.
 
+\preto\subsection{\FloatBarrier}
 \subsection{Modelling Assumption}
 Assumption (HL-A, windowed form). For admissible windows \( I \)  with \( \lvert I \rvert = o(n) \):
 
@@ -626,80 +815,123 @@ Although nearly a century old, HL-A remains the most reliable parameter-free bas
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Data Collection}
 
-For stability, Goldbach pairs \( (n-m, n+m) \) are measured and analyzed with \( m \in [-M,M] \setminus{0} \), where \( M=\lfloor \frac{n}{2} \rfloor \). This symmetric range was chosen for numerical stability and predictability, but the framework applies equally to other ranges.
+For numerical stability, Goldbach pairs \( (n-m,\,n+m) \) are evaluated over
+a symmetric range \( m \in [-M,\,M]\setminus\{0\} \), where
+\begin{equation}
+  M = \bigl\lfloor \min\!\bigl(\alpha,\Ecap(n)\bigr)\,n \bigr\rfloor,
+\end{equation}
+and the scaling parameter \( \alpha \) takes values
+\( 2^{k/8} \) for \( k \in [0,80] \).
+The Euler cap \( \Ecap(n) \), defined in~\eqref{eq:euler_cap},
+represents the upper bound on \( m/n \) for which both the
+Hardy–Littlewood circle correction and the semiprime–to–prime pair
+equivalence remain valid.
+The symmetric formulation improves numerical conditioning and ensures
+predictable convergence, although the same framework is equally
+applicable to asymmetric or alternative interval choices.
 
-The programs used to generate primes and sieve the data were written in C and AWK, and executed on an Intel i5 processor in a 2015 laptop normally used as a home server.  Full analysis requires several weeks, but partial results are available in minutes.  The source code is released under GPL-3.0-or-later, and the manuscript under CC-BY-4.0.  All source code and certified datasets are permanently archived on Zenodo~\cite{Riemers2025SieveGoldbach}.
+The programs used to generate primes and sieve the data were written in
+C, C++, and AWK, and executed on an Intel i5 processor in a 2015 laptop
+serving as a home server.  The full computation of Goldbach pairs up to
+\( n = 23\# / 2 \) requires approximately one week using multiple
+parallel processes, while partial results and predicted values can be
+produced within minutes.  All \( \alpha \)-values are computed within a
+single process.  The source code is released under GPL-3.0-or-later, and
+the manuscript under CC-BY-4.0.  All source code and certified datasets
+are permanently archived on Zenodo~\cite{Riemers2025SieveGoldbach}.
 
-The measured variables \( \Nmeas_0, \Nmeas_1, \Cmeas_{\min}, \Cmeas_{\max}, \Cmeas_{\tavg} \) are defined in Definition~\ref{semiprime-survivors}. Appendix Table~\ref{tab:raw-stats} provides raw (unnormalized) data for verification. The reported minima of zero pairs for \( n=7,11,43 \) result from the exclusion of certain pairs, such as \( (7,7) \), \( (3,19) \), and \( (7,79) \), by the chosen window; they do not contradict Goldbach's Conjecture.
+The measured variables
+\( \Nmeas_0, \Nmeas_1, \Cmeas_{\min}, \Cmeas_{\max}, \Cmeas_{\tavg} \)
+are defined in Definition~\ref{semiprime-survivors}.
+Appendix Table~\ref{tab:raw-stats} provides representative
+unnormalized decade data for \( \alpha = 0.5 \), sufficient for
+independent verification of the results.
+The reported minima of zero pairs for \( n = 7, 11, \) and \( 43 \)
+arise from the exclusion of specific pairs such as \( (7,7) \),
+\( (3,19) \), and \( (7,79) \) by the chosen window and therefore do not
+contradict Goldbach's Conjecture.
 
-Predicted values can be computed in under ten minutes, but counting all Goldbach pairs up to \( n=10^8 \) required several weeks. Figure~\ref{fig:Cminmaxavg} shows scatter plots of measured values versus HL-A prediction lines.
+Figure~\ref{fig:CminmaxavgPrim} present the measured values compared to
+the HL-A prediction lines for \( \alpha = 0.5, \).
 
-\pgfplotstableread[col sep=comma, trim cells]{pairrangejoin-100M.csv}\pairdata
+\pgfplotstableread[col sep=comma, trim cells]{pairrangejoin-23PR.5-0.5-v0.1.6.csv}\pairdata
 
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}
+\pgfplotsset{every axis/.append style={title style={at={(0.98,0.97)},anchor=north east}}}
+
 \begin{axis}[
+  title={\(\,\alpha=0.5\)},
   width=\textwidth, height=0.62\textwidth,
   xmode=log,
   xlabel={\(n\) (log scale)},
   ylabel={\(C\) values},
+  xmin=10,
+  xmax=2e8,
+  ymin=0,
+  ymax=14,
   grid=both, tick align=outside,
   legend style={at={(0.5,1.05)}, anchor=south, legend columns=-1},
   unbounded coords=discard, filter discard warning=false,
+  set layers,
+  axis on top=false,  % so the band stays behind gridlines
 ]
 
-% --- Scatter: measured points ---
-% C_min vs n_0
-\addplot+[
-  only marks, mark=*, mark size=1.4pt, draw=blue!60!black, fill=blue!60!black
-] table[x={n_0}, y={C_min}] {\pairdata};
-\addlegendentry{\( \Cmeas_{\min} \) vs \( n_0 \) }
+% ----- styles -----
+\pgfplotsset{
+  myband/.style   ={fill=orange!50, fill opacity=0.30, draw=none, on layer=axis background},
+  mypred/.style   ={no markers, thick, dotted},
+  myavg/.style    ={no markers, semithick, color=black!70},
+  mydots/.style   ={only marks, mark=*, mark size=0.7pt, opacity=0.30},
+  guide/.style    ={gray!45, very thin, on layer=axis foreground}, % draw on top
+}
 
-% C_avg vs n_geom
-\addplot+[
-  only marks, mark=*, mark size=1.2pt, draw=green!80!black,
-  mark options={fill=green!80!black, draw=black!80!black}
-] table[x={n_geom}, y={C_avg}] {\pairdata};
-\addlegendentry{\( \Cmeas_{\tavg} \) vs \( \Ngeom \)}
+% ----- band (draw first) -----
+\addplot[name path=Cminpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_0}, y={C_min}] {\pairdata};
+\addplot[name path=Cmaxpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_1}, y={C_max}] {\pairdata};
+\addplot[myband, forget plot] fill between[of=Cminpath and Cmaxpath];
 
-% C_max vs n_1
-\addplot+[
-  only marks, mark=*, mark size=1.2pt, draw=red!80!black,
-  mark options={fill=red!80!black, draw=black!80!black}
-] table[x={n_1}, y={C_max}] {\pairdata};
-\addlegendentry{\( \Cmeas_{\max} \) vs \( n_1 \)}
+% ----- main lines (legend entries) -----
+\addplot[myavg]
+  table[x={n_geom}, y={C_avg}] {\pairdata};
+\addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
 
-% --- Lines: predicted curves ---
-% Cpred_min vs Npred_0
-\addplot+[
-  no markers, thick, dashed, mark size=1.2pt, draw=blue!80!black,
-  mark options={fill=blue!80!black, draw=black!80!black}
-] table[x={Npred_0}, y={Cpred_min}] {\pairdata};
-\addlegendentry{\( \Cpred_{\min} \) vs \( \Npred_0 \)}
+\addplot[mypred, thick, blue!70!black, dashed, sharp plot]
+  table[x={Npred_0}, y={Cpred_min}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min} \)}
 
-% Cpred_avg vs n_geom
-\addplot+[
-  no markers, thick, dashed, color=green!50!black
-] table[x={n_geom}, y={Cpred_avg}] {\pairdata};
-\addlegendentry{\( \Cpred_{\tavg} \) vs \(\Ngeom\)}
+\addplot[mypred, thick, green!50!black, dashed, sharp plot]
+  table[x={n_geom}, y={Cpred_avg}] {\pairdata};
+\addlegendentry{\( \Cpred_{\tavg} \)}
 
-% Cpred_max vs n_1
-\addplot+[
-  no markers, thick, dashed, color=red!80!black
-] table[x={n_1}, y={Cpred_max}] {\pairdata};
-\addlegendentry{\( \Cpred_{\max} \) vs \( \Npred_1 \)}
+\addplot[mypred, red!70!black, sharp plot]
+  table[x={n_1}, y={Cpred_max}] {\pairdata};
+\addlegendentry{\( \Cpred{\max} \)}
+
+% style
+\pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
+
+% draw them last, and don't add to legend
+\foreach \x in {15,105,1155,15015,255255,4849845,111546435}{
+  \addplot[primorial, forget plot] coordinates {(\x,0) (\x,14)};
+}
+
 
 \end{axis}
 \end{tikzpicture}
-\caption{Scatter plots of \( \Cmeas_{\min} \), \( \Cmeas_{\max} \), and \( \Cmeas_{\tavg} \) versus \( n \) with HL-A prediction lines.   \emph{Maxima.} The prominent peaks occur at \(n\) whose odd part is a (multiple of a) primorial, in agreement with Proposition~\ref{prop:primorial-plateau}.}
-\label{fig:Cminmaxavg}
+\caption{Scatter plots of \( \Cmeas_{\min} \), \( \Cmeas_{\max} \), and \( \Cmeas_{\tavg} \) versus \( n \) with HL-A prediction lines for \( \alpha = 0.5 \).   \emph{Maxima.} The prominent peaks occur at \(n\) whose odd part is a (multiple of a) primorial, in agreement with Proposition~\ref{prop:primorial-plateau}.}
+\label{fig:CminmaxavgPrim}
 \end{figure}
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{\(\Cmeas_{\tavg}\) Analysis}
 
 Recall from Definition~\ref{def:lambda} that
@@ -708,13 +940,15 @@ Recall from Definition~\ref{def:lambda} that
 \Lambda_{\tavg}(B)\;:=\;\;\log\frac{\Cmeas_{\tavg}(B)}{\Cpred_{\tavg}(B)}.
 \end{equation}
 
-Under HL-A, measured and predicted averages are heuristically expected to converge. For very large \( n \) this should approach \( 4 \). At \( n=10^8 \), asymmetries in the prime distribution above and below \( n \) still push the average slightly higher, but the correction factor \( \HLCorr \) accounts for this. Figure~\ref{fig:lambda-avg} shows \( \Lambda_{\tavg} \) tending toward \( 0 \).
+Under HL-A, measured and predicted averages are heuristically expected to converge. For very large \( n \) this should approach \( 4 \). At the upper end of the tested range, asymmetries in the prime distribution above and below \( n \) still push the average slightly higher, but the correction factor \( \HLCorr \) accounts for this. Figure~\ref{fig:lambda-avg-prim} shows \( \Lambda_{\tavg} \) tending toward \( 0 \).
 
 \begin{figure}[h]
   \centering
-  \FigLambdaAbsSignSplit{lambdaavg-100M.csv}{n_geom}{Lambda_avg}{\( \Ngeom \)}{\( \lvert \Lambda_{\tavg} \rvert \)}{\( |\Lambda_{\tavg}| \) vs \( \Ngeom \) }
-  \caption{Scatter plot of \( \lvert \Lambda_{\tavg} \rvert \) versus \( \Ngeom \) on a log-log scale.}
-  \label{fig:lambda-avg}
+  \FigLambdaAbsSignSplit{lambdaavg-23PR.5-0.5-v0.1.6.csv}{n_geom}{Lambda_avg}
+    {\( \Ngeom \)}{\( \lvert \Lambda_{\tavg} \rvert \)}
+    {\( \vert \Lambda_{\tavg} \rvert \) vs \( \Ngeom \)}
+  \caption{Scatter plot of \( \lvert \Lambda_{\tavg} \rvert \) versus \( \Ngeom \) for \( \alpha=0.5 \) on a log-log scale.}
+  \label{fig:lambda-avg-prim}
 \end{figure}
 
 \needspace{10\baselineskip}
@@ -777,6 +1011,7 @@ Dec. &
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{\( \Cmeas_{\min} \) Analysis}
 
 Recall from Definition~\ref{def:lambda}:
@@ -785,13 +1020,13 @@ Recall from Definition~\ref{def:lambda}:
 \Lambda_{\min}(B)\; := \;\log\frac{\Cmeas_{\min}(B)}{\Cpred_{\min}(B)}.
 \end{equation}
 
-Under HL-A, predictions and measurements converge to the same limit. For very large \( n \), minima should approach \( 2C_2 \), where \( C_2 \) is the twin prime constant. Figure~\ref{fig:lambda-min} shows \( \Lambda_{\min} \to 0 \) as \( n \)  grows.
+Under HL-A, predictions and measurements converge to the same limit. For very large \( n \), minima should approach \( 2C_2 \), where \( C_2 \) is the twin prime constant. Figure~\ref{fig:lambda-minprim} shows \( \Lambda_{\min} \to 0 \) as \( n \)  grows.
 
 \begin{figure}[h]
   \centering
-  \FigLambdaAbsSignSplit{lambdamin-100M.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min} \rvert \)}{\( |\Lambda_{\min}| \) vs \( n_0 \) }
-  \caption{Scatter plot of \( \lvert \Lambda_{\min} \rvert \) versus \( n_0 \) on a log-log scale.}
-  \label{fig:lambda-min}
+  \FigLambdaAbsSignSplit{lambdamin-23PR.5-0.5-v0.1.6.csv}{n_0}{Lambda_min}{\( n_0 \)}{\( \lvert \Lambda_{\min} \rvert \)}{\( |\Lambda_{\min}| \) vs \( n_0 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\min} \rvert \) versus \( n_0 \) for \( \alpha=0.5 \) on a log-log scale.}
+  \label{fig:lambda-minprim}
 \end{figure}
 
 Table~\ref{tab:lambda_min_summary} confirms per-decade convergence. In the 7th decade, the second-largest \( \lvert \Lambda_{\min} \rvert \) is \( \xSecondLambdaMinLimit \), so HL-A agrees with observed data at that tolerance for \( n \ge 10^8 \).
@@ -854,6 +1089,7 @@ Dec. &
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{\( \Cmeas_{\max} \) Analysis}
 
 Recall from Definition~\ref{def:lambda}:
@@ -868,7 +1104,7 @@ Both HL-A and data show step increases at primorial values, each of order \( \lo
 O!\left(\tfrac{n\log\log n}{\log^2 n}\right).
 \end{equation}
 
-Predictions corrected by \( \HLCorr \) account for asymmetry in prime distribution. Figure~\ref{fig:lambda-max} shows \( \Lambda_{\max} \to 0 \) with \( n \).
+Predictions corrected by \( \HLCorr \) account for asymmetry in prime distribution. Figure~\ref{fig:lambda-maxprim} shows \( \Lambda_{\max} \to 0 \) with \( n \).
 
 \begin{remark}[Euler-factor Step Effect]
 Each primorial step corresponds to introducing a new Euler factor \( \frac{(p-1)}{(p-2)} \) in the singular series \cite{HardyLittlewood1923,Vaughan1997}.  Excluding divisibility by a new prime slightly increases the expected Goldbach count, producing the \( \log\log\log n \)-sized steps.
@@ -876,12 +1112,12 @@ Each primorial step corresponds to introducing a new Euler factor \( \frac{(p-1)
 
 \begin{figure}[h]
   \centering
-  \FigLambdaAbsSignSplit{lambdamax-100M.csv}{n_1}{Lambda_max}{\( n_1 \)}{\( \lvert \Lambda_{\max} \rvert \)}{\( |\Lambda_{\max}| \) vs \( n_1 \) }
-  \caption{Scatter plot of \( \lvert \Lambda_{\max} \rvert \) versus \( n_1 \) on a log-log scale.}
-  \label{fig:lambda-max}
+  \FigLambdaAbsSignSplit{lambdamax-23PR.5-0.5-v0.1.6.csv}{n_1}{Lambda_max}{\( n_1 \)}{\( \lvert \Lambda_{\max} \rvert \)}{\( |\Lambda_{\max}| \) vs \( n_1 \) }
+  \caption{Scatter plot of \( \lvert \Lambda_{\max} \rvert \) versus \( n_1 \) for \( \alpha = 0.5 \) on a log-log scale.}
+  \label{fig:lambda-maxprim}
 \end{figure}
 
-Table~\ref{tab:lambda_max_summary} shows decreasing per-decade values, again confirming convergence. In the 7th decade, the second-largest \( \lvert  \Lambda_{\max} \rvert \) is \( \xSecondLambdaMaxLimit \), supporting HL-A agreement at that level for \( n \ge 10^8 \).
+Table~\ref{tab:lambda_max_summary} shows decreasing per-decade values, again confirming convergence. In the 7th decade, the second-largest \( \lvert  \Lambda_{\max} \rvert \) is \( \xSecondLambdaMaxLimit \), supporting HL-A agreement at that level for \( n \ge 10^8 \).
 
 \small
 \sisetup{
@@ -947,6 +1183,7 @@ Because the singular series ignores exponents and the prime \(2\), many nearby m
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Primorial plateaus and HL-A}\label{sec:primorial-prop}
 
 \begin{equation}\label{eq:half-primorial}
@@ -1002,9 +1239,10 @@ Across a fixed scale the factor \(2n/\log^2(2n)\) varies slowly, while \(\mathfr
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Conclusion on Analysis}
 
-The sieve framework was tested against HL-A for all \( n<10^8 \) . The measured values \( \Cmeas_{\min},\Cmeas_{\max},\Cmeas_{\tavg} \) asymptotically approach predictions:
+The sieve framework was tested against HL-A for all \( 2n < 23\# \) with \( \alpha = 0.5 \). The measured values \( \Cmeas_{\min},\Cmeas_{\max},\Cmeas_{\tavg} \) asymptotically approach predictions:
 
 \begin{equation}
 \lvert \Lambda_{\min} \rvert \le \xSecondLambdaMinLimit,\qquad
@@ -1016,6 +1254,7 @@ This is not a proof, but is a statistically robust conclusion: HL-A accurately m
 
 \section{Sieve-Theoretic Goldbach}\label{sec:sgb}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Sieve reduction on \( Q(n,m) \)}\label{sec:reduction}
 \begin{lemma}[Analytic Lower Bound via Certified Shifted Products]
 \label{lem:analytic-lower-bound-reduction}
@@ -1040,6 +1279,7 @@ and similarly for \( q \). Multiplying the two intervals and expanding the error
 which is explicit and decreases in both \( p \) and \( q \).
 \end{proof}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Main Theorem (certified lower bound)}\label{sec:main-thm}
 \begin{theorem}[Goldbach Pairs and a Double-Euler Product Sieve Bound]
 \label{thm:main}
@@ -1201,7 +1441,7 @@ assumptions \cite{HardyLittlewood1923,Vaughan1997}.
 Figure~\ref{fig:lower-analytic-bound-comparison} displays
 a numerical comparison between sieve data and this analytic bound.
 
-\pgfplotstableread[col sep=comma,trim cells]{cpslowerbound-100M.csv}\cpsdata
+\pgfplotstableread[col sep=comma,trim cells]{gbpairsummary-23PR.5-empirical-cps-0.5-v0.1.6.csv}\cpsdata
 
 \begin{figure}[H]
 \centering
@@ -1221,19 +1461,19 @@ a numerical comparison between sieve data and this analytic bound.
 % Cmin: scatter points
 \addplot+[
   only marks, mark=*, mark size=1.2pt
-] table[x={n_0}, y={Cmin}] {\cpsdata};
+] table[x={n}, y={C(n)}] {\cpsdata};
 \addlegendentry{\(\Cmeas_{\min}(n_0)\)}
 
 % Cminus: solid line (add 'smooth' to spline)
 \addplot+[
   no markers, thick
-] table[x={n_0}, y={Cminus}] {\cpsdata};
+] table[x={n}, y={Cminus(n)}] {\cpsdata};
 \addlegendentry{\(\Cminus(n_0)\)}
 
 % CminusAsym: dashed line (add 'smooth' to spline)
 \addplot+[
   no markers, thick, dashed, smooth
-] table[x={n_0}, y={CminusAsym}] {\cpsdata};
+] table[x={n}, y={CminusAsym(n)}] {\cpsdata};
 \addlegendentry{\(\CminusAsymp(n_0)\)}
 
 \end{axis}
@@ -1254,12 +1494,10 @@ confirming that \( \Cmeas_{\min}(N_0) \ge \tfrac{\CminusProduct(N_0) M(N_0)}{\lo
 
 
 Let \(\nprodstar\) denote the smallest \(N_0\) such that \(\Cmeas_{\min}(n) \ge \CminusProduct(n)\) for all subsequent \(n\) in our record.
-From Figure~\ref{fig:lower-analytic-bound-comparison}, the last recorded minimum below \(\CminusProduct\) occurs at \(N_0 = \xPreMertens \).
-The next recorded minimum is therefore taken as a
-a conservative permanence threshold, \(\nprodstar = \xMertens\), with local margin
-\(\zeta = \Cmeas_{\min}(\nprodstar) - \CminusProduct(\nprodstar) = \xDeltaMertens \).
-Because only minima are recorded, intermediate non-minima are not observed; consequently, \(\nprodstar\) may occur slightly later than
-the last crossing, and the value reported here is conservative.
+From Figure~\ref{fig:lower-analytic-bound-comparison}, the last recorded minimum below \(\CminusProduct\) occurs at \(N_0 = \xPreMertens\).
+The first recorded minimum above \(\CminusProduct\) after this crossing is taken as the conservative permanence threshold, \(\nprodstar = \xMertens\), with local margin
+\(\zeta = \Cmeas_{\min}(\nprodstar) - \CminusProduct(\nprodstar) = \xDeltaMertens\).
+Because only minima are recorded, the true last crossing may occur between these two recorded minima; consequently, \(\nprodstar\) represents a conservative (slightly late) bound on the permanence threshold.
 
 \begin{remark}
 Why the bound is not tight for small \(n\) is considered next.
@@ -1312,7 +1550,7 @@ Equivalently,
 
 \noindent\emph{Notes.}
 (i) Only minima is recorded, this is conservative: any unrecorded intermediate values lie \emph{above} \(\Cmeas_{\min}\).
-(ii) The numerical value \(\eta=\xEtaStat\) is computed directly from the table used in Fig.~\ref{fig:lower-analytic-bound-comparison}; the first \(N_0\) attaining \(\eta\) is also recorded in the caption.
+(ii) The numerical value \(\eta=\xEtaStat\) represents the algebraically smallest deviation \(C(n)-\Cminus(n)\) observed after both \(n > n_{5\%}\) (statistical validity) and \(n > n_{\mathrm{preMertens}}\) (verified crossing below the Mertens bound); \(N_0=\xNzeroStat\) is the position where this minimum occurs.
 
 From the statistical validity criterion
 \begin{equation}
@@ -1342,23 +1580,10 @@ occurs at
 \begin{equation}
 N_0=\xNzeroStat,\qquad \Delta(N_0)=\xEtaStat>0.
 \end{equation}
-At the explicit Mertens threshold \(N_0=\xMertens\) there is
-\(\Delta(\xMertens)=\xDeltaMertens>0\).
-Consequently \(\Delta(N_0)>0\) for all \(N_0\ge \xMertens\), so the analytic
+The last recorded minimum below \(\CminusProduct\) occurs at \(n=\xPreMertens\), and the first recorded minimum above \(\CminusProduct\) after that crossing occurs at \(\nprodstar=\xMertens\), where
+\(\Delta(\nprodstar)=\xDeltaMertens>0\).
+Since all observed values between \(\xPreMertens\) and \(\nprodstar\) also lie above \(\CminusProduct(n)\), this choice is conservative: \(\Delta(N_0)>0\) for all \(N_0\ge \nprodstar\), ensuring the analytic
 lower bound lies strictly below all observed minima throughout the verified range.
-
-One minimum per \emph{decimal block} of the form
-\([d\cdot 10^{k},(d+1)\cdot 10^{k}-1]\) is recorded for integers \(k\ge 4\) and \(1\le d\le 9\),
-with the block width scaling by a factor of \(10\) when \(k\) increases (e.g.,
-\(10000\text{-}19999\), \(20000\text{-}29999\), \(\dots\), then \(100000\text{-}199999\), \(\dots\)).
-Consequently, from the observed minimum at \(\nprodstar\) in the block
-\(6000\text{-}6999\), it can be asserted that no smaller \( \Delta \) occurs within that block.
-In the preceding block \(5000\text{-}5999\) the recorded minimum is at \(N_0=\xPreMertens\);
-since only one minimum per block is stored, the possibility of a
-(strictly positive) smaller value at some \(N_0\in[\xPreMertens,5999]\) cannot be excluded. Thus taking
-\(\nprodstar=\xMertens\) as the permanence threshold is conservative: it may occur
-slightly later than the true last crossing, but it guarantees that for all
-\(n\ge \nprodstar\) the empirical minima dominate the analytic bound.
 
 \bigskip
 \noindent
@@ -1393,6 +1618,7 @@ In our dataset, \(\nasymstar=\xNasymStar\).
 Specializing to \(\alpha_0=\tfrac12\) above, Lemma~\ref{lem:alpha-rescale} gives the same certified lower bound for every \(\alpha\in(0,\tfrac12]\) with the natural right-edge cutoff \(\sqrt{n+\alpha n}\). 
 By monotonicity in the window, Corollary~\ref{cor:alpha-superset} further implies \(\mathcal{G}(n;\alpha n)\ge \mathcal{G}(n;\tfrac12 n)\) for all \(\alpha\in[\tfrac12,1)\).
 
+\preto\subsection{\FloatBarrier}
 \subsection{Conclusion}\label{sec:conclusion}
 This author established an explicit, certified sieve-theoretic lower bound for (windowed) Goldbach counts by applying an Eratosthenes-type sieve directly to the quadratic form \(Q(n,m)=(n-m)(n+m)\). The bound is given as a product of conservative per-prime Euler factors and holds uniformly for large \(n\) while the sieve cutoff \(z\) remains below the prime-forcing threshold \(n^{\frac{1}{2}}\), so the classical parity obstruction does not arise.
 
@@ -1403,6 +1629,7 @@ Taken together, these approaches give a precise reduction: to push the sieve to 
 Unconditionally, the paper contributes (i) a rigorous lower bound with explicit constants, free of tail and binning artefacts; (ii) a reproducible computation to the stated limit; and (iii) a clear reduction of the remaining analytic task to a standard short-interval distribution problem—specifically, SI--BV\(_\theta\) with \( \theta > \tfrac12 \) —which is strictly weaker than assuming the full Hardy-Littlewood asymptotic formula.
 The available data strongly support the predicted main term, and the remaining hypothesis is sharply circumscribed.
 
+\preto\subsection{\FloatBarrier}
 \subsection{Conditional Corollary (short-interval equidistribution)}\label{sec:SI-BV}
 \begin{corollary}[Unconditional Reduction; Conditional Consequence Under Short-Interval Equidistribution]
 \label{cor:SI-BV}
@@ -1636,6 +1863,7 @@ Conjecture~\ref{conj:uniform-C} motivates the windowed sieve setup only; no theo
 
 \section{Certified Enclosures for Euler Products}\label{app:enclosures}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Mertens Product Enclosure}\label{app:mertens}
 
 \begin{lemma}[Explicit Mertens Enclosure~\cite{RosserSchoenfeld1962, Dusart2010}]\label{lem:explicit-mertens}
@@ -1656,6 +1884,7 @@ E_M(x) := \frac{1}{20\log^3 x}+\max\!\left\{\frac{316}{\log^4 x},\ \frac{3}{16\l
 \end{equation}
 \end{lemma}
 
+\preto\subsection{\FloatBarrier}
 \subsection{\(C_2\) Tail Bound}\label{app:C2-tail}
 \begin{lemma}[Certified Tail for \( C_2 \)]\label{lem:C2-tail}
 For all \( x\ge 3 \),
@@ -1676,6 +1905,7 @@ which is explicit and strictly decreasing for \( x\ge x_0 \).
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Shifted Product Enclosure}\label{app:shifted-product}
 
 \begin{lemma}[Certified Enclosure for the Shifted Product]\label{lem:shifted-enclosure}
@@ -1743,6 +1973,7 @@ The monotonicity of \(E_M,T\) makes \(\varepsilon_P\) strictly decreasing as wel
 
 \needspace{10\baselineskip}
 
+\preto\subsection{\FloatBarrier}
 \subsection{Application to the Lower Bound Product}
 Let
 \begin{equation}
@@ -1794,6 +2025,10 @@ Summing the one-sided lower bounds over \(|m|\le \alpha n\) proceeds exactly as 
 \end{equation}
 tightens the right-edge cutoff in the second Euler product, which can only \emph{increase} the conservative product in \eqref{eq:Cminus-alpha-def}. Hence the same certification yields \eqref{eq:alpha-certified} for all \(\alpha\le\alpha_0\).
 \end{proof}
+
+\begin{remark}[Checking Validity for Rescaling]
+While Lemma~\ref{lem:alpha-rescale} allows rescaling from \(\alpha_0\) to any \(\alpha \le \alpha_0\), the Mertens certification threshold \(n_{\mathrm{Mertens}}\) depends on \(\alpha\). Table~\ref{tab:cps-alpha-summary} provides empirical Mertens positions and convergence statistics for 82 different \(\alpha\) values. Before applying the rescaling lemma, readers should consult this table to verify that the target \(\alpha\) has sufficient data support (i.e., \(n_{\mathrm{Mertens}}\) is well-separated from the dataset boundary) to justify the rescaling without requiring new certification computations. In practice, so long as \(n \ge n_{\mathrm{Mertens}}\) for the chosen \(\alpha\), the rescaling should yield a normalized lower bound of approximately \(\gtrsim 2\).
+\end{remark}
 
 \begin{corollary}[Monotone Extension to Larger Windows]
 \label{cor:alpha-superset}
@@ -2276,6 +2511,50 @@ Primorials consistently correspond to maxima. Many unnormalized binned maxima ha
 7 & 96281998 & 2.6356 & 2.1463 & 0.4893 & 2.1507 & 0.4849 \\
 \bottomrule
 \end{longtable}
+
+\clearpage
+
+\section{CPS Summary for Multiple Alpha Values}\label{app:cps-alpha}
+
+Table~\ref{tab:cps-alpha-summary} presents the complete CPS (Certified Pair Summary) analysis for 82 different alpha values ranging from \( \alpha = 0.0009765625 \) to \( \alpha = 0.5 \), computed over the range \( 4 \le 2n < 23\# \). 
+
+For each alpha value, the table shows:
+\begin{itemize}
+  \item \textbf{Alpha}: The window parameter \( \alpha \) where \( M = \alpha n \)
+  \item \textbf{PreMertens, Mertens}: Positions where Mertens-type bounds are validated
+  \item \textbf{DeltaMertens}: Normalized deviation at the Mertens position
+  \item \textbf{n\_5percent}: The 5\% threshold position in the tested range
+  \item \textbf{NzeroStat, EtaStat}: Statistical measures of minimum location and deviation
+  \item \textbf{MertensAsymp, DeltaMertensAsymp}: Asymptotic analogs of the Mertens measures
+  \item \textbf{NzeroStatAsymp, EtaStatAsymp}: Asymptotic statistical measures
+\end{itemize}
+
+\textbf{Certification Status:} Only \( \alpha = 0.5 \) has been fully certified in this work. The first five rows (\( \alpha < 0.0015 \)) exhibit edge effects where the minimum \( C(n) \) occurs close to the dataset boundary, providing insufficient data to reliably verify the Mertens condition. Values with \( \alpha \ge 0.0078125 \) may be suitable for certification but require individual inspection of convergence behavior. All data is provided for transparency and to enable independent verification by other researchers.
+
+\bigskip
+\bigskip
+
+\small
+\pgfplotstabletypeset[
+  col sep=comma,
+  string type,
+  begin table=\begin{longtable},
+  end table=\end{longtable},
+  every head row/.style={
+    before row={\caption{CPS summary statistics for multiple alpha values.}\label{tab:cps-alpha-summary}\\\toprule},
+    after row={\midrule\endhead}
+  },
+  every last row/.style={after row=\bottomrule},
+  columns={Alpha,PreMertens,Mertens,DeltaMertens,n_5precent,NzeroStat,EtaStat},
+  columns/Alpha/.style={column name=\( \alpha \), precision=5, column type=l},
+  columns/PreMertens/.style={column name=PreMertens, int detect, column type=r},
+  columns/Mertens/.style={column name=Mertens, int detect, column type=r},
+  columns/DeltaMertens/.style={column name=\( \Delta \)Mertens, precision=3, column type=r},
+  columns/n_5precent/.style={column name=\( n_{5\%} \), int detect, column type=r},
+  columns/NzeroStat/.style={column name=\( N_0 \)Stat, int detect, column type=r},
+  columns/EtaStat/.style={column name=\( \eta \)Stat, precision=3, column type=r},
+]{cpssummary-23PR.5-v0.1.6.csv}
+\normalsize
 
 \section{Reproducibility}
 

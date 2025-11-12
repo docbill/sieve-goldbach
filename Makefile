@@ -404,6 +404,7 @@ backup: $(BACKUP_FILE)
 restore: 
 	@test -n "$(LAST_BACKUP_FILE)" || (echo "$(BACKUP_TPL) not found." 1>&2 && exit 1)
 	@tar xvvfj "$(LAST_BACKUP_FILE)"
+	@tar tfj "$(LAST_BACKUP_FILE)" | xargs touch
 
 # ---------- Base outputs (non-S/M/L) ----------
 BITMAP_FILE := primes-500M.bitmap
@@ -557,6 +558,7 @@ SGB_GOLD_$(1)     := $(DATA)/$$(SGB_FILE_$(1)).csv.verify
 SUMMARY_GOLD_$(1) := $(DATA)/$$(SUMMARY_FILE_$(1)).csv.verify
 JOIN_GOLD_$(1)    := $(DATA)/$$(JOIN_FILE_$(1)).csv.sha256
 CPSLB_GOLD_$(1)   := $(DATA)/$$(CPSLB_FILE_$(1)).csv.sha256
+CPS_SUMMARY_GOLD_$(1) := $(DATA)/$$(CPS_SUMMARY_FILE_$(1)).csv.sha256
 LAVG_GOLD_$(1)    := $(DATA)/$$(LAVG_FILE_$(1)).csv.sha256
 LMIN_GOLD_$(1)    := $(DATA)/$$(LMIN_FILE_$(1)).csv.sha256
 LMAX_GOLD_$(1)    := $(DATA)/$$(LMAX_FILE_$(1)).csv.sha256
@@ -1308,7 +1310,7 @@ verify: certify
 	@(cmp "$(GBP_VERIFY)"    "$(GBP_GOLD)" && echo "Validated $(GBP)") || test "$$TAINTED" = "1"
 	@(cmp "$(SGB_SMALL).csv.verify" "$(SGB_GOLD_SMALL)" && echo "Validated $(SGB_SMALL).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(SUMMARY_SMALL).csv.verify" "$(SUMMARY_GOLD_SMALL)" && echo "Validated $(SUMMARY_SMALL).csv") || test "$$TAINTED" = "1"
-#	@(cmp "$(CPS_SUMMARY_VERIFY_SMALL)" "$(CPS_SUMMARY_GOLD_SMALL)" && echo "Validated $(CPS_SUMMARY_SMALL).csv") || test "$$TAINTED" = "1"
+	@(cmp "$(CPS_SUMMARY_VERIFY_SMALL)" "$(CPS_SUMMARY_GOLD_SMALL)" && echo "Validated $(CPS_SUMMARY_SMALL).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(JOIN_VERIFY_SMALL)" "$(JOIN_GOLD_SMALL)" && echo "Validated $(JOIN_SMALL).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(CPSLB_VERIFY_SMALL)"   "$(CPSLB_GOLD_SMALL)" && echo "Validated $(CPSLB_SMALL).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LAVG_VERIFY_SMALL)"    "$(LAVG_GOLD_SMALL)" && echo "Validated $(LAVG_SMALL).csv") || test "$$TAINTED" = "1"
@@ -1319,7 +1321,7 @@ verify: certify
 	@(cmp "$(LSMAX_VERIFY_SMALL)"    "$(LSMAX_GOLD_SMALL)" && echo "Validated $(LSMAX_SMALL).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(SGB_SPRIM).csv.verify"    "$(SGB_GOLD_SPRIM)" && echo "Validated $(SGB_SPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(SUMMARY_SPRIM).csv.verify" "$(SUMMARY_GOLD_SPRIM)" && echo "Validated $(SUMMARY_SPRIM).csv") || test "$$TAINTED" = "1"
-#	@cmp "$(CPS_SUMMARY_VERIFY_SPRIM)" "$(CPS_SUMMARY_GOLD_SPRIM)" && echo "Validated $(CPS_SUMMARY_SPRIM).csv"
+	@(cmp "$(CPS_SUMMARY_VERIFY_SPRIM)" "$(CPS_SUMMARY_GOLD_SPRIM)" && echo "Validated $(CPS_SUMMARY_SPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(JOIN_VERIFY_SPRIM)" "$(JOIN_GOLD_SPRIM)" && echo "Validated $(JOIN_SPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(CPSLB_VERIFY_SPRIM)"   "$(CPSLB_GOLD_SPRIM)" && echo "Validated $(CPSLB_SPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LAVG_VERIFY_SPRIM)"    "$(LAVG_GOLD_SPRIM)" && echo "Validated $(LAVG_SPRIM).csv") || test "$$TAINTED" = "1"
@@ -1335,7 +1337,7 @@ verify-medium: $(OUT)/verify-medium-$(COMPAT).stamp
 $(OUT)/verify-medium-$(COMPAT).stamp: certify-medium verify
 	@(cmp "$(SGB_MEDIUM).csv.verify"    "$(SGB_GOLD_MEDIUM)" && echo "Validated $(SGB_MEDIUM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(SUMMARY_MEDIUM).csv.verify" "$(SUMMARY_GOLD_MEDIUM)" && echo "Validated $(SUMMARY_MEDIUM).csv") || test "$$TAINTED" = "1"
-#	@(cmp "$(CPS_SUMMARY_VERIFY_MEDIUM)" "$(CPS_SUMMARY_GOLD_MEDIUM)" && echo "Validated $(CPS_SUMMARY_MEDIUM).csv") || test "$$TAINTED" = "1"
+	@(cmp "$(CPS_SUMMARY_VERIFY_MEDIUM)" "$(CPS_SUMMARY_GOLD_MEDIUM)" && echo "Validated $(CPS_SUMMARY_MEDIUM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(JOIN_VERIFY_MEDIUM)"   "$(JOIN_GOLD_MEDIUM)" && echo "Validated $(JOIN_MEDIUM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(CPSLB_VERIFY_MEDIUM)"   "$(CPSLB_GOLD_MEDIUM)" && echo "Validated $(CPSLB_MEDIUM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LAVG_VERIFY_MEDIUM)"    "$(LAVG_GOLD_MEDIUM)" && echo "Validated $(LAVG_MEDIUM).csv") || test "$$TAINTED" = "1"
@@ -1345,7 +1347,7 @@ $(OUT)/verify-medium-$(COMPAT).stamp: certify-medium verify
 	@(cmp "$(LSMIN_VERIFY_MEDIUM)"    "$(LSMIN_GOLD_MEDIUM)" && echo "Validated $(LSMIN_MEDIUM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LSMAX_VERIFY_MEDIUM)"    "$(LSMAX_GOLD_MEDIUM)" && echo "Validated $(LSMAX_MEDIUM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(SUMMARY_MPRIM).csv.verify" "$(SUMMARY_GOLD_MPRIM)" && echo "Validated $(SUMMARY_MPRIM).csv") || test "$$TAINTED" = "1"
-#	@(cmp "$(CPS_SUMMARY_VERIFY_MPRIM)" "$(CPS_SUMMARY_GOLD_MPRIM)" && echo "Validated $(CPS_SUMMARY_MPRIM).csv") || test "$$TAINTED" = "1"
+	@(cmp "$(CPS_SUMMARY_VERIFY_MPRIM)" "$(CPS_SUMMARY_GOLD_MPRIM)" && echo "Validated $(CPS_SUMMARY_MPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(JOIN_VERIFY_MPRIM)"   "$(JOIN_GOLD_MPRIM)" && echo "Validated $(JOIN_MPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(CPSLB_VERIFY_MPRIM)"   "$(CPSLB_GOLD_MPRIM)" && echo "Validated $(CPSLB_MPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LAVG_VERIFY_MPRIM)"    "$(LAVG_GOLD_MPRIM)" && echo "Validated $(LAVG_MPRIM).csv") || test "$$TAINTED" = "1"
@@ -1362,7 +1364,7 @@ verify-large: $(OUT)/verify-large-$(COMPAT).stamp
 $(OUT)/verify-large-$(COMPAT).stamp: certify-large verify-medium
 	@(cmp "$(SGB_LARGE).csv.verify"    "$(SGB_GOLD_LARGE)" && echo "Validated $(SGB_LARGE).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(SUMMARY_LARGE).csv.verify" "$(SUMMARY_GOLD_LARGE)" && echo "Validated $(SUMMARY_LARGE).csv") || test "$$TAINTED" = "1"
-#	@(cmp "$(CPS_SUMMARY_VERIFY_LARGE)" "$(CPS_SUMMARY_GOLD_LARGE)" && echo "Validated $(CPS_SUMMARY_LARGE).csv") || test "$$TAINTED" = "1"
+	@(cmp "$(CPS_SUMMARY_VERIFY_LARGE)" "$(CPS_SUMMARY_GOLD_LARGE)" && echo "Validated $(CPS_SUMMARY_LARGE).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(JOIN_VERIFY_LARGE)"   "$(JOIN_GOLD_LARGE)" && echo "Validated $(JOIN_LARGE).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(CPSLB_VERIFY_LARGE)"   "$(CPSLB_GOLD_LARGE)" && echo "Validated $(CPSLB_LARGE).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LAVG_VERIFY_LARGE)"    "$(LAVG_GOLD_LARGE)" && echo "Validated $(LAVG_LARGE).csv") || test "$$TAINTED" = "1"
@@ -1372,7 +1374,7 @@ $(OUT)/verify-large-$(COMPAT).stamp: certify-large verify-medium
 	@(cmp "$(LSMIN_VERIFY_LARGE)"    "$(LSMIN_GOLD_LARGE)" && echo "Validated $(LSMIN_LARGE).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LSMAX_VERIFY_LARGE)"    "$(LSMAX_GOLD_LARGE)" && echo "Validated $(LSMAX_LARGE).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(SUMMARY_LPRIM).csv.verify" "$(SUMMARY_GOLD_LPRIM)" && echo "Validated $(SUMMARY_LPRIM).csv") || test "$$TAINTED" = "1"
-#	@(cmp "$(CPS_SUMMARY_VERIFY_LPRIM)" "$(CPS_SUMMARY_GOLD_LPRIM)" && echo "Validated $(CPS_SUMMARY_LPRIM).csv") || test "$$TAINTED" = "1"
+	@(cmp "$(CPS_SUMMARY_VERIFY_LPRIM)" "$(CPS_SUMMARY_GOLD_LPRIM)" && echo "Validated $(CPS_SUMMARY_LPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(JOIN_VERIFY_LPRIM)"   "$(JOIN_GOLD_LPRIM)" && echo "Validated $(JOIN_LPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(CPSLB_VERIFY_LPRIM)"   "$(CPSLB_GOLD_LPRIM)" && echo "Validated $(CPSLB_LPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LAVG_VERIFY_LPRIM)"    "$(LAVG_GOLD_LPRIM)" && echo "Validated $(LAVG_LPRIM).csv") || test "$$TAINTED" = "1"
@@ -1389,7 +1391,7 @@ verify-huge: $(OUT)/verify-huge-$(COMPAT).stamp
 $(OUT)/verify-huge-$(COMPAT).stamp: certify-huge verify-large
 	@(cmp "$(SGB_XPRIM).csv.verify"    "$(SGB_GOLD_XPRIM)" && echo "Validated $(SGB_XPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(SUMMARY_XPRIM).csv.verify" "$(SUMMARY_GOLD_XPRIM)" && echo "Validated $(SUMMARY_XPRIM).csv") || test "$$TAINTED" = "1"
-#	@(cmp "$(CPS_SUMMARY_VERIFY_XPRIM)" "$(CPS_SUMMARY_GOLD_XPRIM)" && echo "Validated $(CPS_SUMMARY_XPRIM).csv") || test "$$TAINTED" = "1"
+	@(cmp "$(CPS_SUMMARY_VERIFY_XPRIM)" "$(CPS_SUMMARY_GOLD_XPRIM)" && echo "Validated $(CPS_SUMMARY_XPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(JOIN_VERIFY_XPRIM)"   "$(JOIN_GOLD_XPRIM)" && echo "Validated $(JOIN_XPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(CPSLB_VERIFY_XPRIM)"   "$(CPSLB_GOLD_XPRIM)" && echo "Validated $(CPSLB_XPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LAVG_VERIFY_XPRIM)"    "$(LAVG_GOLD_XPRIM)" && echo "Validated $(LAVG_XPRIM).csv") || test "$$TAINTED" = "1"

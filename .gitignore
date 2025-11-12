@@ -14,3 +14,4 @@ src/storeprimes/storeprimes
 src/validatepairrangesummary/validatepairrangesummary
 src/primesieve_bitmap/primesieve_bitmap
 src/gbpairsummary/gbpairsummary
+Makefile

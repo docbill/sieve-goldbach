@@ -282,17 +282,31 @@ public:
                 }
             
                 if(merged_n_5percent >= first_row.n_start) {
+                    // Initialize to INFINITY so first valid value will be smaller
+                    merged_etaStat = INFINITY;
+                    merged_etaStatAsymp = INFINITY;
+                    
                     for (const auto& row : group) {
-                        // Find etaStat: lowest positive value where nzeroStat > n_5percent
-                        if (row.etaStat > 0.0L && row.nzeroStat > merged_n_5percent && row.nzeroStat > effective_preMertens)  {
+                        // Find etaStat: algebraically smallest value where nzeroStat > n_5percent and > preMertens
+                        if (row.nzeroStat > merged_n_5percent && row.nzeroStat > effective_preMertens && row.etaStat < merged_etaStat)  {
                             merged_etaStat = row.etaStat;
                             merged_nzeroStat = row.nzeroStat;
                         }
-                        // Find etaStatAsymp: lowest positive value where nzeroStatAsymp > n_5percent
-                        if (row.etaStatAsymp > 0.0L && row.nzeroStatAsymp > merged_n_5percent && row.nzeroStatAsymp > effective_preMertens) {
+                        // Find etaStatAsymp: algebraically smallest value where nzeroStatAsymp > n_5percent and > preMertens
+                        if (row.nzeroStatAsymp > merged_n_5percent && row.nzeroStatAsymp > effective_preMertens && row.etaStatAsymp < merged_etaStatAsymp) {
                             merged_etaStatAsymp = row.etaStatAsymp;
                             merged_nzeroStatAsymp = row.nzeroStatAsymp;
                         }
+                    }
+                    
+                    // Reset to 0 if no valid value was found
+                    if (merged_etaStat == INFINITY) {
+                        merged_etaStat = 0.0L;
+                        merged_nzeroStat = 0;
+                    }
+                    if (merged_etaStatAsymp == INFINITY) {
+                        merged_etaStatAsymp = 0.0L;
+                        merged_nzeroStatAsymp = 0;
                     }
                 }
             }

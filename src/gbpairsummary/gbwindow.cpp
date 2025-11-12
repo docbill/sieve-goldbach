@@ -80,19 +80,23 @@ void GBWindow::updateN5percent(std::uint64_t n,std::uint64_t delta,long double l
         }
         n_5percent = n;
     }
-    if(nzeroStat && nzeroStat <= preMertens) {
+    // Reset if nzeroStat is before either threshold
+    if(nzeroStat && (nzeroStat <= n_5percent || nzeroStat <= preMertens)) {
         nzeroStat = 0;
-        etaStat = 0.0L;
+        etaStat = INFINITY; // Initialize to positive infinity so any value is smaller
     }
-    if(n > preMertens && (etaStat >= diff || ! nzeroStat)) {
+    // Update if past both thresholds and we found a smaller (algebraically) delta
+    if(n > n_5percent && n > preMertens && (! nzeroStat || diff < etaStat)) {
         nzeroStat = n;
         etaStat = diff;
     }
-    if(nzeroStatAsymp && nzeroStatAsymp <= preMertensAsymp) {
+    // Reset if nzeroStatAsymp is before either threshold
+    if(nzeroStatAsymp && (nzeroStatAsymp <= n_5percent || nzeroStatAsymp <= preMertensAsymp)) {
         nzeroStatAsymp = 0;
-        etaStatAsymp = 0.0L;
+        etaStatAsymp = INFINITY; // Initialize to positive infinity so any value is smaller
     }
-    if(n > preMertensAsymp && (etaStatAsymp >= diff || ! nzeroStatAsymp)) {
+    // Update if past both thresholds and we found a smaller (algebraically) delta
+    if(n > n_5percent && n > preMertensAsymp && (! nzeroStatAsymp || diffAsymp < etaStatAsymp)) {
         nzeroStatAsymp = n;
         etaStatAsymp = diffAsymp;
     }
