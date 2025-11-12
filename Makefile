@@ -775,10 +775,10 @@ $$(LMIN_$(1)).csv: $$(LMIN_DEFAULT_$(1)).csv
 
 $$(LALIGNMIN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv bin/compareAlignMin.awk
 	@chmod ugo+x ./bin/compareAlignMin.awk
-	# Generate lambda align min files for all alphas (skip for v0.1.5 decade files)
+	# Generate lambda align min files for all alphas (skip for v0.1.x decade files)
 	@set -Eeo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
-	if [ "$(COMPAT)" = "v0.1.5" ] && ( [ "$(1)" = "SMALL" ] || [ "$(1)" = "MEDIUM" ] || [ "$(1)" = "LARGE" ] ); then \
-		echo "Skipping lambda align min generation for v0.1.5 decade files (would contain zeros)"; \
+	if [[ "$(COMPAT)" == v0.1.* ]] && ( [ "$(1)" = "SMALL" ] || [ "$(1)" = "MEDIUM" ] || [ "$(1)" = "LARGE" ] ); then \
+		echo "Skipping lambda align min generation for v0.1.x decade files (would contain zeros)"; \
 		touch "$$@"; \
 	else \
 		for a in $(ALPHAS); do \
@@ -799,10 +799,10 @@ $$(LALIGNMIN_$(1)).csv: $$(LALIGNMIN_DEFAULT_$(1)).csv
 
 $$(LALIGNMAX_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv bin/compareAlignMax.awk
 	@chmod ugo+x ./bin/compareAlignMax.awk
-	# Generate lambda align max files for all alphas (skip for v0.1.5 decade files)
+	# Generate lambda align max files for all alphas (skip for v0.1.x decade files)
 	@set -Eeo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
-	if [ "$(COMPAT)" = "v0.1.5" ] && ( [ "$(1)" = "SMALL" ] || [ "$(1)" = "MEDIUM" ] || [ "$(1)" = "LARGE" ] ); then \
-		echo "Skipping lambda align max generation for v0.1.5 decade files (would contain zeros)"; \
+	if [[ "$(COMPAT)" == v0.1.* ]] && ( [ "$(1)" = "SMALL" ] || [ "$(1)" = "MEDIUM" ] || [ "$(1)" = "LARGE" ] ); then \
+		echo "Skipping lambda align max generation for v0.1.x decade files (would contain zeros)"; \
 		touch "$$@"; \
 	else \
 		for a in $(ALPHAS); do \
@@ -823,10 +823,10 @@ $$(LALIGNMAX_$(1)).csv: $$(LALIGNMAX_DEFAULT_$(1)).csv
 
 $$(LBOUNDMIN_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv bin/compareBoundMin.awk
 	@chmod ugo+x ./bin/compareBoundMin.awk
-	# Generate lambda bound files for all alphas (skip for v0.1.5 decade files)
+	# Generate lambda bound files for all alphas (skip for v0.1.x decade files)
 	@set -Eeo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
-	if [ "$(COMPAT)" = "v0.1.5" ] && ( [ "$(1)" = "SMALL" ] || [ "$(1)" = "MEDIUM" ] || [ "$(1)" = "LARGE" ] ); then \
-		echo "Skipping lambda bound generation for v0.1.5 decade files (would contain zeros)"; \
+	if [[ "$(COMPAT)" == v0.1.* ]] && ( [ "$(1)" = "SMALL" ] || [ "$(1)" = "MEDIUM" ] || [ "$(1)" = "LARGE" ] ); then \
+		echo "Skipping lambda bound generation for v0.1.x decade files (would contain zeros)"; \
 		touch "$$@"; \
 	else \
 		for a in $(ALPHAS); do \
@@ -847,10 +847,10 @@ $$(LBOUNDMIN_$(1)).csv: $$(LBOUNDMIN_DEFAULT_$(1)).csv
 
 $$(LBOUNDMAX_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv bin/compareBoundMax.awk
 	@chmod ugo+x ./bin/compareBoundMax.awk
-	# Generate lambda bound max files for all alphas (skip for v0.1.5 decade files)
+	# Generate lambda bound max files for all alphas (skip for v0.1.x decade files)
 	@set -Eeo pipefail; trap 'echo "error at line $$$$LINENO" >&2; exit 1' ERR; \
-	if [ "$(COMPAT)" = "v0.1.5" ] && ( [ "$(1)" = "SMALL" ] || [ "$(1)" = "MEDIUM" ] || [ "$(1)" = "LARGE" ] ); then \
-		echo "Skipping lambda bound max generation for v0.1.5 decade files (would contain zeros)"; \
+	if [[ "$(COMPAT)" == v0.1.* ]] && ( [ "$(1)" = "SMALL" ] || [ "$(1)" = "MEDIUM" ] || [ "$(1)" = "LARGE" ] ); then \
+		echo "Skipping lambda bound max generation for v0.1.x decade files (would contain zeros)"; \
 		touch "$$@"; \
 	else \
 		for a in $(ALPHAS); do \
