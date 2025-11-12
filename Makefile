@@ -1396,9 +1396,7 @@ $$(SUMMARY_DEFAULT_$(1)).csv: \
 # Depend on summary partial files to ensure gbpairsummary runs first
 $$(BOUNDRATIOMIN_DEFAULT_$(1))$(POINTWISE_EXTENSION): \
         $(foreach part,$($(1)PARTS),$$(call GET,SUMMARY_DEFAULT,$(1)$(part)).partial.csv) \
-        $(call IFSIZE,$(2),$(foreach part,$($(2)PARTS),$$(call GET,SUMMARY_DEFAULT,$(2)$(part)).partial.csv)) \
-        $(if $(filter-out SMALL MEDIUM LARGE HUGE,$(1)),$(foreach part,$($(1)PARTS),$(OUT)/alpha-$(ALPHA_DEFAULT)/boundratiomin-$$(SFX_$(1)$(part))-$(ALPHA_DEFAULT)-$(COMPAT).partial.csv)) \
-        $(call IFSIZE,$(2),$(if $(filter-out SMALL MEDIUM LARGE HUGE,$(2)),$(foreach part,$($(2)PARTS),$(OUT)/alpha-$(ALPHA_DEFAULT)/boundratiomin-$$(SFX_$(2)$(part))-$(ALPHA_DEFAULT)-$(COMPAT).partial.csv)))
+        $(call IFSIZE,$(2),$(foreach part,$($(2)PARTS),$$(call GET,SUMMARY_DEFAULT,$(2)$(part)).partial.csv))
 	@if [ "$(POINTWISE)" = "1" ]; then \
 		rm -f "$$(BOUNDRATIOMIN_DEFAULT_$(1)).stamp"; \
 		echo "Merging: $$@"; \
@@ -1443,9 +1441,7 @@ $$(BOUNDRATIOMIN_$(1))$(POINTWISE_EXTENSION): $$(BOUNDRATIOMIN_DEFAULT_$(1))$(PO
 
 $$(BOUNDRATIOMAX_DEFAULT_$(1))$(POINTWISE_EXTENSION): \
         $(foreach part,$($(1)PARTS),$$(call GET,SUMMARY_DEFAULT,$(1)$(part)).partial.csv) \
-        $(call IFSIZE,$(2),$(foreach part,$($(2)PARTS),$$(call GET,SUMMARY_DEFAULT,$(2)$(part)).partial.csv)) \
-        $(if $(filter-out SMALL MEDIUM LARGE HUGE,$(1)),$(foreach part,$($(1)PARTS),$(OUT)/alpha-$(ALPHA_DEFAULT)/boundratiomax-$$(SFX_$(1)$(part))-$(ALPHA_DEFAULT)-$(COMPAT).partial.csv)) \
-        $(call IFSIZE,$(2),$(if $(filter-out SMALL MEDIUM LARGE HUGE,$(2)),$(foreach part,$($(2)PARTS),$(OUT)/alpha-$(ALPHA_DEFAULT)/boundratiomax-$$(SFX_$(2)$(part))-$(ALPHA_DEFAULT)-$(COMPAT).partial.csv)))
+        $(call IFSIZE,$(2),$(foreach part,$($(2)PARTS),$$(call GET,SUMMARY_DEFAULT,$(2)$(part)).partial.csv))
 	@if [ "$(POINTWISE)" = "1" ]; then \
 		rm -f "$$(BOUNDRATIOMAX_DEFAULT_$(1)).stamp"; \
 		echo "Merging: $$@"; \
