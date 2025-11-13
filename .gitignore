@@ -23,3 +23,4 @@ src/printprimes/printprimes
 src/storeprimes/storeprimes
 src/mergecps/mergecps
 src/gbpairsummary/gbpairsummary
+*.fdb_latexmk
