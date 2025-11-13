@@ -1666,21 +1666,22 @@ $(CPS_SUMMARY_XPRIM).csv: $(CPS_SUMMARY_LPRIM).csv $(SUMMARY_DEFAULT_XPRIM).csv 
 	@set -Eeo pipefail; trap 'echo "error at line $$LINENO" >&2; exit 1' ERR; \
 	$(MERGECPS) $(foreach a,$(CPS_SUMMARY_LPRIM).csv $(CPS_SUMMARY_XPRIM_PARTS),--input $(a)) --output "$@"
 
+# ---------- Generic sha256 rule ----------
+# Generic rule for all files (specific CPS summary rules defined below)
+%.sha256: %
+	sha256sum "$<" | tee "$@"
+
 # ---------- CPS Summary sha256 rules (strip asymp columns for uncorrected files) ----------
 # These rules strip the last 4 columns (MertensAsymp, DeltaMertensAsymp, 
 # NzeroStatAsymp, EtaStatAsymp) before checksumming to allow validation
 # of paper-relevant data while large runs complete.
 # Only applied to 23PR.5 and 100M files which still have uncorrected asymp data.
+# NOTE: These override the generic %.sha256 rule above (warnings expected)
 $(CPS_SUMMARY_LARGE).csv.sha256: $(CPS_SUMMARY_LARGE).csv
 	@cut -d',' -f1-9 "$<" | sha256sum | awk '{print $$1 "  $(notdir $<)"}' | tee "$@"
 
 $(CPS_SUMMARY_XPRIM).csv.sha256: $(CPS_SUMMARY_XPRIM).csv
 	@cut -d',' -f1-9 "$<" | sha256sum | awk '{print $$1 "  $(notdir $<)"}' | tee "$@"
-
-# ---------- Generic sha256 rule ----------
-# Generic rule for most files
-%.sha256: %
-	sha256sum "$<" | tee "$@"
 
 # ---------- Top-level generation groups ----------
 generate:  $(GBP) $(SGB_SMALL).csv $(SGB_SPRIM).csv $(SUMMARY_SMALL).csv \
