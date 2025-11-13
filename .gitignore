@@ -11,6 +11,7 @@ parts/
 *.toc
 *.out
 *.synctex.gz
+*.partial.csv
 backups/
 src/validatepairrangesummary/validatepairrangesummary
 src/certifygbpairs/certifygbpairs
