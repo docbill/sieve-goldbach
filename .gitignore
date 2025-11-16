@@ -1,4 +1,5 @@
 output/
+papers/submissions/
 *.a
 *.o
 *.log
@@ -17,3 +18,11 @@ src/validatepairrangesummary/validatepairrangesummary
 src/primesieve_bitmap/primesieve_bitmap
 src/gbpairsummary/gbpairsummary
 *.fdb_latexmk
+src/heroprime/heroprime
+src/heroprime/heroprime_fast
+src/heroprime/heroprime_fast.cpp
+src/heroprime/heroprime.cpp
+papers/hero-primes/hero-primes.tex
+.gitignore
+src/mergecps/mergecps
+papers/hero-primes/hero-primes-short.tex
