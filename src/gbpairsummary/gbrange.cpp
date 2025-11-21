@@ -106,7 +106,7 @@ static void printHeaderCps(FILE *out1,bool legacy) {
 static void printHeaderCpsSummary(FILE *out1,FILE *out2,Model model) {
     if(model == Model::Empirical) {
         fputs_both(
-            "FIRST,LAST,Alpha,PreMertens,Mertens,DeltaMertens,n_5precent,NzeroStat,EtaStat,MertensAsymp,DeltaMertensAsymp,NzeroStatAsymp,EtaStatAsymp\n",
+            "FIRST,LAST,Alpha,PreMertens,Mertens,DeltaMertens,n_5precent,NzeroStat,EtaStat,PreMertensAsymp,MertensAsymp,DeltaMertensAsymp,NzeroStatAsymp,EtaStatAsymp\n",
         out1,out2);
     }
 }
@@ -367,12 +367,12 @@ void GBRange::decOutputCpsSummary(GBWindow &w) {
     }
     //if(w->preMertens > 1 && w->dec.nstar > 1 && w->dec.deltaMertens > 0.0L) {
         std::fprintf(decAgg.cps_summary,
-            "%" PRIu64 ",%" PRIu64 ",%.12Lg,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf\n",
+            "%" PRIu64 ",%" PRIu64 ",%.12Lg,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf\n",
             decAgg.n_start, decAgg.n_end,
             w.alpha,
             w.preMertens,w.dec.nstar,w.dec.deltaMertens,
             w.n_5percent,w.nzeroStat,w.etaStat,
-            w.dec.nstarAsymp,w.dec.deltaMertensAsymp,w.nzeroStatAsymp,w.etaStatAsymp );
+            w.preMertensAsymp,w.dec.nstarAsymp,w.dec.deltaMertensAsymp,w.nzeroStatAsymp,w.etaStatAsymp );
     //}
 }
 
@@ -464,12 +464,12 @@ void GBRange::primOutputCpsSummary(GBWindow &w) {
         return;
     }
     std::fprintf(primAgg.cps_summary,
-        "%" PRIu64 ",%" PRIu64 ",%.12Lg,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf\n",
+        "%" PRIu64 ",%" PRIu64 ",%.12Lg,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf\n",
         primAgg.n_start, primAgg.n_end,
         w.alpha,
         w.preMertens,w.prim.nstar,w.prim.deltaMertens,
         w.n_5percent,w.nzeroStat,w.etaStat,
-        w.prim.nstarAsymp,w.prim.deltaMertensAsymp,w.nzeroStatAsymp,w.etaStatAsymp );
+        w.preMertensAsymp,w.prim.nstarAsymp,w.prim.deltaMertensAsymp,w.nzeroStatAsymp,w.etaStatAsymp );
 }
 
 int GBRange::primInputCpsSummary(const char* filename) {

@@ -39,6 +39,7 @@ struct CPSRow {
     std::uint64_t n_5percent;
     std::uint64_t nzeroStat;
     long double etaStat;
+    std::uint64_t preMertensAsymp;
     std::uint64_t nstarAsymp;
     long double deltaMertensAsymp;
     std::uint64_t nzeroStatAsymp;
@@ -50,12 +51,12 @@ struct CPSRow {
     
     CPSRow( std::uint64_t ns, std::uint64_t ne, long double a, std::uint64_t pm,
             std::uint64_t ns_val, long double dm, std::uint64_t n5p,
-            std::uint64_t nzs, long double es, std::uint64_t nsa,
+            std::uint64_t nzs, long double es, std::uint64_t pma, std::uint64_t nsa,
             long double dma, std::uint64_t nzsa, long double esa,
             const std::string& src = "")
         : n_start(ns), n_end(ne), alpha(a), preMertens(pm), nstar(ns_val),
             deltaMertens(dm), n_5percent(n5p), nzeroStat(nzs), etaStat(es),
-            nstarAsymp(nsa), deltaMertensAsymp(dma), nzeroStatAsymp(nzsa),
+            preMertensAsymp(pma), nstarAsymp(nsa), deltaMertensAsymp(dma), nzeroStatAsymp(nzsa),
             etaStatAsymp(esa), source_file(src) {}
 };
 
@@ -109,23 +110,23 @@ public:
             }
             
             // Parse the line
-            std::uint64_t n_start, n_end, preMertens, nstar, n_5percent, nzeroStat, nstarAsymp, nzeroStatAsymp;
+            std::uint64_t n_start, n_end, preMertens, nstar, n_5percent, nzeroStat, preMertensAsymp, nstarAsymp, nzeroStatAsymp;
             long double alpha, deltaMertens, etaStat, deltaMertensAsymp, etaStatAsymp;
             
-            int parsed = std::sscanf(line, "%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%Lf,%" SCNu64 ",%Lf",
+            int parsed = std::sscanf(line, "%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%" SCNu64 ",%Lf,%" SCNu64 ",%Lf",
                 &n_start, &n_end, &alpha, &preMertens,
                 &nstar, &deltaMertens, &n_5percent, &nzeroStat, &etaStat,
-                &nstarAsymp, &deltaMertensAsymp, &nzeroStatAsymp, &etaStatAsymp
+                &preMertensAsymp, &nstarAsymp, &deltaMertensAsymp, &nzeroStatAsymp, &etaStatAsymp
             );
             
-            if (parsed != 13) {
-                std::fprintf(stderr, "ERROR: Malformed line %d in %s - expected 13 fields, got %d\n", lineNum, filename.c_str(), parsed);
+            if (parsed != 14) {
+                std::fprintf(stderr, "ERROR: Malformed line %d in %s - expected 14 fields, got %d\n", lineNum, filename.c_str(), parsed);
                 std::fclose(file);
                 throw std::runtime_error("Malformed input data detected");
             }
             
             all_rows.emplace_back(n_start, n_end, alpha, preMertens, nstar, deltaMertens,
-                                n_5percent, nzeroStat, etaStat, nstarAsymp, deltaMertensAsymp,
+                                n_5percent, nzeroStat, etaStat, preMertensAsymp, nstarAsymp, deltaMertensAsymp,
                                 nzeroStatAsymp, etaStatAsymp, filename);
         }
         
@@ -246,6 +247,14 @@ public:
                 }
             }
 
+            // Handle preMertensAsymp inheritance
+            std::uint64_t effective_preMertensAsymp = first_row.n_start - 1;
+            for (const auto& row : group) {
+                if (row.preMertensAsymp >= row.n_start || ! row.preMertensAsymp) {
+                    effective_preMertensAsymp = row.preMertensAsymp;
+                }
+            }
+
             // Find n_5percent: first row with non-zero value
             std::uint64_t merged_n_5percent = 0;
             for (const auto& row : group) {
@@ -272,9 +281,9 @@ public:
                         break;
                     }
                 }
-                // Find nstarAsymp: lowest value above effective_preMertens
+                // Find nstarAsymp: lowest value above effective_preMertensAsymp
                 for (const auto& row : group) {
-                    if (row.nstarAsymp > effective_preMertens && ! merged_nstarAsymp) {
+                    if (row.nstarAsymp > effective_preMertensAsymp && ! merged_nstarAsymp) {
                         merged_nstarAsymp = row.nstarAsymp;
                         merged_deltaMertensAsymp = row.deltaMertensAsymp;
                         break;
@@ -292,8 +301,8 @@ public:
                             merged_etaStat = row.etaStat;
                             merged_nzeroStat = row.nzeroStat;
                         }
-                        // Find etaStatAsymp: algebraically smallest value where nzeroStatAsymp > n_5percent and > preMertens
-                        if (row.nzeroStatAsymp > merged_n_5percent && row.nzeroStatAsymp > effective_preMertens && row.etaStatAsymp < merged_etaStatAsymp) {
+                        // Find etaStatAsymp: algebraically smallest value where nzeroStatAsymp > n_5percent and > preMertensAsymp
+                        if (row.nzeroStatAsymp > merged_n_5percent && row.nzeroStatAsymp > effective_preMertensAsymp && row.etaStatAsymp < merged_etaStatAsymp) {
                             merged_etaStatAsymp = row.etaStatAsymp;
                             merged_nzeroStatAsymp = row.nzeroStatAsymp;
                         }
@@ -312,10 +321,10 @@ public:
             }
             
             // Write merged row
-            std::fprintf(output, "%" PRIu64 ",%" PRIu64 ",%.12Lg,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf\n",
+            std::fprintf(output, "%" PRIu64 ",%" PRIu64 ",%.12Lg,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%" PRIu64 ",%.6Lf,%" PRIu64 ",%.6Lf\n",
                 first_row.n_start, last_row.n_end, first_row.alpha, effective_preMertens,
                 merged_nstar, merged_deltaMertens, merged_n_5percent, merged_nzeroStat, merged_etaStat,
-                merged_nstarAsymp, merged_deltaMertensAsymp, merged_nzeroStatAsymp, merged_etaStatAsymp);
+                effective_preMertensAsymp, merged_nstarAsymp, merged_deltaMertensAsymp, merged_nzeroStatAsymp, merged_etaStatAsymp);
         }
     }
     
@@ -356,7 +365,7 @@ public:
         }
         
         // Write header
-        std::fprintf(output, "FIRST,LAST,Alpha,PreMertens,Mertens,DeltaMertens,n_5precent,NzeroStat,EtaStat,MertensAsymp,DeltaMertensAsymp,NzeroStatAsymp,EtaStatAsymp\n");
+        std::fprintf(output, "FIRST,LAST,Alpha,PreMertens,Mertens,DeltaMertens,n_5precent,NzeroStat,EtaStat,PreMertensAsymp,MertensAsymp,DeltaMertensAsymp,NzeroStatAsymp,EtaStatAsymp\n");
         
         // Merge each alpha group
         for (auto& [alpha, rows] : alpha_groups) {
