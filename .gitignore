@@ -13,7 +13,7 @@ parts/
 *.synctex.gz
 *.fdb_latexmk
 backups/
-papers/hero-primes/
+papers/drafts/
 papers/submissions/
 src/printprimes/printprimes
 src/storeprimes/storeprimes
