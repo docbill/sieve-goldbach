@@ -48,6 +48,7 @@ FORMATS_HL_A := full raw norm psi
 FORMATS_EMP  := full raw norm cps psi
 COMPAT       := v0.2.0
 COMPAT_LEGACY := v0.1.5
+LBOUNDSUMMARY_ENABLED := $(if $(filter v0.% v1.%,$(COMPAT)),,1)
 # PSI file extension: use .csv when PSI = 1, .stamp when PSI != 1 (for dummy files)
 PSI_EXTENSION := $(if $(filter 1,$(PSI)),.csv,.stamp)
 # POINTWISE file extension: use .csv when POINTWISE = 1, .stamp when POINTWISE != 1 (for dummy files)
@@ -621,7 +622,7 @@ OUTPUT_$(1)   := $$(SGB_$(1)).csv $$(SGB_DEFAULT_$(1)).csv $$(SUMMARY_$(1)).csv 
 	$$(LAVG_$(1)).csv $$(LMIN_$(1)).csv $$(LALIGNMIN_$(1)).csv $$(LALIGNMAX_$(1)).csv $$(LBOUNDMIN_$(1)).csv $$(LBOUNDMAX_$(1)).csv $$(LMAX_$(1)).csv \
 	$$(LSAVG_$(1)).csv $$(LSMIN_$(1)).csv $$(LSMAX_$(1)).csv \
 	$(if $(filter 1,$(PSI)),$$(LALIGNMIN_PSI_$(1)).csv $$(LALIGNMAX_PSI_$(1)).csv $$(LBOUNDMIN_PSI_$(1)).csv $$(LBOUNDMAX_PSI_$(1)).csv) \
-	$$(LBOUNDMIN_SUMMARY_$(1)).csv $$(LBOUNDMAX_SUMMARY_$(1)).csv
+	$(if $(filter 1,$(LBOUNDSUMMARY_ENABLED)),$$(LBOUNDMIN_SUMMARY_$(1)).csv $$(LBOUNDMAX_SUMMARY_$(1)).csv)
 
 # Verifies (sha256 or tool-specific)
 SGB_VERIFY_$(1)      := $$(SGB_$(1)).csv.verify
@@ -716,10 +717,10 @@ ifeq ($(1),HUGE)
         $$(LSAVG_DEFAULT_$(1)).csv $$(LSAVG_$(1)).csv $$(LSAVG_VERIFY_$(1)) \
         $$(LSMIN_DEFAULT_$(1)).csv $$(LSMIN_$(1)).csv $$(LSMIN_VERIFY_$(1)) \
         $$(LSMAX_DEFAULT_$(1)).csv $$(LSMAX_$(1)).csv $$(LSMAX_VERIFY_$(1)) \
-        $$(LBOUNDMIN_SUMMARY_$(1)).csv $$(LBOUNDMIN_SUMMARY_VERIFY_$(1)) \
+        $(if $(filter 1,$(LBOUNDSUMMARY_ENABLED)),$$(LBOUNDMIN_SUMMARY_$(1)).csv $$(LBOUNDMIN_SUMMARY_VERIFY_$(1)) \
         $$(LBOUNDMAX_SUMMARY_$(1)).csv $$(LBOUNDMAX_SUMMARY_VERIFY_$(1)) \
         $$(LBOUNDMIN_CERT_$(1)).csv $$(LBOUNDMIN_CERT_VERIFY_$(1)) \
-        $$(LBOUNDMIN_AUDIT_$(1)).csv $$(LBOUNDMIN_AUDIT_VERIFY_$(1)) \
+        $$(LBOUNDMIN_AUDIT_$(1)).csv $$(LBOUNDMIN_AUDIT_VERIFY_$(1)) ) \
 	$(if $(filter 1,$(PSI)),$$(LALIGNMIN_PSI_DEFAULT_$(1))$(PSI_EXTENSION) $$(LALIGNMIN_PSI_$(1))$(PSI_EXTENSION) $$(LALIGNMIN_PSI_VERIFY_$(1)) \
 		$$(LALIGNMAX_PSI_DEFAULT_$(1))$(PSI_EXTENSION) $$(LALIGNMAX_PSI_$(1))$(PSI_EXTENSION) $$(LALIGNMAX_PSI_VERIFY_$(1)) \
 		$$(LBOUNDMIN_PSI_DEFAULT_$(1))$(PSI_EXTENSION) $$(LBOUNDMIN_PSI_$(1))$(PSI_EXTENSION) $$(LBOUNDMIN_PSI_VERIFY_$(1)) \
@@ -907,13 +908,28 @@ $$(LBOUNDMAX_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)
 	fi
 
 $$(LBOUNDMIN_SUMMARY_$(1)).csv: $$(LBOUNDMIN_DEFAULT_$(1)).csv
-	./bin/summarizelambdabound.py $$(LBOUNDMIN_TPL_FILE_$(1)).csv "$$@"
+	@if [ "$(LBOUNDSUMMARY_ENABLED)" = "1" ]; then \
+		./bin/summarizelambdabound.py $$(LBOUNDMIN_TPL_FILE_$(1)).csv "$$@"; \
+	else \
+		echo "Skipping lambdabound summary for COMPAT $(COMPAT) (< v2.0)"; \
+		touch "$$@"; \
+	fi
 
 $$(LBOUNDMIN_CERT_$(1)).csv: $$(LBOUNDMIN_SUMMARY_$(1)).csv
-	./bin/summarizelambdaboundcert.py $$(LBOUNDMIN_TPL_FILE_$(1)).csv $$(LBOUNDMAX_TPL_FILE_$(1)).csv "$$@"
+	@if [ "$(LBOUNDSUMMARY_ENABLED)" = "1" ]; then \
+		./bin/summarizelambdaboundcert.py $$(LBOUNDMIN_TPL_FILE_$(1)).csv $$(LBOUNDMAX_TPL_FILE_$(1)).csv "$$@"; \
+	else \
+		echo "Skipping lambdabound cert for COMPAT $(COMPAT) (< v2.0)"; \
+		touch "$$@"; \
+	fi
 
 $$(LBOUNDMIN_AUDIT_$(1)).csv: $$(LBOUNDMIN_CERT_$(1)).csv
-	./bin/summarizelambdaboundaudit.py "$$<" "$$@"
+	@if [ "$(LBOUNDSUMMARY_ENABLED)" = "1" ]; then \
+		./bin/summarizelambdaboundaudit.py "$$<" "$$@"; \
+	else \
+		echo "Skipping lambdabound audit for COMPAT $(COMPAT) (< v2.0)"; \
+		touch "$$@"; \
+	fi
 
 $$(LBOUNDMAX_$(1)).csv: $$(LBOUNDMAX_DEFAULT_$(1)).csv
 	cp "$$<" "$$@"
@@ -935,7 +951,12 @@ $$(LMAX_DEFAULT_$(1)).csv: $$(SUMMARY_DEFAULT_$(1)).csv $$(SGB_DEFAULT_$(1)).csv
 	done
 
 $$(LBOUNDMAX_SUMMARY_$(1)).csv: $$(LBOUNDMAX_DEFAULT_$(1)).csv
-	./bin/summarizelambdabound.py $$(LBOUNDMAX_TPL_FILE_$(1)).csv "$$@"
+	@if [ "$(LBOUNDSUMMARY_ENABLED)" = "1" ]; then \
+		./bin/summarizelambdabound.py $$(LBOUNDMAX_TPL_FILE_$(1)).csv "$$@"; \
+	else \
+		echo "Skipping lambdabound summary for COMPAT $(COMPAT) (< v2.0)"; \
+		touch "$$@"; \
+	fi
 
 $$(LMAX_$(1)).csv: $$(LMAX_DEFAULT_$(1)).csv
 	cp "$$<" "$$@"
@@ -1812,8 +1833,8 @@ certify: $(BITMAP_VERIFY) $(RAW_VERIFY) $(GBP_VERIFY) \
 	$(LAVG_VERIFY_SPRIM) $(LMIN_VERIFY_SPRIM) $(LALIGNMIN_VERIFY_SPRIM) $(LALIGNMAX_VERIFY_SPRIM) \
 	$(LBOUNDMIN_VERIFY_SPRIM) $(LBOUNDMAX_VERIFY_SPRIM) $(LMAX_VERIFY_SPRIM) \
     $(LSAVG_VERIFY_SPRIM) $(LSMIN_VERIFY_SPRIM) $(LSMAX_VERIFY_SPRIM) \
-	$(LBOUNDMIN_SUMMARY_VERIFY_SPRIM) $(LBOUNDMAX_SUMMARY_VERIFY_SPRIM) \
-	$(LBOUNDMIN_CERT_VERIFY_SPRIM) $(LBOUNDMIN_AUDIT_VERIFY_SPRIM) \
+	$(if $(filter 1,$(LBOUNDSUMMARY_ENABLED)),$(LBOUNDMIN_SUMMARY_VERIFY_SPRIM) $(LBOUNDMAX_SUMMARY_VERIFY_SPRIM) \
+	$(LBOUNDMIN_CERT_VERIFY_SPRIM) $(LBOUNDMIN_AUDIT_VERIFY_SPRIM) ) \
 	$(if $(filter 1,$(PSI)),$(LALIGNMIN_PSI_VERIFY_SPRIM) $(LALIGNMAX_PSI_VERIFY_SPRIM) $(LBOUNDMIN_PSI_VERIFY_SPRIM) $(LBOUNDMAX_PSI_VERIFY_SPRIM)) \
 	$(if $(filter 1,$(POINTWISE)),$(BOUNDRATIOMIN_VERIFY_SPRIM) $(BOUNDRATIOMAX_VERIFY_SPRIM) \
 		$(BOUNDRATIOMIN_SUMMARY_VERIFY_SPRIM) $(BOUNDRATIOMAX_SUMMARY_VERIFY_SPRIM) \
@@ -1830,8 +1851,8 @@ certify-medium: \
 	$(LAVG_VERIFY_MPRIM) $(LMIN_VERIFY_MPRIM) $(LALIGNMIN_VERIFY_MPRIM) $(LALIGNMAX_VERIFY_MPRIM) \
 	$(LBOUNDMIN_VERIFY_MPRIM) $(LBOUNDMAX_VERIFY_MPRIM) $(LMAX_VERIFY_MPRIM) \
 	$(LSAVG_VERIFY_MPRIM) $(LSMIN_VERIFY_MPRIM) $(LSMAX_VERIFY_MPRIM) \
-	$(LBOUNDMIN_SUMMARY_VERIFY_MPRIM) $(LBOUNDMAX_SUMMARY_VERIFY_MPRIM)	\
-	$(LBOUNDMIN_CERT_VERIFY_MPRIM) $(LBOUNDMIN_AUDIT_VERIFY_MPRIM)	\
+	$(if $(filter 1,$(LBOUNDSUMMARY_ENABLED)),$(LBOUNDMIN_SUMMARY_VERIFY_MPRIM) $(LBOUNDMAX_SUMMARY_VERIFY_MPRIM)	\
+	$(LBOUNDMIN_CERT_VERIFY_MPRIM) $(LBOUNDMIN_AUDIT_VERIFY_MPRIM)	) \
 	$(if $(filter 1,$(PSI)),$(LALIGNMIN_PSI_VERIFY_MPRIM) $(LALIGNMAX_PSI_VERIFY_MPRIM) $(LBOUNDMIN_PSI_VERIFY_MPRIM) $(LBOUNDMAX_PSI_VERIFY_MPRIM)) \
 	$(if $(filter 1,$(POINTWISE)),$(BOUNDRATIOMIN_VERIFY_MPRIM) $(BOUNDRATIOMAX_VERIFY_MPRIM) \
 		$(BOUNDRATIOMIN_SUMMARY_VERIFY_MPRIM) $(BOUNDRATIOMAX_SUMMARY_VERIFY_MPRIM) \
@@ -1849,8 +1870,8 @@ certify-large: \
 	$(LAVG_VERIFY_LPRIM) $(LMIN_VERIFY_LPRIM) $(LALIGNMIN_VERIFY_LPRIM) $(LALIGNMAX_VERIFY_LPRIM) \
 	$(LBOUNDMIN_VERIFY_LPRIM) $(LBOUNDMAX_VERIFY_LPRIM) $(LMAX_VERIFY_LPRIM) \
 	$(LSAVG_VERIFY_LPRIM) $(LSMIN_VERIFY_LPRIM) $(LSMAX_VERIFY_LPRIM) \
-	$(LBOUNDMIN_SUMMARY_VERIFY_LPRIM) $(LBOUNDMAX_SUMMARY_VERIFY_LPRIM)	\
-	$(LBOUNDMIN_CERT_VERIFY_LPRIM) $(LBOUNDMIN_AUDIT_VERIFY_LPRIM)	\
+	$(if $(filter 1,$(LBOUNDSUMMARY_ENABLED)),$(LBOUNDMIN_SUMMARY_VERIFY_LPRIM) $(LBOUNDMAX_SUMMARY_VERIFY_LPRIM)	\
+	$(LBOUNDMIN_CERT_VERIFY_LPRIM) $(LBOUNDMIN_AUDIT_VERIFY_LPRIM)	) \
 	$(if $(filter 1,$(PSI)),$(LALIGNMIN_PSI_VERIFY_LPRIM) $(LALIGNMAX_PSI_VERIFY_LPRIM) $(LBOUNDMIN_PSI_VERIFY_LPRIM) $(LBOUNDMAX_PSI_VERIFY_LPRIM)) \
 	$(if $(filter 1,$(POINTWISE)), $(BOUNDRATIOMIN_VERIFY_LPRIM) $(BOUNDRATIOMAX_VERIFY_LPRIM) \
 		$(BOUNDRATIOMIN_SUMMARY_VERIFY_LPRIM) $(BOUNDRATIOMAX_SUMMARY_VERIFY_LPRIM)	\
@@ -1863,8 +1884,8 @@ certify-huge: \
 	$(LAVG_VERIFY_XPRIM) $(LMIN_VERIFY_XPRIM) $(LALIGNMIN_VERIFY_XPRIM) $(LALIGNMAX_VERIFY_XPRIM) \
 	$(LBOUNDMIN_VERIFY_XPRIM) $(LBOUNDMAX_VERIFY_XPRIM) $(LMAX_VERIFY_XPRIM) \
 	$(LSAVG_VERIFY_XPRIM) $(LSMIN_VERIFY_XPRIM) $(LSMAX_VERIFY_XPRIM) \
-	$(LBOUNDMIN_SUMMARY_VERIFY_XPRIM) $(LBOUNDMAX_SUMMARY_VERIFY_XPRIM)	\
-	$(LBOUNDMIN_CERT_VERIFY_XPRIM) $(LBOUNDMIN_AUDIT_VERIFY_XPRIM)	\
+	$(if $(filter 1,$(LBOUNDSUMMARY_ENABLED)),$(LBOUNDMIN_SUMMARY_VERIFY_XPRIM) $(LBOUNDMAX_SUMMARY_VERIFY_XPRIM)	\
+	$(LBOUNDMIN_CERT_VERIFY_XPRIM) $(LBOUNDMIN_AUDIT_VERIFY_XPRIM)	) \
 	$(if $(filter 1,$(PSI)),$(LALIGNMIN_PSI_VERIFY_XPRIM) $(LALIGNMAX_PSI_VERIFY_XPRIM) $(LBOUNDMIN_PSI_VERIFY_XPRIM) $(LBOUNDMAX_PSI_VERIFY_XPRIM)) \
 	$(if $(filter 1,$(POINTWISE)),$(BOUNDRATIOMIN_VERIFY_XPRIM) $(BOUNDRATIOMAX_VERIFY_XPRIM) \
 		$(BOUNDRATIOMIN_SUMMARY_VERIFY_XPRIM) $(BOUNDRATIOMAX_SUMMARY_VERIFY_XPRIM) \
@@ -1904,10 +1925,10 @@ verify: certify
 	@(cmp "$(LALIGNMAX_VERIFY_SPRIM)"  "$(LALIGNMAX_GOLD_SPRIM)" && echo "Validated $(LALIGNMAX_SPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LBOUNDMIN_VERIFY_SPRIM)"  "$(LBOUNDMIN_GOLD_SPRIM)" && echo "Validated $(LBOUNDMIN_SPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LBOUNDMAX_VERIFY_SPRIM)"  "$(LBOUNDMAX_GOLD_SPRIM)" && echo "Validated $(LBOUNDMAX_SPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_SUMMARY_VERIFY_SPRIM)"  "$(LBOUNDMIN_SUMMARY_GOLD_SPRIM)" && echo "Validated $(LBOUNDMIN_SUMMARY_SPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMAX_SUMMARY_VERIFY_SPRIM)"  "$(LBOUNDMAX_SUMMARY_GOLD_SPRIM)" && echo "Validated $(LBOUNDMAX_SUMMARY_SPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_CERT_VERIFY_SPRIM)"  "$(LBOUNDMIN_CERT_GOLD_SPRIM)" && echo "Validated $(LBOUNDMIN_CERT_SPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_AUDIT_VERIFY_SPRIM)"  "$(LBOUNDMIN_AUDIT_GOLD_SPRIM)" && echo "Validated $(LBOUNDMIN_AUDIT_SPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_SUMMARY_VERIFY_SPRIM)"  "$(LBOUNDMIN_SUMMARY_GOLD_SPRIM)" && echo "Validated $(LBOUNDMIN_SUMMARY_SPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMAX_SUMMARY_VERIFY_SPRIM)"  "$(LBOUNDMAX_SUMMARY_GOLD_SPRIM)" && echo "Validated $(LBOUNDMAX_SUMMARY_SPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_CERT_VERIFY_SPRIM)"  "$(LBOUNDMIN_CERT_GOLD_SPRIM)" && echo "Validated $(LBOUNDMIN_CERT_SPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_AUDIT_VERIFY_SPRIM)"  "$(LBOUNDMIN_AUDIT_GOLD_SPRIM)" && echo "Validated $(LBOUNDMIN_AUDIT_SPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LMAX_VERIFY_SPRIM)"    "$(LMAX_GOLD_SPRIM)" && echo "Validated $(LMAX_SPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LSAVG_VERIFY_SPRIM)"    "$(LSAVG_GOLD_SPRIM)" && echo "Validated $(LSAVG_SPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LSMIN_VERIFY_SPRIM)"    "$(LSMIN_GOLD_SPRIM)" && echo "Validated $(LSMIN_SPRIM).csv") || test "$$TAINTED" = "1"
@@ -1952,10 +1973,10 @@ $(OUT)/verify-medium-$(COMPAT).stamp: certify-medium verify
 	@(cmp "$(LALIGNMAX_VERIFY_MPRIM)"  "$(LALIGNMAX_GOLD_MPRIM)" && echo "Validated $(LALIGNMAX_MPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LBOUNDMIN_VERIFY_MPRIM)"  "$(LBOUNDMIN_GOLD_MPRIM)" && echo "Validated $(LBOUNDMIN_MPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LBOUNDMAX_VERIFY_MPRIM)"  "$(LBOUNDMAX_GOLD_MPRIM)" && echo "Validated $(LBOUNDMAX_MPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_SUMMARY_VERIFY_MPRIM)"  "$(LBOUNDMIN_SUMMARY_GOLD_MPRIM)" && echo "Validated $(LBOUNDMIN_SUMMARY_MPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMAX_SUMMARY_VERIFY_MPRIM)"  "$(LBOUNDMAX_SUMMARY_GOLD_MPRIM)" && echo "Validated $(LBOUNDMAX_SUMMARY_MPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_CERT_VERIFY_MPRIM)"  "$(LBOUNDMIN_CERT_GOLD_MPRIM)" && echo "Validated $(LBOUNDMIN_CERT_MPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_AUDIT_VERIFY_MPRIM)"  "$(LBOUNDMIN_AUDIT_GOLD_MPRIM)" && echo "Validated $(LBOUNDMIN_AUDIT_MPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_SUMMARY_VERIFY_MPRIM)"  "$(LBOUNDMIN_SUMMARY_GOLD_MPRIM)" && echo "Validated $(LBOUNDMIN_SUMMARY_MPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMAX_SUMMARY_VERIFY_MPRIM)"  "$(LBOUNDMAX_SUMMARY_GOLD_MPRIM)" && echo "Validated $(LBOUNDMAX_SUMMARY_MPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_CERT_VERIFY_MPRIM)"  "$(LBOUNDMIN_CERT_GOLD_MPRIM)" && echo "Validated $(LBOUNDMIN_CERT_MPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_AUDIT_VERIFY_MPRIM)"  "$(LBOUNDMIN_AUDIT_GOLD_MPRIM)" && echo "Validated $(LBOUNDMIN_AUDIT_MPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LMAX_VERIFY_MPRIM)"    "$(LMAX_GOLD_MPRIM)" && echo "Validated $(LMAX_MPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LSAVG_VERIFY_MPRIM)"    "$(LSAVG_GOLD_MPRIM)" && echo "Validated $(LSAVG_MPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LSMIN_VERIFY_MPRIM)"    "$(LSMIN_GOLD_MPRIM)" && echo "Validated $(LSMIN_MPRIM).csv") || test "$$TAINTED" = "1"
@@ -2001,10 +2022,10 @@ $(OUT)/verify-large-$(COMPAT).stamp: certify-large verify-medium
 	@(cmp "$(LALIGNMAX_VERIFY_LPRIM)"  "$(LALIGNMAX_GOLD_LPRIM)" && echo "Validated $(LALIGNMAX_LPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LBOUNDMIN_VERIFY_LPRIM)"  "$(LBOUNDMIN_GOLD_LPRIM)" && echo "Validated $(LBOUNDMIN_LPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LBOUNDMAX_VERIFY_LPRIM)"  "$(LBOUNDMAX_GOLD_LPRIM)" && echo "Validated $(LBOUNDMAX_LPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_SUMMARY_VERIFY_LPRIM)"  "$(LBOUNDMIN_SUMMARY_GOLD_LPRIM)" && echo "Validated $(LBOUNDMIN_SUMMARY_LPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMAX_SUMMARY_VERIFY_LPRIM)"  "$(LBOUNDMAX_SUMMARY_GOLD_LPRIM)" && echo "Validated $(LBOUNDMAX_SUMMARY_LPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_CERT_VERIFY_LPRIM)"  "$(LBOUNDMIN_CERT_GOLD_LPRIM)" && echo "Validated $(LBOUNDMIN_CERT_LPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_AUDIT_VERIFY_LPRIM)"  "$(LBOUNDMIN_AUDIT_GOLD_LPRIM)" && echo "Validated $(LBOUNDMIN_AUDIT_LPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_SUMMARY_VERIFY_LPRIM)"  "$(LBOUNDMIN_SUMMARY_GOLD_LPRIM)" && echo "Validated $(LBOUNDMIN_SUMMARY_LPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMAX_SUMMARY_VERIFY_LPRIM)"  "$(LBOUNDMAX_SUMMARY_GOLD_LPRIM)" && echo "Validated $(LBOUNDMAX_SUMMARY_LPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_CERT_VERIFY_LPRIM)"  "$(LBOUNDMIN_CERT_GOLD_LPRIM)" && echo "Validated $(LBOUNDMIN_CERT_LPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_AUDIT_VERIFY_LPRIM)"  "$(LBOUNDMIN_AUDIT_GOLD_LPRIM)" && echo "Validated $(LBOUNDMIN_AUDIT_LPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LMAX_VERIFY_LPRIM)"    "$(LMAX_GOLD_LPRIM)" && echo "Validated $(LMAX_LPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LSAVG_VERIFY_LPRIM)"    "$(LSAVG_GOLD_LPRIM)" && echo "Validated $(LSAVG_LPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LSMIN_VERIFY_LPRIM)"    "$(LSMIN_GOLD_LPRIM)" && echo "Validated $(LSMIN_LPRIM).csv") || test "$$TAINTED" = "1"
@@ -2034,10 +2055,10 @@ $(OUT)/verify-huge-$(COMPAT).stamp: certify-huge verify-large
 	@(cmp "$(LALIGNMAX_VERIFY_XPRIM)"  "$(LALIGNMAX_GOLD_XPRIM)" && echo "Validated $(LALIGNMAX_XPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LBOUNDMIN_VERIFY_XPRIM)"  "$(LBOUNDMIN_GOLD_XPRIM)" && echo "Validated $(LBOUNDMIN_XPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LBOUNDMAX_VERIFY_XPRIM)"  "$(LBOUNDMAX_GOLD_XPRIM)" && echo "Validated $(LBOUNDMAX_XPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_SUMMARY_VERIFY_XPRIM)"  "$(LBOUNDMIN_SUMMARY_GOLD_XPRIM)" && echo "Validated $(LBOUNDMIN_SUMMARY_XPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMAX_SUMMARY_VERIFY_XPRIM)"  "$(LBOUNDMAX_SUMMARY_GOLD_XPRIM)" && echo "Validated $(LBOUNDMAX_SUMMARY_XPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_CERT_VERIFY_XPRIM)"  "$(LBOUNDMIN_CERT_GOLD_XPRIM)" && echo "Validated $(LBOUNDMIN_CERT_XPRIM).csv") || test "$$TAINTED" = "1"
-	@(cmp "$(LBOUNDMIN_AUDIT_VERIFY_XPRIM)"  "$(LBOUNDMIN_AUDIT_GOLD_XPRIM)" && echo "Validated $(LBOUNDMIN_AUDIT_XPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_SUMMARY_VERIFY_XPRIM)"  "$(LBOUNDMIN_SUMMARY_GOLD_XPRIM)" && echo "Validated $(LBOUNDMIN_SUMMARY_XPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMAX_SUMMARY_VERIFY_XPRIM)"  "$(LBOUNDMAX_SUMMARY_GOLD_XPRIM)" && echo "Validated $(LBOUNDMAX_SUMMARY_XPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_CERT_VERIFY_XPRIM)"  "$(LBOUNDMIN_CERT_GOLD_XPRIM)" && echo "Validated $(LBOUNDMIN_CERT_XPRIM).csv") || test "$$TAINTED" = "1"
+	@test "$(LBOUNDSUMMARY_ENABLED)" != "1" || (cmp "$(LBOUNDMIN_AUDIT_VERIFY_XPRIM)"  "$(LBOUNDMIN_AUDIT_GOLD_XPRIM)" && echo "Validated $(LBOUNDMIN_AUDIT_XPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LMAX_VERIFY_XPRIM)"    "$(LMAX_GOLD_XPRIM)" && echo "Validated $(LMAX_XPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LSAVG_VERIFY_XPRIM)"    "$(LSAVG_GOLD_XPRIM)" && echo "Validated $(LSAVG_XPRIM).csv") || test "$$TAINTED" = "1"
 	@(cmp "$(LSMIN_VERIFY_XPRIM)"    "$(LSMIN_GOLD_XPRIM)" && echo "Validated $(LSMIN_XPRIM).csv") || test "$$TAINTED" = "1"
