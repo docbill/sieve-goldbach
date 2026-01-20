@@ -163,6 +163,14 @@ The top-level `Makefile` provides several convenient targets:
 * `make validate-medium` – build and validate medium datasets (≈12+ hours).
 * `make validate-large` – build and validate large datasets (can run for weeks).
 * `make verify` – compare generated outputs against golden reference `.verify` and `.sha256` files.
+* `make manifest` – create a manifest file (`manifest-17PR2-$(COMPAT).txt`) containing SHA256 checksums of all CSV files from alpha directories matching the small primorial pattern (`*-17PR2-*-$(COMPAT).csv`).
+* `make manifest-medium` – create a manifest file (`manifest-19PR-$(COMPAT).txt`) for medium primorial files (`*-19PR-*-$(COMPAT).csv`).
+* `make manifest-large` – create a manifest file (`manifest-23PR.5-$(COMPAT).txt`) for large primorial files (`*-23PR.5-*-$(COMPAT).csv`).
+* `make manifest-huge` – create a manifest file (`manifest-23PR-$(COMPAT).txt`) for huge primorial files (`*-23PR-*-$(COMPAT).csv`).
+* `make verify-manifest` – verify the small primorial manifest against golden reference in `data/` directory. Uses the `TAINTED` flag to allow builds to complete without failure on first run.
+* `make verify-manifest-medium` – verify the medium primorial manifest.
+* `make verify-manifest-large` – verify the large primorial manifest.
+* `make verify-manifest-huge` – verify the huge primorial manifest.
 * `make clean` – remove temporary certification files (`*.verify`) from `output/`.
 * `make clobber` – perform `clean` and also remove all generated data products (`output/*.csv`, `.raw`, `.bitmap`, etc.), leaving only source and reference data.
 * `make backup` – create a compressed backup of all partial CSV files (`.partial.csv`) in the `backups/` directory. Useful for preserving progress on long-running jobs. Backups are named with a timestamp and compatibility version (e.g., `backup-20251111145800-v0.2.0.tar.bz2`).
@@ -267,6 +275,59 @@ The repository includes two kinds of certification artifacts:
 * **Manual certification** (`.cert`) — attested files prepared after human review, confirming that the `.verify` output matches expectations and is correct for inclusion in the archive.
 
 This separation ensures that verification can be re-run independently, while manual certifications provide a stable reference for long-term archival.
+
+### Manifest Files
+
+For convenience and archival purposes, the project provides manifest files that contain SHA256 checksums of all CSV files from the alpha directories, organized by data range:
+
+* **Small Primorial Manifest** (`manifest-17PR2-$(COMPAT).txt`) – Contains SHA256 checksums of all files matching `*-17PR2-*-$(COMPAT).csv` from all `alpha-*/` directories.
+
+* **Medium Primorial Manifest** (`manifest-19PR-$(COMPAT).txt`) – Contains SHA256 checksums of all files matching `*-19PR-*-$(COMPAT).csv` from all `alpha-*/` directories.
+
+* **Large Primorial Manifest** (`manifest-23PR.5-$(COMPAT).txt`) – Contains SHA256 checksums of all files matching `*-23PR.5-*-$(COMPAT).csv` from all `alpha-*/` directories.
+
+* **Huge Primorial Manifest** (`manifest-23PR-$(COMPAT).txt`) – Contains SHA256 checksums of all files matching `*-23PR-*-$(COMPAT).csv` from all `alpha-*/` directories.
+
+**Workflow benefit:** The manifest files enable a much faster verification workflow. Instead of waiting months to regenerate all data from scratch, reviewers can restore from backups and verify checksums in about 10 minutes. This is particularly useful for peer review scenarios where reviewers typically only need to verify the small runs and validate that the full dataset checksums match the published manifests.
+
+**Note for researchers:** While reviewers can use the restore workflow for quick verification, researchers who need to work with or extend the data will typically need to run the full validation (`make POINTWISE=1 -j 12 validate-large`) to generate fresh data. The restore workflow is primarily intended for verification and review purposes.
+
+**Creating manifests:**
+```sh
+make manifest          # Small primorial only
+make manifest-medium   # Small + medium primorial
+make manifest-large    # Small + medium + large primorial
+make manifest-huge     # All primorial ranges
+```
+
+**Prerequisites:** Before running the manifest targets, you must first complete the corresponding validation run:
+```sh
+make validate          # For manifest
+make validate-medium   # For manifest-medium
+make validate-large    # For manifest-large
+make validate-huge     # For manifest-huge
+```
+
+If you don't want to wait for the full build (which can take several weeks), you can restore data from a previous run's partial files:
+```sh
+make restore
+```
+
+After restoration, complete any remaining partial files, then run the manifest targets.
+
+The manifest files are created in the `output/` directory. Each manifest file contains one line per CSV file, with the SHA256 checksum followed by the file path (relative to the `output/` directory).
+
+**Verifying manifests:**
+```sh
+make verify-manifest          # Verify small primorial manifest
+make verify-manifest-medium   # Verify medium primorial manifest
+make verify-manifest-large    # Verify large primorial manifest
+make verify-manifest-huge     # Verify huge primorial manifest
+```
+
+This compares the generated manifest checksums against golden reference manifests in the `data/` directory. Like other verification targets, it uses the `TAINTED` flag to allow builds to complete without failure on first run (when golden references don't exist yet).
+
+**Note:** The manifest files only include files from `alpha-*/` directories. Files in the main `output/` directory (like `boundratiomax-17PR2-v0.2.0.csv`) are handled separately with their own checksums and are not included in the manifests.
 
 ---
 

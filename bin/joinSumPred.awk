@@ -199,14 +199,16 @@ FNR==1 {
     
     # Detect format from file header
     if (index($0, "FIRST") > 0) {
-        # Check if it has align/bound columns to distinguish v0.2.0 from v0.1.5 primorial
-        if (index($0, "n_v") > 0 && index($0, "Calign_min") > 0) {
+        # Check column naming pattern: v0.1.6/v0.2.0 use asterisks (n_0*) and Cpred_ prefix,
+        # while v0.1.5 uses no asterisks (n_0) and C_ prefix
+        if (index($0, "n_0*") > 0 || index($0, "Cpred_min") > 0) {
             file2_format = "v0.2.0"
         } else {
             file2_format = "v0.1.5"
         }
         if (file2_format == "v0.2.0") {
             # HLA v0.2.0 VERSION: FIRST,LAST,START,minAt*,Gpred(minAt*),maxAt*,Gpred(maxAt*),n_0*,Cpred_min(n_0*),n_1*,Cpred_max(n_1*),n_geom,<COUNT>*,Cpred_avg,n_v,Calign_min(n_v),n_u,Calign_max(n_u),n_a,CboundMin,jitter
+            # v0.1.6 uses same column names but may not have alignment/bound columns
             col_label2 = find_column($0, "START")
             col_n0_2 = find_column($0, "n_0*")
             col_cmin_2 = find_column($0, "Cpred_min(n_0*)")
@@ -214,14 +216,23 @@ FNR==1 {
             col_cmax_2 = find_column($0, "Cpred_max(n_1*)")
             col_ngeom_2 = find_column($0, "n_geom")
             col_cavg_2 = find_column($0, "Cpred_avg")
+            # Alignment/bound columns are optional (may not exist in v0.1.6)
             col_nalign = find_column($0, "n_v")
+            if (col_nalign == -1) col_nalign = 0
             col_calign = find_column($0, "Calign_min(n_v)")
+            if (col_calign == -1) col_calign = 0
             col_nalignmax = find_column($0, "n_u")
+            if (col_nalignmax == -1) col_nalignmax = 0
             col_calignmax = find_column($0, "Calign_max(n_u)")
+            if (col_calignmax == -1) col_calignmax = 0
             col_ncbound = find_column($0, "n_a")
+            if (col_ncbound == -1) col_ncbound = 0
             col_ccbound = find_column($0, "CboundMin(n_a)")
+            if (col_ccbound == -1) col_ccbound = 0
             col_ncboundmax = find_column($0, "n_b")
+            if (col_ncboundmax == -1) col_ncboundmax = 0
             col_ccboundmax = find_column($0, "CboundMax(n_b)")
+            if (col_ccboundmax == -1) col_ccboundmax = 0
         } else {
             # v0.1.5 primorial format: FIRST,LAST,START,minAt,G(minAt),maxAt,G(maxAt),n_0,C_min(n_0),n_1,C_max(n_1),n_geom,<COUNT>,C_avg
             col_label2 = find_column($0, "START")
@@ -244,22 +255,23 @@ FNR==1 {
         # Validate required columns based on format
         missing_columns = 0
         if (file2_format == "v0.2.0") {
-            if (col_nalign == -1) { print "ERROR: n_v column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
-            if (col_calign == -1) { print "ERROR: Calign_min(n_v) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
-            if (col_nalignmax == -1) { print "ERROR: n_u column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
-            if (col_calignmax == -1) { print "ERROR: Calign_max(n_u) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
-            if (col_ncbound == -1) { print "ERROR: n_a column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
-            if (col_ccbound == -1) { print "ERROR: CboundMin(n_a) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
-            if (col_ncboundmax == -1) { print "ERROR: n_b column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
-            if (col_ccboundmax == -1) { print "ERROR: CboundMax(n_b) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            # Core columns are required
+            if (col_label2 == -1) { print "ERROR: START column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_n0_2 == -1) { print "ERROR: n_0* column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_cmin_2 == -1) { print "ERROR: Cpred_min(n_0*) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_n1_2 == -1) { print "ERROR: n_1* column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_cmax_2 == -1) { print "ERROR: Cpred_max(n_1*) column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_ngeom_2 == -1) { print "ERROR: n_geom column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            if (col_cavg_2 == -1) { print "ERROR: Cpred_avg column not found for v0.2.0" > "/dev/stderr"; missing_columns++ }
+            # Alignment/bound columns are optional (may not exist in v0.1.6)
         } else {
             if (col_label2 == -1) { print "ERROR: START column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
-            if (col_n0_2 == -1) { print "ERROR: n_0* column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
-            if (col_cmin_2 == -1) { print "ERROR: Cpred_min(n_0*) column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
-            if (col_n1_2 == -1) { print "ERROR: n_1* column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
-            if (col_cmax_2 == -1) { print "ERROR: Cpred_max(n_1*) column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_n0_2 == -1) { print "ERROR: n_0 column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_cmin_2 == -1) { print "ERROR: C_min(n_0) column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_n1_2 == -1) { print "ERROR: n_1 column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_cmax_2 == -1) { print "ERROR: C_max(n_1) column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
             if (col_ngeom_2 == -1) { print "ERROR: n_geom column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
-            if (col_cavg_2 == -1) { print "ERROR: Cpred_avg column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
+            if (col_cavg_2 == -1) { print "ERROR: C_avg column not found for v0.1.5" > "/dev/stderr"; missing_columns++ }
         }
         if (missing_columns > 0) {
             print "ERROR: " missing_columns " required columns missing for " file2_format ". Cannot proceed." > "/dev/stderr"
