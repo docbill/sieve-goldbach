@@ -47,8 +47,8 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 TARGET = gbpairsummary
-SRC = gbpairsummary.cpp gbaggregate.cpp gbrange.cpp gbdecade.cpp gbprimorial.cpp gbwindow.cpp eulerproductseries.cpp gblongintervalsummary.cpp
-INCL = gblongintervalsummary.hpp gbaggregate.hpp gbdecade.hpp gbprimorial.hpp gbrange.hpp gbwindow.hpp hlcorrstate.hpp hlcorrinterp.hpp eulerproductseries.hpp
+SRC = gbpairsummary.cpp gbaggregate.cpp gbrange.cpp gbdecade.cpp gbprimorial.cpp gbpsi.cpp gbwindow.cpp eulerproductseries.cpp gblongintervalsummary.cpp availabledeficit.cpp
+INCL = gblongintervalsummary.hpp gbaggregate.hpp gbdecade.hpp gbprimorial.hpp gbpsi.hpp gbrange.hpp gbwindow.hpp hlcorrstate.hpp hlcorrinterp.hpp eulerproductseries.hpp availabledeficit.hpp
 LIBFILE = ../lib/libprime.a
 
 all: $(TARGET)

@@ -141,6 +141,55 @@ long double ExtremaValues::getLastRatio() const {
     return getRatio(extra_last, c_last);
 }
 
+void ExtremaValues::putMinimaRatio(long double c_meas, long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr) {
+    current = c+cBaseline;
+    currentBaseline = cBaseline;
+    if(! n_last) {
+        c_firstBaseline = currentBaseline;
+        c_first = current;
+        delta_first = delta;
+        n_first = n;
+        hlCorr_first = hlCorr;
+        extra_first = c_meas;
+        c_lastBaseline = currentBaseline;
+        c_last = current;
+        delta_last = delta;
+        n_last = n;
+        hlCorr_last = hlCorr;
+        extra_last = c_meas;
+        return;
+    }
+    // Calculate ratio: c_meas / current
+    // Handle division by zero: use maximum long double as sentinel value that preserves sign
+    // c_meas should never be negative, but we check for it as a safeguard to detect math errors
+    // Use tolerance-based equality check to handle floating-point round-off errors
+    const long double ratio = getRatio(c_meas, current);
+    
+    
+    const long double r_last = getLastRatio();
+    
+    // Always track the minimum ratio value, including negative values.
+    // This version does not have special handling for negative values with baseline,
+    // it simply tracks the true minimum regardless of sign.
+    if (ratio <= r_last) {
+        const long double r_first = getFirstRatio();
+        if (ratio < r_first) {
+            c_firstBaseline = currentBaseline;
+            c_first = current;
+            delta_first = delta;
+            n_first = n;
+            hlCorr_first = hlCorr;
+            extra_first = c_meas;
+        }
+        c_lastBaseline = currentBaseline;
+        c_last = current;  // Store current (c+cBaseline)
+        delta_last = delta;
+        n_last = n;
+        hlCorr_last = hlCorr;
+        extra_last = c_meas;
+    }
+}
+
 void ExtremaValues::putMaxima(long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr) {
     current = c+cBaseline;
     currentBaseline = cBaseline;
@@ -158,6 +207,52 @@ void ExtremaValues::putMaxima(long double c, long double cBaseline, std::uint64_
         delta_last = delta;
         n_last = n;
         hlCorr_last = hlCorr;
+    }
+}
+
+void ExtremaValues::putMaximaRatio(long double c_meas, long double c, long double cBaseline, std::uint64_t n, std::uint64_t delta, long double hlCorr) {
+    current = c+cBaseline;
+    currentBaseline = cBaseline;
+    if(! n_last) {
+        c_firstBaseline = currentBaseline;
+        c_first = current;
+        delta_first = delta;
+        n_first = n;
+        hlCorr_first = hlCorr;
+        extra_first = c_meas;
+        c_lastBaseline = currentBaseline;
+        c_last = current;
+        delta_last = delta;
+        n_last = n;
+        hlCorr_last = hlCorr;
+        extra_last = c_meas;
+        return;
+    }
+    // Calculate ratio: c_meas / current
+    // Handle division by zero: use maximum long double as sentinel value that preserves sign
+    // c_meas should never be negative, but we check for it as a safeguard to detect math errors
+    // Use tolerance-based equality check to handle floating-point round-off errors
+    const long double ratio = getRatio(c_meas, current);
+    
+    const long double r_last = getLastRatio();
+    
+    // Track the maximum ratio value, including negative values.
+    if (ratio >= r_last) {
+        const long double r_first = getFirstRatio();
+        if (ratio > r_first) {
+            c_firstBaseline = currentBaseline;
+            c_first = current;
+            delta_first = delta;
+            n_first = n;
+            hlCorr_first = hlCorr;
+            extra_first = c_meas;
+        }
+        c_lastBaseline = currentBaseline;
+        c_last = current;  // Store current (c+cBaseline)
+        delta_last = delta;
+        n_last = n;
+        hlCorr_last = hlCorr;
+        extra_last = c_meas;
     }
 }
 
@@ -241,6 +336,48 @@ void ExtremaValues::applyHLCorrStateMax(HLCorrState &state) {
         copyLastToFirst();
     } else if(c_last < c_first) {
         // First is the maximum, copy it to last
+        copyFirstToLast();
+    }
+}
+
+void ExtremaValues::applyHLCorrStateMinRatio(HLCorrState &state) {
+    // Skip correction if no value was ever assigned (n_first == 0 indicates uninitialized)
+    if(n_first == 0) {
+        return;
+    }
+    applyHLCorrFirst(state(n_first, delta_first));
+    applyHLCorrLast(state(n_last, delta_last));
+    // After HLCorr correction, compare ratios to determine the minimum
+    long double r_last = getLastRatio();
+    long double r_first = getFirstRatio();
+    // For alignment calculations: after HLCorr correction, keep the minimum ratio.
+    // The condition r_last <= 0.0L handles cases where the last ratio is still negative
+    // after correction, ensuring we maintain proper minimum tracking.
+    if(r_last <= 0.0L || r_last < r_first) {
+        // Last ratio is the minimum, copy it to first
+        copyLastToFirst();
+    } else if(r_last > r_first) {
+        // First ratio is the minimum, copy it to last
+        copyFirstToLast();
+    }
+}
+
+void ExtremaValues::applyHLCorrStateMaxRatio(HLCorrState &state) {
+    // Skip correction if no value was ever assigned (n_first == 0 indicates uninitialized)
+    if(n_first == 0) {
+        return;
+    }
+    applyHLCorrFirst(state(n_first, delta_first));
+    applyHLCorrLast(state(n_last, delta_last));
+    // After HLCorr correction, compare ratios to determine the maximum
+    long double r_last = getLastRatio();
+    long double r_first = getFirstRatio();
+    // Keep the maximum ratio value
+    if(r_last > r_first) {
+        // Last ratio is the maximum, copy it to first
+        copyLastToFirst();
+    } else if(r_last < r_first) {
+        // First ratio is the maximum, copy it to last
         copyFirstToLast();
     }
 }
@@ -372,5 +509,103 @@ void GBLongIntervalSummary::outputCpsLine(
         interval.nstarAsymp = n;
         interval.deltaMertensAsymp = deltaCAsymp;
     }
+}
+
+void GBLongIntervalSummary::outputBoundRatioMin(GBLongInterval &interval) {
+    if(! interval.boundRatioMin || boundRatioMinima.n_first == 0) {
+        return;
+    }
+    // TODO: This function already includes both ratio and lambda - good example to follow for other outputs
+    long double ratio = boundRatioMinima.getFirstRatio();
+    long double lambda = boundRatioMinima.getLambda();
+    BoundStatus status = boundRatioMinima.getMinBoundStatus();
+    
+    // Output ratio as empty string if it's an invalid sentinel value (LDBL_MAX or -LDBL_MAX)
+    char ratio_buf[64] = "";
+    if(ratio != LDBL_MAX && ratio != -LDBL_MAX && std::isfinite(ratio)) {
+        std::snprintf(ratio_buf, sizeof(ratio_buf), "%.8Lf", ratio);
+    }
+    
+    // Output lambda as empty string if it's an invalid sentinel value (LDBL_MAX or -LDBL_MAX)
+    // Note: std::isfinite(LDBL_MAX) returns true because LDBL_MAX is finite, so we check explicitly
+    char lambda_buf[64] = "";
+    if(lambda != LDBL_MAX && lambda != -LDBL_MAX && std::isfinite(lambda)) {
+        std::snprintf(lambda_buf, sizeof(lambda_buf), "%.8Lf", lambda);
+    }
+
+    // Output c_first and baseline_first as empty string if they're invalid sentinel values
+    // These indicate norm=0 (delta=0) cases where normalization is undefined
+    char first_buf[64] = "";
+    char baseline_buf[64] = "";
+    long double c_first = boundRatioMinima.c_first;
+    long double baseline = boundRatioMinima.c_firstBaseline;
+    // Check for sentinel values: LDBL_MIN, LDBL_MAX, or -LDBL_MAX
+    // Note: std::isfinite(LDBL_MAX) returns true, so we must check explicitly
+    if(c_first != LDBL_MAX && c_first != -LDBL_MAX && std::isfinite(c_first)) {
+        std::snprintf(first_buf, sizeof(first_buf), "%.8Lf", c_first);
+    }
+    if(baseline != LDBL_MAX && baseline != -LDBL_MAX && std::isfinite(baseline)) {
+        std::snprintf(baseline_buf, sizeof(baseline_buf), "%.8Lf", baseline);
+    }
+    
+    std::fprintf(interval.boundRatioMin,
+        "%" PRIu64 ",%s,%s,%s,%.8Lf,%s,%s\n",
+        boundRatioMinima.n_first,
+        ratio_buf,
+        first_buf,
+        baseline_buf,
+        boundRatioMinima.extra_first,  // c_of_n_first
+        lambda_buf,
+        boundStatusToString(status)
+    );
+}
+
+void GBLongIntervalSummary::outputBoundRatioMax(GBLongInterval &interval) {
+    if(! interval.boundRatioMax || boundRatioMaxima.n_first == 0) {
+        return;
+    }
+    // TODO: This function already includes both ratio and lambda - good example to follow for other outputs
+    long double ratio = boundRatioMaxima.getFirstRatio();
+    long double lambda = boundRatioMaxima.getLambda();
+    BoundStatus status = boundRatioMaxima.getMaxBoundStatus();
+    
+    // Output ratio as empty string if it's an invalid sentinel value (LDBL_MAX or -LDBL_MAX)
+    char ratio_buf[64] = "";
+    if(ratio != LDBL_MAX && ratio != -LDBL_MAX && std::isfinite(ratio)) {
+        std::snprintf(ratio_buf, sizeof(ratio_buf), "%.8Lf", ratio);
+    }
+    
+    // Output lambda as empty string if it's an invalid sentinel value (LDBL_MAX or -LDBL_MAX)
+    // Note: std::isfinite(LDBL_MAX) returns true because LDBL_MAX is finite, so we check explicitly
+    char lambda_buf[64] = "";
+    if(lambda != LDBL_MAX && lambda != -LDBL_MAX && std::isfinite(lambda)) {
+        std::snprintf(lambda_buf, sizeof(lambda_buf), "%.8Lf", lambda);
+    }
+    
+    // Output c_first and baseline_first as empty string if they're invalid sentinel values
+    // These indicate norm=0 (delta=0) cases where normalization is undefined
+    char first_buf[64] = "";
+    char baseline_buf[64] = "";
+    long double c_first = boundRatioMaxima.c_first;
+    long double baseline = boundRatioMaxima.c_firstBaseline;
+    // Check for sentinel values: LDBL_MIN, LDBL_MAX, or -LDBL_MAX
+    // Note: std::isfinite(LDBL_MAX) returns true, so we must check explicitly
+    if(c_first != LDBL_MAX && c_first != -LDBL_MAX && std::isfinite(c_first)) {
+        std::snprintf(first_buf, sizeof(first_buf), "%.8Lf", c_first);
+    }
+    if(baseline != LDBL_MAX && baseline != -LDBL_MAX && std::isfinite(baseline)) {
+        std::snprintf(baseline_buf, sizeof(baseline_buf), "%.8Lf", baseline);
+    }
+    
+    std::fprintf(interval.boundRatioMax,
+        "%" PRIu64 ",%s,%s,%s,%.8Lf,%s,%s\n",
+        boundRatioMaxima.n_first,
+        ratio_buf,
+        first_buf,
+        baseline_buf,
+        boundRatioMaxima.extra_first,  // c_of_n_first
+        lambda_buf,
+        boundStatusToString(status)
+    );
 }
 

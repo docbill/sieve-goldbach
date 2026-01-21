@@ -75,6 +75,7 @@ static void print_usage(const char* prog) {
         "  --prim-cps=FILE      Write primorial cps CSV to FILE (use \"-\" for stdout)\n"
         "  --prim-cps-summary=FILE Write a summary cps values to a text file (use \"-\" for stdout)\n"
         "  --prim-cps-summary-resume=FILE Resume processing by reading previous cps summary from FILE\n"
+        "  --prim-psi=FILE      Write primorial short interval (PSI) CSV to FILE (use \"-\" for stdout)\n"
         "  --compat=VERSION     v0.1 (aka v0.1.5) or v0.2/current. Default: v0.2\n"
         "  --model=MODE         empirical (default) or hl-a\n"
         "  --start-n=N          Start n (uint64). Default: 4\n"
@@ -215,6 +216,8 @@ int main(int argc, char* argv[]) try {
     const char* dec_cps_path  = nullptr;
     const char* dec_cps_summary_path  = nullptr;
     const char* dec_cps_summary_resume_path = nullptr;
+    const char* dec_boundRatioMin_path = nullptr;  // v0.2.0: bound ratio minimum output
+    const char* dec_boundRatioMax_path = nullptr;  // v0.2.0: bound ratio maximum output
     const char* prim_out_path = nullptr;
     const char* prim_full_path = nullptr;
     const char* prim_raw_path = nullptr;
@@ -222,6 +225,11 @@ int main(int argc, char* argv[]) try {
     const char* prim_cps_path = nullptr;
     const char* prim_cps_summary_path = nullptr;
     const char* prim_cps_summary_resume_path = nullptr;
+    const char* prim_boundRatioMin_path = nullptr;  // v0.2.0: bound ratio minimum output
+    const char* prim_boundRatioMax_path = nullptr;  // v0.2.0: bound ratio maximum output
+    const char* psi_full_path = nullptr;
+    const char* psi_boundRatioMin_path = nullptr;  // v0.2.0: bound ratio minimum output
+    const char* psi_boundRatioMax_path = nullptr;  // v0.2.0: bound ratio maximum output
     bool append_to_file  = false;
     std::vector<long double> alphas;
     FILE * dec_trace = nullptr;
@@ -239,6 +247,8 @@ int main(int argc, char* argv[]) try {
         {"dec-cps",         required_argument, 0,  0 },
         {"dec-cps-summary", required_argument, 0,  0 },
         {"dec-cps-summary-resume", required_argument, 0,  0 },
+        {"dec-bound-ratio-min", required_argument, 0,  0 },  // v0.2.0
+        {"dec-bound-ratio-max", required_argument, 0,  0 },  // v0.2.0
         {"prim-out",        required_argument, 0,  0 },
         {"prim-full",       required_argument, 0,  0 },
         {"prim-raw",        required_argument, 0,  0 },
@@ -246,12 +256,19 @@ int main(int argc, char* argv[]) try {
         {"prim-cps",        required_argument, 0,  0 },
         {"prim-cps-summary",required_argument, 0,  0 },
         {"prim-cps-summary-resume",required_argument, 0,  0 },
+        {"prim-bound-ratio-min", required_argument, 0,  0 },  // v0.2.0
+        {"prim-bound-ratio-max", required_argument, 0,  0 },  // v0.2.0
+        {"prim-psi",        required_argument, 0,  0 },
+        {"psi-bound-ratio-min", required_argument, 0,  0 },  // v0.2.0
+        {"psi-bound-ratio-max", required_argument, 0,  0 },  // v0.2.0
         {"n-start",         required_argument, 0,  0 },
         {"prim-n-start",    required_argument, 0,  0 },
         {"dec-n-start",     required_argument, 0,  0 },
+        {"psi-n-start",     required_argument, 0,  0 },
         {"n-end",           required_argument, 0,  0 },
         {"prim-n-end",      required_argument, 0,  0 },
         {"dec-n-end",       required_argument, 0,  0 },
+        {"psi-n-end",       required_argument, 0,  0 },
         {"compat",          required_argument, 0,  0 },
         {"euler-cap",       no_argument,       0,  0 },
         {"no-euler-cap",    no_argument,       0,  0 },
@@ -309,6 +326,12 @@ int main(int argc, char* argv[]) try {
                 else if (!std::strcmp(name, "dec-cps-summary-resume")) {
                     dec_cps_summary_resume_path = optarg;
                 }
+                else if (!std::strcmp(name, "dec-bound-ratio-min")) {
+                    dec_boundRatioMin_path = optarg;  // v0.2.0
+                }
+                else if (!std::strcmp(name, "dec-bound-ratio-max")) {
+                    dec_boundRatioMax_path = optarg;  // v0.2.0
+                }
                 else if (!std::strcmp(name, "prim-out")) {
                     prim_out_path = optarg; // "-" means stdout
                 }
@@ -329,6 +352,21 @@ int main(int argc, char* argv[]) try {
                 }
                 else if (!std::strcmp(name, "prim-cps-summary-resume")) {
                     prim_cps_summary_resume_path = optarg;
+                }
+                else if (!std::strcmp(name, "prim-bound-ratio-min")) {
+                    prim_boundRatioMin_path = optarg;  // v0.2.0
+                }
+                else if (!std::strcmp(name, "prim-bound-ratio-max")) {
+                    prim_boundRatioMax_path = optarg;  // v0.2.0
+                }
+                else if (!std::strcmp(name, "prim-psi")) {
+                    psi_full_path = optarg; // "-" means stdout
+                }
+                else if (!std::strcmp(name, "psi-bound-ratio-min")) {
+                    psi_boundRatioMin_path = optarg;  // v0.2.0
+                }
+                else if (!std::strcmp(name, "psi-bound-ratio-max")) {
+                    psi_boundRatioMax_path = optarg;  // v0.2.0
                 }
                 else if (!std::strcmp(name, "dec-n-start")) {
                     char* endp = nullptr;
@@ -352,6 +390,18 @@ int main(int argc, char* argv[]) try {
                     range.primAgg.left = (std::uint64_t)tmp;
                     if( n_start_opt == 0 || range.primAgg.left < n_start_opt) {
                         n_start_opt = range.primAgg.left;
+                    }
+                }
+                else if (!std::strcmp(name, "psi-n-start")) {
+                    char* endp = nullptr;
+                    unsigned long long tmp = strtoull(optarg, &endp, 10);
+                    if (!endp || *endp != '\0' || tmp < 4ULL) {
+                        std::fprintf(stderr, "Error: --psi-n-start must be an integer >= 4\n");
+                        return 1;
+                    }
+                    range.psiAgg.left = (std::uint64_t)tmp;
+                    if( n_start_opt == 0 || range.psiAgg.left < n_start_opt) {
+                        n_start_opt = range.psiAgg.left;
                     }
                 }
                 else if (!std::strcmp(name, "n-end")) {
@@ -387,8 +437,22 @@ int main(int argc, char* argv[]) try {
                         n_end_opt = range.primAgg.n_end;
                     }
                 }
+                else if (!std::strcmp(name, "psi-n-end")) {
+                    char* endp = nullptr;
+                    unsigned long long tmp = strtoull(optarg, &endp, 10);
+                    if (!endp || *endp != '\0' || tmp < 4ULL) {
+                        std::fprintf(stderr, "Error: --psi-n-end must be an integer >= 4\n");
+                        return 1;
+                    }
+                    range.psiAgg.n_end = (std::uint64_t)tmp;
+                    if( n_end_opt == 0 || range.psiAgg.n_end < n_end_opt) {
+                        n_end_opt = range.psiAgg.n_end;
+                    }
+                }
                 else if (!std::strcmp(name, "compat")) {
                     if (!std::strcmp(optarg, "v0.1") || !std::strncmp(optarg, "v0.1.", 5)) {
+                        range.compat_ver = CompatVer::V01x;
+                    } else if (!std::strcmp(optarg, "v0.1.5") || !std::strncmp(optarg, "v0.1.5", 6)) {
                         range.compat_ver = CompatVer::V01x;
                     } else if (!std::strcmp(optarg,"current") || !std::strcmp(optarg,"v0.2") || !std::strncmp(optarg,"v0.2.",5)) {
                         range.compat_ver = CompatVer::Current;
@@ -557,8 +621,24 @@ int main(int argc, char* argv[]) try {
             std::fprintf(stderr, "The %s macro required with multiple alpha values. --prim-cps=%s\n", ALPHA_KEY.c_str(), prim_cps_path);
             return 1;
         }
+        if(dec_boundRatioMin_path && !containsKey(dec_boundRatioMin_path,ALPHA_KEY)) {
+            std::fprintf(stderr, "The %s macro required with multiple alpha values. --dec-bound-ratio-min=%s\n", ALPHA_KEY.c_str(), dec_boundRatioMin_path);
+            return 1;
+        }
+        if(dec_boundRatioMax_path && !containsKey(dec_boundRatioMax_path,ALPHA_KEY)) {
+            std::fprintf(stderr, "The %s macro required with multiple alpha values. --dec-bound-ratio-max=%s\n", ALPHA_KEY.c_str(), dec_boundRatioMax_path);
+            return 1;
+        }
         if(dec_full_path && !containsKey(dec_full_path,ALPHA_KEY)) {
             std::fprintf(stderr, "The %s macro required with multiple alpha values. --dec-full=%s\n", ALPHA_KEY.c_str(), dec_full_path);
+            return 1;
+        }
+        if(prim_boundRatioMin_path && !containsKey(prim_boundRatioMin_path,ALPHA_KEY)) {
+            std::fprintf(stderr, "The %s macro required with multiple alpha values. --prim-bound-ratio-min=%s\n", ALPHA_KEY.c_str(), prim_boundRatioMin_path);
+            return 1;
+        }
+        if(prim_boundRatioMax_path && !containsKey(prim_boundRatioMax_path,ALPHA_KEY)) {
+            std::fprintf(stderr, "The %s macro required with multiple alpha values. --prim-bound-ratio-max=%s\n", ALPHA_KEY.c_str(), prim_boundRatioMax_path);
             return 1;
         }
         if(prim_full_path && !containsKey(prim_full_path,ALPHA_KEY)) {
@@ -610,6 +690,18 @@ int main(int argc, char* argv[]) try {
                 return 1;
             }
         }
+        if (dec_boundRatioMin_path) {
+            w->dec.boundRatioMin = open_stream_from_template(dec_boundRatioMin_path, w->alpha, "bound-ratio-min", append_to_file);
+            if(! w->dec.boundRatioMin) {
+                return 1;
+            }
+        }
+        if (dec_boundRatioMax_path) {
+            w->dec.boundRatioMax = open_stream_from_template(dec_boundRatioMax_path, w->alpha, "bound-ratio-max", append_to_file);
+            if(! w->dec.boundRatioMax) {
+                return 1;
+            }
+        }
         if (prim_out_path) {
             w->prim.out  = open_stream_from_template(prim_out_path, w->alpha, "full", append_to_file);
             if(! w->prim.out) {
@@ -648,6 +740,36 @@ int main(int argc, char* argv[]) try {
         if (prim_cps_summary_path) {
             range.primAgg.cps_summary  = open_stream_from_template(prim_cps_summary_path, w->alpha, "cps-summary", false);
             if(! range.primAgg.cps_summary) {
+                return 1;
+            }
+        }
+        if (prim_boundRatioMin_path) {
+            w->prim.boundRatioMin = open_stream_from_template(prim_boundRatioMin_path, w->alpha, "bound-ratio-min", append_to_file);
+            if(! w->prim.boundRatioMin) {
+                return 1;
+            }
+        }
+        if (prim_boundRatioMax_path) {
+            w->prim.boundRatioMax = open_stream_from_template(prim_boundRatioMax_path, w->alpha, "bound-ratio-max", append_to_file);
+            if(! w->prim.boundRatioMax) {
+                return 1;
+            }
+        }
+        if(psi_full_path) {
+            w->psi.out  = open_stream_from_template(psi_full_path, w->alpha, "psi", append_to_file);
+            if(! w->psi.out) {
+                return 1;
+            }
+        }
+        if(psi_boundRatioMin_path) {
+            w->psi.boundRatioMin = open_stream_from_template(psi_boundRatioMin_path, w->alpha, "bound-ratio-min", append_to_file);
+            if(! w->psi.boundRatioMin) {
+                return 1;
+            }
+        }
+        if(psi_boundRatioMax_path) {
+            w->psi.boundRatioMax = open_stream_from_template(psi_boundRatioMax_path, w->alpha, "bound-ratio-max", append_to_file);
+            if(! w->psi.boundRatioMax) {
                 return 1;
             }
         }

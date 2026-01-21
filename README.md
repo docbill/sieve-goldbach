@@ -97,7 +97,13 @@ output/
 
 ## System Requirements
 
-* **Operating System**: Linux or macOS (tested on Apple M2 Pro with macOS 15; also works on Linux distributions with GCC/Clang).
+* **Operating System**: macOS (Apple Silicon or Intel) or Intel-based Linux. The software has been tested on:
+  * Apple M2 Pro with macOS 15 (primary development platform)
+  * Intel-based Linux distributions with GCC/Clang
+
+* **Platform-Specific Notes**:
+  * **Intel-based platforms** (both macOS and Linux): Due to floating-point round-off differences between Intel and Apple Silicon architectures, you **must** set `TAINTED=1` when running verification on Intel-based platforms. See the [Makefile Options](#makefile-options) section for details.
+  * **Performance**: Intel-based platforms have been observed to run significantly slower than Apple Silicon (M2 Pro) for the same workloads. Runtime estimates in this README are based on Apple M2 Pro performance.
 
 * **Compiler**: GCC ≥ 10 or Clang ≥ 12 recommended. On macOS, install via:
 
@@ -105,7 +111,7 @@ output/
   brew install gcc
   ```
 
-  or use Apple’s Command Line Tools (provides `clang`).
+  or use Apple's Command Line Tools (provides `clang`).
 
 * **Disk & Memory**:
 
@@ -113,11 +119,13 @@ output/
   * Tested with 8 GB RAM on Linux; more memory improves runtime.
   * Likely to run on devices with 4 GB RAM (e.g., Raspberry Pi), but this has not been tested.
 
-* **Runtime**:
+* **Runtime** (Apple M2 Pro benchmarks):
 
   * Small runs (`1M`) finish in minutes.
-  * Medium runs (`10M`) take \~12 hours on an Apple M2 Pro.
+  * Medium runs (`10M`) take \~12 hours.
   * Large runs (`100M`) may run for several weeks.
+  
+  **Note**: Intel-based platforms may take significantly longer for the same workloads.
 
 ---
 
@@ -149,8 +157,8 @@ make validate-large
 
 It is recommended to run these long jobs inside a persistent session (e.g., with `screen` or `tmux`), since:
 
-* **Medium validation** takes more than 12 hours on an Apple M2 Pro.
-* **Large validation** may take several weeks.
+* **Medium validation** takes more than 12 hours on an Apple M2 Pro (Intel-based platforms will be significantly slower).
+* **Large validation** may take several weeks (Intel-based platforms will take longer).
 
 ---
 
@@ -163,6 +171,14 @@ The top-level `Makefile` provides several convenient targets:
 * `make validate-medium` – build and validate medium datasets (≈12+ hours).
 * `make validate-large` – build and validate large datasets (can run for weeks).
 * `make verify` – compare generated outputs against golden reference `.verify` and `.sha256` files.
+* `make manifest` – create a manifest file (`manifest-17PR2-$(COMPAT).txt`) containing SHA256 checksums of all CSV files from alpha directories matching the small primorial pattern (`*-17PR2-*-$(COMPAT).csv`).
+* `make manifest-medium` – create a manifest file (`manifest-19PR-$(COMPAT).txt`) for medium primorial files (`*-19PR-*-$(COMPAT).csv`).
+* `make manifest-large` – create a manifest file (`manifest-23PR.5-$(COMPAT).txt`) for large primorial files (`*-23PR.5-*-$(COMPAT).csv`).
+* `make manifest-huge` – create a manifest file (`manifest-23PR-$(COMPAT).txt`) for huge primorial files (`*-23PR-*-$(COMPAT).csv`).
+* `make verify-manifest` – verify the small primorial manifest against golden reference in `data/` directory. Uses the `TAINTED` flag to allow builds to complete without failure on first run.
+* `make verify-manifest-medium` – verify the medium primorial manifest.
+* `make verify-manifest-large` – verify the large primorial manifest.
+* `make verify-manifest-huge` – verify the huge primorial manifest.
 * `make clean` – remove temporary certification files (`*.verify`) from `output/`.
 * `make clobber` – perform `clean` and also remove all generated data products (`output/*.csv`, `.raw`, `.bitmap`, etc.), leaving only source and reference data.
 * `make backup` – create a compressed backup of all partial CSV files (`.partial.csv`) in the `backups/` directory. Useful for preserving progress on long-running jobs. Backups are named with a timestamp and compatibility version (e.g., `backup-20251111145800-v0.2.0.tar.bz2`).
@@ -176,7 +192,7 @@ Use `make help` to see a summary if available. Always run long jobs inside `scre
 
 The Makefile supports several optional flags to control output generation and verification:
 
-* **`TAINTED` (environment variable)** – When set to `1` or `true`, verification failures print warnings instead of exiting with an error. Useful when intentionally generating different outputs (e.g., during development or when testing new algorithms). This is implemented as an environment variable (rather than a make variable) for convenience, allowing AWK scripts to access it without requiring additional parameter passing. Set as an environment variable:
+* **`TAINTED` (environment variable)** – When set to `1` or `true`, verification failures print warnings instead of exiting with an error. This is **required** for Intel-based platforms (both macOS and Linux) due to floating-point round-off differences between Intel and Apple Silicon architectures. It is also useful when intentionally generating different outputs (e.g., during development or when testing new algorithms). This is implemented as an environment variable (rather than a make variable) for convenience, allowing AWK scripts to access it without requiring additional parameter passing. Set as an environment variable:
   ```sh
   export TAINTED=1
   make verify
@@ -185,15 +201,27 @@ The Makefile supports several optional flags to control output generation and ve
   ```sh
   TAINTED=1 make verify
   ```
+  
+  **Important**: If you are running on an Intel-based platform, you should set `TAINTED=1` before running any verification targets to avoid false failures due to platform-specific numerical differences.
 
-* **`COMPAT=v0.1.5` (make variable)** – When set, uses the legacy v0.1.5 compatibility mode. The default is `v0.1.6`, which supports all current features.  Example:
+* **`POINTWISE=1` (make variable)** – When set, generates bound ratio files (`boundratiomin-*.csv` and `boundratiomax-*.csv`) that compare pointwise predictions against measured values. When not set, these files are skipped (creating `.stamp` placeholders instead) to save CPU time on large runs. **Note:** This option is not available for the legacy `COMPAT=v0.1.5` version. Example:
   ```sh
-  make COMPAT=v0.1.6 generate
+  make POINTWISE=1 generate
+  ```
+
+* **`PSI=1` (make variable)** – When set, generates Primorial Short Interval (PSI) output files and lambda statistics. PSI files use short interval aggregation for analysis. When not set, PSI file generation is skipped (creating `.stamp` placeholders instead). **Note:** This option is not available for the legacy `COMPAT=v0.1.5` version. Example:
+  ```sh
+  make PSI=1 generate
+  ```
+
+* **`COMPAT=v0.1.5` (make variable)** – When set, uses the legacy v0.1.5 compatibility mode. The default is `v0.2.0`, which supports all current features including `POINTWISE` and `PSI` options. Use this option only when you need to reproduce results from the v0.1.5 version. Example:
+  ```sh
+  make COMPAT=v0.1.5 generate
   ```
 
 These options can be combined:
 ```sh
-TAINTED=1 make COMPAT=v0.1.5 verify
+TAINTED=1 make PSI=1 POINTWISE=1 verify
 ```
 
 ---
@@ -257,6 +285,59 @@ The repository includes two kinds of certification artifacts:
 * **Manual certification** (`.cert`) — attested files prepared after human review, confirming that the `.verify` output matches expectations and is correct for inclusion in the archive.
 
 This separation ensures that verification can be re-run independently, while manual certifications provide a stable reference for long-term archival.
+
+### Manifest Files
+
+For convenience and archival purposes, the project provides manifest files that contain SHA256 checksums of all CSV files from the alpha directories, organized by data range:
+
+* **Small Primorial Manifest** (`manifest-17PR2-$(COMPAT).txt`) – Contains SHA256 checksums of all files matching `*-17PR2-*-$(COMPAT).csv` from all `alpha-*/` directories.
+
+* **Medium Primorial Manifest** (`manifest-19PR-$(COMPAT).txt`) – Contains SHA256 checksums of all files matching `*-19PR-*-$(COMPAT).csv` from all `alpha-*/` directories.
+
+* **Large Primorial Manifest** (`manifest-23PR.5-$(COMPAT).txt`) – Contains SHA256 checksums of all files matching `*-23PR.5-*-$(COMPAT).csv` from all `alpha-*/` directories.
+
+* **Huge Primorial Manifest** (`manifest-23PR-$(COMPAT).txt`) – Contains SHA256 checksums of all files matching `*-23PR-*-$(COMPAT).csv` from all `alpha-*/` directories.
+
+**Workflow benefit:** The manifest files enable a much faster verification workflow. Instead of waiting months to regenerate all data from scratch, reviewers can restore from backups and verify checksums in about 10 minutes. This is particularly useful for peer review scenarios where reviewers typically only need to verify the small runs and validate that the full dataset checksums match the published manifests.
+
+**Note for researchers:** While reviewers can use the restore workflow for quick verification, researchers who need to work with or extend the data will typically need to run the full validation (`make POINTWISE=1 -j 12 validate-large`) to generate fresh data. The restore workflow is primarily intended for verification and review purposes.
+
+**Creating manifests:**
+```sh
+make manifest          # Small primorial only
+make manifest-medium   # Small + medium primorial
+make manifest-large    # Small + medium + large primorial
+make manifest-huge     # All primorial ranges
+```
+
+**Prerequisites:** Before running the manifest targets, you must first complete the corresponding validation run:
+```sh
+make validate          # For manifest
+make validate-medium   # For manifest-medium
+make validate-large    # For manifest-large
+make validate-huge     # For manifest-huge
+```
+
+If you don't want to wait for the full build (which can take several weeks), you can restore data from a previous run's partial files:
+```sh
+make restore
+```
+
+After restoration, complete any remaining partial files, then run the manifest targets.
+
+The manifest files are created in the `output/` directory. Each manifest file contains one line per CSV file, with the SHA256 checksum followed by the file path (relative to the `output/` directory).
+
+**Verifying manifests:**
+```sh
+make verify-manifest          # Verify small primorial manifest
+make verify-manifest-medium   # Verify medium primorial manifest
+make verify-manifest-large    # Verify large primorial manifest
+make verify-manifest-huge     # Verify huge primorial manifest
+```
+
+This compares the generated manifest checksums against golden reference manifests in the `data/` directory. Like other verification targets, it uses the `TAINTED` flag to allow builds to complete without failure on first run (when golden references don't exist yet).
+
+**Note:** The manifest files only include files from `alpha-*/` directories. Files in the main `output/` directory (like `boundratiomax-17PR2-v0.2.0.csv`) are handled separately with their own checksums and are not included in the manifests.
 
 ---
 
