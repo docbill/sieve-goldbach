@@ -267,7 +267,7 @@
 
 \geometry{margin=1in}
 
-\title{A Sieve-Theoretic Reformulation of the Goldbach Conjecture}
+\title{A Sieve-Theoretic Framework for Goldbach-Type Problems}
 \author{Bill C Riemers}
 \date{\today}
 
@@ -548,15 +548,15 @@ for \(15\le n<30\), a single block \([15,30)\) is used.
 
 For \(n\ge30\), let \(p<q\) be consecutive primes with corresponding primorials \(p\#\) and \(q\#\).
 Each primorial plateau \([p\#,q\#)\) is partitioned into bins of width
-\[
+\begin{equation}
 w_p := \max\!\Bigl(15,\frac{p\#}{2p}\Bigr), \qquad
 L_p := q\# - p\#, \qquad
 K_p := \Bigl\lceil \frac{L_p}{w_p} \Bigr\rceil .
-\]
+\end{equation}
 Define nodes
-\[
+\begin{equation}
 a_j := p\# + \min(j\,w_p,\,L_p), \qquad j=0,1,\dots,K_p ,
-\]
+\end{equation}
 so that \(a_0=p\#\) and \(a_{K_p}=q\#\).
 The indexed primorial bins are
 \begin{equation}
@@ -679,11 +679,11 @@ and approximate the block average by a two-point proxy of the slowly varying \(\
 Without loss of generality, we take blocks aligned to consecutive primorial plateaus.
 For \(p<q\) consecutive primes, let \(p\#,q\#\) be the corresponding primorials.
 Define the bin width and count
-\[
+\begin{equation}
 w_p := \max\!\Bigl(15,\frac{p\#}{2p}\Bigr), \qquad
 L_p := q\# - p\#, \qquad
 K_p := \Bigl\lceil \frac{L_p}{w_p} \Bigr\rceil,
-\]
+\end{equation}
 and nodes \(a_j := p\# + \min(j\,w_p,L_p)\), \(j=0,1,\dots,K_p\),
 so that \(a_0=p\#\) and \(a_{K_p}=q\#\).
 The indexed primorial blocks are
@@ -1191,17 +1191,17 @@ P_y \;:=\; \prod_{3\le p\le p_y} p \;=\; \frac{p_y^\#}{2}\qquad\text{(``half a p
 \end{equation}
 
 \begin{lemma}[Singular-series plateaus (unconditional)]\label{lem:SS-plateau}
-For even $N=2n$,
+For even \(N=2n\),
 \begin{equation}\label{eq:sing-series-2n}
 \mathfrak S(2n)\;=\;2C_2 \prod_{\substack{p\mid n\\ p\ge 3}}\frac{p-1}{p-2}.
 \end{equation}
-Fix $X>0$ and consider $n\le X$. Then $\mathfrak S(2n)$ is maximized when $n$ is divisible by $P_y$ for the largest $p_y$ with $P_y\le X$; equivalently, within $[P_y,\,p_{y+1}P_y)$ the maximizers are precisely the multiples of $P_y$, and all such $n$ have the same value of $\mathfrak S(2n)$.
+Fix \(X>0\) and consider \(n\le X\). Then \(\mathfrak S(2n)\) is maximized when \(n\) is divisible by \(P_y\) for the largest \(p_y\) with \(P_y\le X\); equivalently, within \([P_y,\,p_{y+1}P_y)\) the maximizers are precisely the multiples of \(P_y\), and all such \(n\) have the same value of \(\mathfrak S(2n)\).
 \end{lemma}
 
 \begin{proof}
-Write $f(p):=(p-1)/(p-2)=1+\frac{1}{p-2}$. Then
+Write \(f(p):=(p-1)/(p-2)=1+\frac{1}{p-2}\). Then
 \(\mathfrak S(2n)=2C_2\prod_{p\mid n,\,p\ge 3} f(p)\).
-If $q>p\ge 3$ then $f(q)<f(p)$, so among sets of distinct odd primes the product is maximized by the initial segment $\{3,5,\dots,p_y\}$. The smallest integer carrying exactly this set is $P_y$, yielding the record at $n=P_y$. On $[P_y,p_{y+1}P_y)$ no new distinct odd prime beyond $p_y$ can divide $n$, so the maximizers are exactly the multiples of $P_y$ (exponents do not affect $\mathfrak S$), and all such $n$ share the same $\mathfrak S(2n)$. 
+If \(q>p\ge 3\) then \(f(q)<f(p)\), so among sets of distinct odd primes the product is maximized by the initial segment \(\{3,5,\dots,p_y\}\). The smallest integer carrying exactly this set is \(P_y\), yielding the record at \(n=P_y\). On \([P_y,p_{y+1}P_y)\) no new distinct odd prime beyond \(p_y\) can divide \(n\), so the maximizers are exactly the multiples of \(P_y\) (exponents do not affect \(\mathfrak S\)), and all such \(n\) share the same \(\mathfrak S(2n)\). 
 \end{proof}
 
 \begin{proposition}[Record and plateau maxima \emph{under HL-A}]\label{prop:primorial-plateau}
@@ -1209,24 +1209,24 @@ Assume the Hardy-Littlewood Conjecture~A in the form
 \begin{equation}\label{eq:HLA-main-term}
 \mathbb E\,R_2(2n)\ \sim\ \frac{\mathfrak S(2n)\,2n}{\log^2(2n)}\qquad(n\to\infty),
 \end{equation}
-uniformly on fixed-size blocks. Then, within each interval $[P_y,\,p_{y+1}P_y)$, the \emph{normalized} expected count
+uniformly on fixed-size blocks. Then, within each interval \([P_y,\,p_{y+1}P_y)\), the \emph{normalized} expected count
 \begin{equation}\label{eq:normalized-expectation}
 \frac{\log^2(2n)}{2n}\,\mathbb E\,R_2(2n)
 \end{equation}
-attains its maximum precisely at those $n$ with $P_y\mid n$ (i.e., multiples of $p_y^\#/2$). In particular,
+attains its maximum precisely at those \(n\) with \(P_y\mid n\) (i.e., multiples of \(p_y^\#/2\)). In particular,
 \begin{equation}\label{eq:record-max}
 \max_{\,2n\le 2P_y}\ \frac{\log^2(2n)}{2n}\,\mathbb E\,R_2(2n)
 \ \text{ is attained at }\, n=P_y,
 \end{equation}
-so $P_y$ are record maximizers as $y$ increases.
+so \(P_y\) are record maximizers as \(y\) increases.
 \end{proposition}
 
 \begin{proof}
-By \eqref{eq:HLA-main-term}, the normalized expectation \eqref{eq:normalized-expectation} is asymptotic to $\mathfrak S(2n)$, while $2n/\log^2(2n)$ varies slowly across a fixed block. Therefore the maximizers of \eqref{eq:normalized-expectation} coincide with the maximizers of $\mathfrak S(2n)$, which are exactly the multiples of $P_y$ by Lemma~\ref{lem:SS-plateau}. The record statement \eqref{eq:record-max} follows likewise.
+By \eqref{eq:HLA-main-term}, the normalized expectation \eqref{eq:normalized-expectation} is asymptotic to \(\mathfrak S(2n)\), while \(2n/\log^2(2n)\) varies slowly across a fixed block. Therefore the maximizers of \eqref{eq:normalized-expectation} coincide with the maximizers of \(\mathfrak S(2n)\), which are exactly the multiples of \(P_y\) by Lemma~\ref{lem:SS-plateau}. The record statement \eqref{eq:record-max} follows likewise.
 \end{proof}
 
 \begin{remark}[Empirical Alignment]
-Table~\ref{tab:normalized-status} shows that blockwise maxima of the observed normalized counts occur at (or extremely near) multiples of $P_y$, matching the HL-A prediction up to sampling noise.
+Table~\ref{tab:normalized-status} shows that blockwise maxima of the observed normalized counts occur at (or extremely near) multiples of \(P_y\), matching the HL-A prediction up to sampling noise.
 \end{remark}
 
 \begin{remark}[HL-A Heuristic for Normalized Maxima]
@@ -1717,10 +1717,10 @@ Via Vaughan’s identity, Cauchy-Schwarz and the large sieve, this delivers \eqr
 
 \item[\textnormal{(ii)}] \emph{Almost-Everywhere Short-Interval Equidistribution.}
 For some \(\delta,\varepsilon>0\) and every \(A>0\), all but \(O\!\big(N/(\log N)^A\big)\) starting points \(x\in[N,2N]\) satisfy
-\[
+\begin{equation}
 \max_{q\le N^{\frac{1}{2}+\delta}}\ \max_{(a,q)=1}\ \max_{H\ge N^{\frac{1}{2}+\varepsilon}}
 \bigl|\pi(x+H;q,a)-\tfrac{H}{\varphi(q)\log x}\bigr|\ \ll\ \frac{H}{(\log N)^{A}}.
-\]
+\end{equation}
 This yields \eqref{eq:major-arc-again-copy} after integrating over \(x\) and summing dyadically.
 
 \item[\textnormal{(iii)}] \emph{Any stronger hypothesis implying (i) or (ii)} (e.g. a GEH/EH-type statement in short intervals, or BV in short intervals for a rich class of moduli together with a standard dispersion argument).
@@ -1754,9 +1754,9 @@ that are logically independent of it.
 Assume the minor-arc input \eqref{eq:major-arc-again-copy} with some \(A>2\) (e.g. under SI--BV\(_\theta\)).
 
 (i) \emph{Positivity.} Since \(\mathfrak S(N)\ge \Szero=2C_2\) and
-\[
+\begin{equation}
 R_2(N)\ =\ \frac{\mathfrak S(N)\,N}{\log^2 N}\ +\ O\!\Big(\frac{N}{(\log N)^A}\Big),
-\]
+\end{equation}
 there exists \(N_0\) with \(R_2(N)>0\) for all even \(N\ge N_0\).
 
 (ii) \emph{Tail From the Certified \emph{Product-Form} Bound.}
@@ -1769,11 +1769,11 @@ From Theorem~\ref{thm:main}, for \(n\ge \nprodstar\) and a fixed window \(M(n)\a
 \end{equation}
 Set \(\displaystyle \kappaprod:=\inf_{n\ge \nprodstar}\CminusProduct(n)>0\) (the recorded positive margin).
 Then for all \(N\ge 2\nprodstar\),
-\[
+\begin{equation}
 R_2(N)\ \ge\ \frac{c_{\mathrm{prod}}\,N}{\log^2 N},
 \qquad
 c_{\mathrm{prod}}=c\big(\Szero,\kappaprod\big)>0,
-\]
+\end{equation}
 by a dyadic decomposition and the comparison \(M(n)\asymp n\).
 
 \smallskip
@@ -1789,9 +1789,9 @@ Set \(e(t):=e^{2\pi i t}\) and
 S(\alpha):=\sum_{n\le N}\Lambda(n)\,e(n\alpha),\qquad \alpha\in[0,1].
 \end{equation}
 Fix \(Q:=N^{1/2-\delta}\) with \(0<\delta<\theta-\tfrac12\). For each reduced fraction \(a/q\) with \(1\le q\le Q\) and \((a,q)=1\), define the major arc
-\[
+\begin{equation}
 \mathfrak M(q,a):=\Bigl\{\alpha\in[0,1]:\ \bigl|\alpha-\tfrac{a}{q}\bigr| \le \tfrac{1}{2qQ}\Bigr\}.
-\]
+\end{equation}
 Let \(\mathfrak M:=\bigcup_{1\le q\le Q}\ \bigcup_{(a,q)=1}\ \mathfrak M(q,a)\) and \(\mathfrak m:=[0,1]\setminus \mathfrak M\).
 \end{definition}
 
@@ -2534,15 +2534,20 @@ For each alpha value, the table shows:
 \bigskip
 \bigskip
 
+\begin{table}[H]
+\caption{CPS summary statistics for multiple alpha values.}
+\label{tab:cps-alpha-summary}
+\end{table}
+
 \small
 \pgfplotstabletypeset[
   col sep=comma,
   string type,
   begin table=\begin{longtable},
   end table=\end{longtable},
-  every head row/.style={
-    before row={\caption{CPS summary statistics for multiple alpha values.}\label{tab:cps-alpha-summary}\\\toprule},
-    after row={\midrule\endhead}
+  every first row/.style={
+    before row=\toprule,
+    after row=\midrule
   },
   every last row/.style={after row=\bottomrule},
   columns={Alpha,PreMertens,Mertens,DeltaMertens,n_5precent,NzeroStat,EtaStat},
@@ -2564,7 +2569,8 @@ The repository includes build scripts, certification outputs, and checksums to e
 \clearpage
 
 \bibliographystyle{plain}   % or 'alpha', 'abbrv', etc.
-\bibliography{sieve_goldbach}
+\bibliography{goldbach-reformulation}
+
 \end{document}
 \typeout{get arXiv to do 4 passes: Label(s) may have changed. Rerun}
 

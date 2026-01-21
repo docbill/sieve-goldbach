@@ -1222,6 +1222,7 @@ $(CPS_SUMMARY_XPRIM).csv: $(CPS_SUMMARY_LPRIM).csv $(SUMMARY_DEFAULT_XPRIM).csv 
 	$(MERGECPS) $(foreach a,$(CPS_SUMMARY_LPRIM).csv $(CPS_SUMMARY_XPRIM_PARTS),--input $(a)) --output "$@"
 
 # ---------- Generic sha256 rule ----------
+# Generic rule for all files (specific CPS summary rules defined below)
 %.sha256: %
 	sha256sum "$<" | tee "$@"
 
