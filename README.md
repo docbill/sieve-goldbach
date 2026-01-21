@@ -97,7 +97,13 @@ output/
 
 ## System Requirements
 
-* **Operating System**: Linux or macOS (tested on Apple M2 Pro with macOS 15; also works on Linux distributions with GCC/Clang).
+* **Operating System**: macOS (Apple Silicon or Intel) or Intel-based Linux. The software has been tested on:
+  * Apple M2 Pro with macOS 15 (primary development platform)
+  * Intel-based Linux distributions with GCC/Clang
+
+* **Platform-Specific Notes**:
+  * **Intel-based platforms** (both macOS and Linux): Due to floating-point round-off differences between Intel and Apple Silicon architectures, you **must** set `TAINTED=1` when running verification on Intel-based platforms. See the [Makefile Options](#makefile-options) section for details.
+  * **Performance**: Intel-based platforms have been observed to run significantly slower than Apple Silicon (M2 Pro) for the same workloads. Runtime estimates in this README are based on Apple M2 Pro performance.
 
 * **Compiler**: GCC ≥ 10 or Clang ≥ 12 recommended. On macOS, install via:
 
@@ -105,7 +111,7 @@ output/
   brew install gcc
   ```
 
-  or use Apple’s Command Line Tools (provides `clang`).
+  or use Apple's Command Line Tools (provides `clang`).
 
 * **Disk & Memory**:
 
@@ -113,11 +119,13 @@ output/
   * Tested with 8 GB RAM on Linux; more memory improves runtime.
   * Likely to run on devices with 4 GB RAM (e.g., Raspberry Pi), but this has not been tested.
 
-* **Runtime**:
+* **Runtime** (Apple M2 Pro benchmarks):
 
   * Small runs (`1M`) finish in minutes.
-  * Medium runs (`10M`) take \~12 hours on an Apple M2 Pro.
+  * Medium runs (`10M`) take \~12 hours.
   * Large runs (`100M`) may run for several weeks.
+  
+  **Note**: Intel-based platforms may take significantly longer for the same workloads.
 
 ---
 
@@ -149,8 +157,8 @@ make validate-large
 
 It is recommended to run these long jobs inside a persistent session (e.g., with `screen` or `tmux`), since:
 
-* **Medium validation** takes more than 12 hours on an Apple M2 Pro.
-* **Large validation** may take several weeks.
+* **Medium validation** takes more than 12 hours on an Apple M2 Pro (Intel-based platforms will be significantly slower).
+* **Large validation** may take several weeks (Intel-based platforms will take longer).
 
 ---
 
@@ -184,7 +192,7 @@ Use `make help` to see a summary if available. Always run long jobs inside `scre
 
 The Makefile supports several optional flags to control output generation and verification:
 
-* **`TAINTED` (environment variable)** – When set to `1` or `true`, verification failures print warnings instead of exiting with an error. Useful when intentionally generating different outputs (e.g., during development or when testing new algorithms). This is implemented as an environment variable (rather than a make variable) for convenience, allowing AWK scripts to access it without requiring additional parameter passing. Set as an environment variable:
+* **`TAINTED` (environment variable)** – When set to `1` or `true`, verification failures print warnings instead of exiting with an error. This is **required** for Intel-based platforms (both macOS and Linux) due to floating-point round-off differences between Intel and Apple Silicon architectures. It is also useful when intentionally generating different outputs (e.g., during development or when testing new algorithms). This is implemented as an environment variable (rather than a make variable) for convenience, allowing AWK scripts to access it without requiring additional parameter passing. Set as an environment variable:
   ```sh
   export TAINTED=1
   make verify
@@ -193,6 +201,8 @@ The Makefile supports several optional flags to control output generation and ve
   ```sh
   TAINTED=1 make verify
   ```
+  
+  **Important**: If you are running on an Intel-based platform, you should set `TAINTED=1` before running any verification targets to avoid false failures due to platform-specific numerical differences.
 
 * **`POINTWISE=1` (make variable)** – When set, generates bound ratio files (`boundratiomin-*.csv` and `boundratiomax-*.csv`) that compare pointwise predictions against measured values. When not set, these files are skipped (creating `.stamp` placeholders instead) to save CPU time on large runs. **Note:** This option is not available for the legacy `COMPAT=v0.1.5` version. Example:
   ```sh
