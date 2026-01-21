@@ -51,7 +51,7 @@ ARFLAGS  ?= rcs
 PROGRAMS := primesieve_bitmap printprimes storeprimes \
             gbpairsummary \
             cpslowerbound findgbpairs certifyprimes certifygbpairs \
-            validatepairrangesummary
+            validatepairrangesummary mergecps
 
 LIBDIR  := lib
 LIBFILE := $(LIBDIR)/libprime.a

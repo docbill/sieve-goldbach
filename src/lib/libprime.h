@@ -67,6 +67,7 @@ extern int findPair( uint64_t n, uint64_t **current, uint64_t *lowest, uint64_t 
 
 #include "twoSGB.h"
 #include "calcBnormSymmetric.h"
+#include "chineseRemainderTheorem.h"
 
 #ifdef __cplusplus
 }
