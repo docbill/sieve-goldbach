@@ -15,8 +15,11 @@ identifiers:
     value: "10.5281/zenodo.16735169"
     description: "Related paper describing results validated by this software."
   - type: doi
-    value: "10.5281/zenodo.18329183-bugfix"
-    description: "Repository v0.1.6 Sieve-Goldbach"
+    value: "10.5281/zenodo.18329831"
+    description: "Repository v0.2.0 Sieve-Goldbach"
+  - type: doi
+    value: "10.5281/zenodo.18329183"
+    description: "Repository v0.1.6-bugfix Sieve-Goldbach"
   - type: doi
     value: "10.5281/zenodo.17585892"
     description: "Repository v0.1.6 Sieve-Goldbach"
