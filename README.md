@@ -89,7 +89,7 @@ output/
 * **Lambda files**: `lambdaalignmin-*-0.25-v0.2.0.csv`, `lambdaboundmax-*-0.25-v0.2.0.csv`, etc.
 * **Partial files**: `*.partial.csv` (intermediate files during generation)
 
-**Alpha value generation:** Alpha values are generated in a geometric progression: starting from 2^-10 ≈ 0.0009765625, each subsequent value is multiplied by 2^(1/8) ≈ 1.0905077, up to α = 1.0. This provides approximately 80 different alpha values for analysis.
+**Alpha value generation:** Alpha values are generated in a geometric progression: starting from 2^-10 ≈ 0.0009765625, each subsequent value is multiplied by 2^(1/8) ≈ 1.0905077, up to α = 1.0. This provides approximately 81 different alpha values for analysis.
 
 **Default alpha:** The default alpha value is 0.5, and results for this value are also copied to the root `output/` directory (without the alpha suffix in the filename) for convenience.
 
@@ -204,19 +204,19 @@ The Makefile supports several optional flags to control output generation and ve
   
   **Important**: If you are running on an Intel-based platform, you should set `TAINTED=1` before running any verification targets to avoid false failures due to platform-specific numerical differences.
 
-* **`POINTWISE=1` (make variable)** – When set, generates bound ratio files (`boundratiomin-*.csv` and `boundratiomax-*.csv`) that compare pointwise predictions against measured values. When not set, these files are skipped (creating `.stamp` placeholders instead) to save CPU time on large runs. **Note:** This option is not available for the legacy `COMPAT=v0.1.5` version. Example:
+* **`POINTWISE=1` (make variable)** – When set, generates bound ratio files (`boundratiomin-*.csv` and `boundratiomax-*.csv`) that compare pointwise predictions against measured values. When not set, these files are skipped (creating `.stamp` placeholders instead) to save CPU time on large runs. **Note:** This option is not available for the legacy `COMPAT=v0.1.6` version. Example:
   ```sh
   make POINTWISE=1 generate
   ```
 
-* **`PSI=1` (make variable)** – When set, generates Primorial Short Interval (PSI) output files and lambda statistics. PSI files use short interval aggregation for analysis. When not set, PSI file generation is skipped (creating `.stamp` placeholders instead). **Note:** This option is not available for the legacy `COMPAT=v0.1.5` version. Example:
+* **`PSI=1` (make variable)** – When set, generates Primorial Short Interval (PSI) output files and lambda statistics. PSI files use short interval aggregation for analysis. When not set, PSI file generation is skipped (creating `.stamp` placeholders instead). **Note:** This option is not available for the legacy `COMPAT=v0.1.6` version. Example:
   ```sh
   make PSI=1 generate
   ```
 
-* **`COMPAT=v0.1.5` (make variable)** – When set, uses the legacy v0.1.5 compatibility mode. The default is `v0.2.0`, which supports all current features including `POINTWISE` and `PSI` options. Use this option only when you need to reproduce results from the v0.1.5 version. Example:
+* **`COMPAT=v0.1.6` (make variable)** – When set, uses the legacy v0.1.6 compatibility mode. The default is `v0.2.0`, which supports all current features including `POINTWISE` and `PSI` options. Use this option only when you need to reproduce results from the v0.1.6 version. Example:
   ```sh
-  make COMPAT=v0.1.5 generate
+  make COMPAT=v0.1.6 generate
   ```
 
 These options can be combined:
