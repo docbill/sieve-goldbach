@@ -2172,65 +2172,10 @@ help:
 	@echo "  make clobber-huge        # remove huge data files (XPRIM parts)"
 
 
-# ---- Paper Source Archive Configuration ------------------------
-DATE := $(shell date +%Y%m%d)
-
-# List all papers (add new papers here)
-ALL_PAPERS := goldbach-reformulation
-# Example: ALL_PAPERS := goldbach-reformulation another-paper third-paper
-
-# Define files for each paper
-GOLDBACH_REFORMULATION_FILES := \
-  LICENSES/CC-BY-4.0.txt \
-  papers/goldbach-reformulation/sieve_goldbach.tex \
-  papers/goldbach-reformulation/sieve_goldbach.bib \
-  papers/goldbach-reformulation/README.txt \
-  papers/goldbach-reformulation/Makefile \
-  papers/goldbach-reformulation/cpssummary-23PR.5-v0.1.6.csv \
-  data/cpslowerbound-100M-v0.1.6.csv \
-  data/lambdaavg-100M.csv \
-  data/lambdamax-100M.csv \
-  data/lambdamin-100M.csv \
-  data/pairrangejoin-100M.csv
-
-# Add more papers here as needed:
-# ANOTHER_PAPER_FILES := \
-#   LICENSES/CC-BY-4.0.txt \
-#   papers/another-paper/main.tex \
-#   ...
-
-.PHONY: zip-goldbach-reformulation clean-goldbach-reformulation
-
-# ---- Build the date-stamped source archive for goldbach-reformulation -----
-zip-goldbach-reformulation:
-	@echo "Creating source archive for goldbach-reformulation..."
-	@rm -rf "$(OUT)/goldbach-reformulation-src"
-	@mkdir -p "$(OUT)/goldbach-reformulation-src"
-	@cp -f $(GOLDBACH_REFORMULATION_FILES) "$(OUT)/goldbach-reformulation-src/."
-	@cd "$(OUT)/goldbach-reformulation-src" && ( \
-	  echo "SHA256 manifest for goldbach-reformulation ($(DATE))" > CHECKSUMS.txt; \
-	  for f in $(notdir $(GOLDBACH_REFORMULATION_FILES)); do sha256sum "$$f" >> CHECKSUMS.txt 2>/dev/null || shasum -a 256 "$$f" >> CHECKSUMS.txt; done )
-	@(cd "$(OUT)" && zip -r -X "goldbach-reformulation-src-$(DATE).zip" "goldbach-reformulation-src" >/dev/null)
-	@rm -rf "$(OUT)/goldbach-reformulation-src"
-	@echo "Created $(OUT)/goldbach-reformulation-src-$(DATE).zip"
-	@(cd "$(OUT)" && shasum -a 256 "goldbach-reformulation-src-$(DATE).zip" | tee "goldbach-reformulation-src-$(DATE).sha256")
-
-# ---- Cleanup goldbach-reformulation archive ----------------------------
-clean-goldbach-reformulation:
-	@rm -rf "$(OUT)/goldbach-reformulation-src-$(DATE).zip" "$(OUT)/goldbach-reformulation-src-$(DATE).sha256"
-
 # ---- Build/clean all papers ----------------------------------------
 .PHONY: zip-src clean-src
 zip-src:
-	@echo "Building source archives for all papers..."
-	@for paper in $(ALL_PAPERS); do \
-		$(MAKE) zip-$$paper; \
-	done
-	@echo "All paper source archives created."
+	$(MAKE) -C papers zip-src
 
 clean-src:
-	@echo "Cleaning source archives for all papers..."
-	@for paper in $(ALL_PAPERS); do \
-		$(MAKE) clean-$$paper; \
-	done
-	@echo "All paper source archives cleaned."
+	$(MAKE) -C papers clean-src

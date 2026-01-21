@@ -13,7 +13,10 @@ repository-code: "https://github.com/docbill/sieve-goldbach"
 identifiers:
   - type: doi
     value: "10.5281/zenodo.16735169"
-    description: "Related paper describing results validated by this software."
+    description: "Related paper describing results validated by v0.1.6 of this software."
+  - type: doi
+    value: "10.5281/zenodo.18330442"
+    description: "Related paper describing results validated by v0.2.0 of this software."
   - type: doi
     value: "10.5281/zenodo.18329831"
     description: "Repository v0.2.0 Sieve-Goldbach"

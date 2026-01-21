@@ -1,0 +1,2278 @@
+% Copyright (C) 2025 Bill C. Riemers
+% SPDX-License-Identifier: CC-BY-4.0
+%
+% Licensed under the Creative Commons Attribution 4.0 International License.
+% You may obtain a copy of the License at:
+%     https://creativecommons.org/licenses/by/4.0/
+%
+% You are free to:
+%   - Share — copy and redistribute the material in any medium or format
+%   - Adapt — remix, transform, and build upon the material for any purpose
+% Under the following terms:
+%   - Attribution — You must give appropriate credit, provide a link to the license,
+%     and indicate if changes were made.
+
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,fullpage,mathtools,microtype}
+\setlength{\parskip}{0.8em}
+\setlength{\parindent}{0pt}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{needspace}
+\usepackage{mathtools}
+\usepackage{url}
+\usepackage{longtable,booktabs}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\renewcommand{\ttdefault}{lmtt}
+\usepackage{microtype}
+\usepackage{mathtools}
+\usepackage{siunitx}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18} % or at least 1.11+
+\pgfplotsset{set layers} % enables axis background/foreground layers
+\usepgfplotslibrary{fillbetween} % <-- this is the key line
+\usetikzlibrary{fillbetween}
+\usepackage{pgfplotstable}
+\usepackage{xparse}
+\usepackage[section]{placeins} % floats can't cross section boundaries
+\usepackage{etoolbox}
+\usepackage{xcolor}
+\usepackage[skip=2pt]{caption}
+
+% Define stable color names:
+\colorlet{bandA}{blue}
+\colorlet{bandB}{red}
+\colorlet{bandC}{teal}
+\colorlet{bandD}{orange}
+\colorlet{bandE}{violet}
+\colorlet{bandF}{green!60!black}
+\colorlet{bandG}{magenta}
+\colorlet{bandH}{cyan!60!black}
+\colorlet{bandI}{brown}
+\colorlet{bandJ}{gray}
+\colorlet{bandK}{lime!60!black}
+
+\pgfplotstableset{empty cells with={nan}} % treat empty CSV cells as NaN
+
+% When a point becomes NaN, don't try to draw through it
+\pgfplotsset{unbounded coords=jump}
+
+\title{\textbf{Empirical Validation and Certification of Prime Curvature Geometry}}
+\author{Bill C. Riemers}
+\date{\today}
+
+\newcommand{\BandColorName}[1]{bandcolor#1}
+% Make sure you have:
+% \usepgfplotslibrary{fillbetween}
+% \pgfplotsset{unbounded coords=jump}
+
+\newcommand{\PlotBand}[3]{% #1 = alpha literal, #2 = color, #3 = alpha in caption form
+
+  % low curve
+  \addplot[
+    name path=low#2,
+    draw=#2,
+    thin,
+    forget plot,
+    x filter/.code={%
+      \pgfmathparse{abs((\thisrow{alpha}+0)-(#1)) < 1e-12 ? \pgfmathresult : nan}%
+    },
+  ] table[
+    x=n_min_lambda, 
+    y expr=abs(\thisrow{min_lambda}),
+  ]{\banddata};
+
+  % high curve
+  \addplot[
+    name path=high#2,
+    draw=#2,
+    thin,
+    forget plot,
+    x filter/.code={%
+      \pgfmathparse{abs((\thisrow{alpha}+0)-(#1)) < 1e-12 ? \pgfmathresult : nan}%
+    },
+  ] table[
+    x=n_max_lambda,
+    y expr=abs(\thisrow{max_lambda}),
+  ]{\banddata};
+
+  % fill between
+  \addplot[
+    draw=none,
+    fill=#2,
+    fill opacity=0.18,
+  ] fill between[of=low#2 and high#2];
+
+  \addlegendentry{\(\alpha=#3\)}
+}
+
+\DeclarePairedDelimiter{\card}{\lvert}{\rvert}
+
+\newtheoremstyle{inline}% for remarks/notes
+  {}{}{\normalfont}{}{\itshape}{.}{ }{}
+  
+\newtheoremstyle{break}  % Name
+  {1ex}                  % Space above
+  {1ex}                  % Space below
+  {\normalfont}          % Body font
+  {}                     % Indent
+  {\bfseries}            % Theorem head font
+  {.}                    % Punctuation after theorem head
+  {\newline}             % Space after theorem head (THIS FORCES LINE BREAK)
+  {}                     % Theorem head spec
+
+\theoremstyle{inline}
+\newtheorem*{remark}{Remark}
+
+\theoremstyle{inline}
+\newtheorem*{convention}{Convention}
+
+\theoremstyle{break}
+\newtheorem{lemma}{Lemma}
+
+\makeatletter
+\renewenvironment{proof}[1][\proofname]{%
+  \par\pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\mbox{}\\  % This line forces the break
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+\theoremstyle{break}
+\newtheorem*{conclusion}{Conclusion}
+
+\theoremstyle{break}
+\newtheorem{theorem}{Theorem}
+
+\theoremstyle{break}
+\newtheorem{proposition}{Proposition}
+
+\theoremstyle{break}
+\newtheorem{conjecture}{Conjecture}
+
+\theoremstyle{break}
+\newtheorem{corollary}{Corollary}
+
+\theoremstyle{break}
+\newtheorem{definition}{Definition}
+
+\theoremstyle{break}
+\newtheorem{hypothesis}{Hypothesis}
+
+\theoremstyle{inline}
+\newtheorem*{note}{Note}
+
+% --- Base (unchanged) ---
+\newcommand{\Cmeas}{C}
+\newcommand{\Cpred}{\mathring{C}}
+
+\newcommand{\Gmeas}{G}
+\newcommand{\Gpred}{\mathring{G}}
+\newcommand{\Gproxy}{\widehat{G}}
+
+% tiny tags
+\newcommand{\talign}{{\scriptscriptstyle\mathrm{align}}}
+\newcommand{\thead}{{\scriptscriptstyle\mathrm{head}}}
+\newcommand{\ttail}{{\scriptscriptstyle\mathrm{tail}}}
+\newcommand{\tavg}{{\scriptscriptstyle\mathrm{avg}}}
+\newcommand{\tlow}{{\scriptscriptstyle\mathrm{low}}}
+\newcommand{\thigh}{{\scriptscriptstyle\mathrm{high}}}
+\newcommand{\textrema}{{\scriptscriptstyle\mathrm{extrema}}}
+\newcommand{\tbound}{{\scriptscriptstyle\mathrm{bound}}}
+\newcommand{\tdensity}{{\scriptscriptstyle\mathrm{density}}}
+\newcommand{\tenv}{{\scriptscriptstyle\mathrm{env}}}
+\newcommand{\tpairs}{{\scriptscriptstyle\mathrm{pairs}}}
+\newcommand{\ttrivial}{{\scriptscriptstyle\mathrm{trivial}}}
+\newcommand{\tsem}{{\scriptscriptstyle\mathrm{sem}}}
+\newcommand{\tsieve}{{\scriptscriptstyle\mathrm{sieve}}}
+\newcommand{\twin}{{\scriptscriptstyle\mathrm{win}}}
+\newcommand{\tref}{{\scriptscriptstyle\mathrm{ref}}}
+\newcommand{\tana}{{\scriptscriptstyle\mathrm{analytical}}}
+\newcommand{\tgb}{{\scriptscriptstyle\mathrm{GB}}}
+\newcommand{\thl}{{\scriptscriptstyle\mathrm{HL}}}
+\newcommand{\teff}{{\scriptscriptstyle\mathrm{eff}}}
+\DeclareMathOperator{\SquareCap}{\mathsf{Sq}}
+\DeclareMathOperator{\EffLocModCap}{\mathsf{\EffLocMod}}
+
+\newcommand{\etaHL}{\eta^{\mathrm{HL}}}
+\newcommand{\Ecap}{\mathrm{Ecap}}
+\newcommand{\HLCorr}{\mathcal{H}}
+\newcommand{\pmin}{\mathrm{p_{\min}}}
+\newcommand{\ecap}[1]{\left\langle #1 \right\rangle_{\mathrm{ec}}}
+\newcommand{\GHL}{\Gpred^{\thl}}
+\newcommand{\GHLproxy}{\Gproxy^{\thl}}
+\newcommand{\OmegaPrime}{\Omega_{\mathrm{prime}}}
+\newcommand{\OmegaPrimeNorm}{\widehat{\Omega}_{\mathrm{prime}}}
+\newcommand{\Ipar}{I^{\mathrm{par}}}
+\newcommand{\EffLocMod}{\mathcal{Q}}
+\newcommand{\Peff}{\mathbb{P}_{\teff}}
+\newcommand{\Podd}{{\mathbb{P}\setminus\{2\}}}
+\newcommand{\RHLbound}{\widehat{R}^{\thl}}
+\newcommand{\RHLboundEnv}{\RHLbound_{\tenv}}
+\newcommand{\Ssem}{\mathfrak{S}}
+\newcommand{\SsemHead}{\Ssem_{\thead}}
+\newcommand{\SsemTail}{\Ssem_{\ttail}}
+\newcommand{\SGB}{\mathfrak{S_{\tgb}}}
+\newcommand{\HHL}{H^{\thl}}
+\newcommand{\THL}{T^{\thl}}
+\newcommand{\RHL}{R^{\thl}}
+\newcommand{\QpleL}{\EffLocMod_p(n) \le L}
+\newcommand{\QpProduct}{\prod_{\substack{p\in\Peff(n) \\ \QpleL}}}
+\newcommand{\pZeroProduct}{\prod_{\substack{p\in\Peff(n) \\ p \le P_0}}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This paper presents an empirical certification of the \textbf{Prime Curvature Geometry
+Conjecture for Goldbach (PCGC--Goldbach)}, as formulated in~\cite{Riemers2026-PCGH}.
+All tested instances with \(4 \le 2n \le 23\# \approx 2.5852\times 10^{8}\)
+are certified to satisfy the geometric curvature bounds predicted by
+PCGC--Goldbach.
+The certification spans a discrete family of fixed-scale Goldbach windows and
+covers more than 16~billion non-trivial test scenarios, with no violations
+observed across the entire tested range.
+
+Beyond aggregate verification, the paper provides detailed extremal and
+pointwise analysis of the certified bounds together with a fully reproducible
+computational pipeline.
+All certified claims are grounded in explicit enumeration rather than
+probabilistic heuristics, and the associated data products and verification
+artifacts are archived to permit independent audit and falsification.
+\end{abstract}
+
+\clearpage
+\tableofcontents
+
+
+\clearpage
+\preto\section{\FloatBarrier}
+\section{Introduction}
+
+\preto\subsection{\FloatBarrier}
+\subsection{Background}
+
+The Prime Curvature Geometry Conjecture for Goldbach (PCGC--Goldbach) was introduced
+in~\cite{Riemers2026-PCGH} as a geometric framework for bounding deviations in
+Goldbach pair counts.
+The present paper reports an empirical certification of that framework over a
+large, explicitly enumerated domain.
+
+Crucially, the original intent of the computational programme was \emph{not} to
+verify pointwise validity of PCGC--Goldbach.
+On the contrary, the working assumption motivating the software design was that
+prime distributions exhibit pseudo-random behaviour at sufficiently fine scales,
+and that any non-aggregated formulation of the conjecture would almost certainly
+admit local violations.
+
+Under this assumption, one expects bounds derived from a geometric approximation
+to hold only after aggregation over intervals large enough to be statistically
+representative, and to fail when tested pointwise in \(n\).
+Accordingly, the computational framework was engineered to probe a wide range of
+window sizes and aggregation regimes, with the expectation that sufficiently fine
+partitions would expose outliers.
+
+Only after observing \emph{zero} violations across all tested cross-intervals
+\(\Delta_\alpha(n)\), spanning 81 distinct curvature parameters \(\alpha\), did it
+become clear that this expectation of statistical failures was incorrect.
+Rather than exhibiting sporadic pointwise escapes, the measured pair counts remain
+uniformly confined within the predicted curvature envelopes.
+
+To verify that the absence of violations was not an artifact of the computational
+pipeline, controlled perturbation tests were performed designed to force failures.
+Specifically, key structural components of the PCGC--Goldbach framework were
+deliberately replaced with known-inadequate surrogates.
+In particular, the effective local modulus \(\EffLocMod_p(n)\) was replaced by the
+corresponding primorial cutoff \(p\#\), thereby discarding the adaptive
+localisation that encodes small-prime congruence structure.
+
+Under these substitutions, violations of the predicted bounds appeared
+immediately and systematically, both in aggregated extrema and at the pointwise
+level.
+The resulting failure patterns were consistent with theoretical expectations and
+confirm that the software reliably detects genuine departures from admissible
+curvature.
+
+These perturbation tests demonstrate that the observed absence of violations
+under the full PCGC--Goldbach formulation is not a consequence of numerical
+smoothing, windowing artefacts, or implicit aggregation, but reflects a
+structural property of the conjectured geometry itself.
+Thus, the empirical results do not arise from tuning the experiment to confirm a
+conjecture, but instead from an outcome that directly contradicts the original
+working hypothesis built into the experimental design.
+
+\preto\subsection{\FloatBarrier}
+\subsection{Computational Framework Overview}
+
+The software used in this study is an extension of the framework introduced
+in~\cite{Riemers2025-SieveGoldbach}.
+As before, binning is performed using primorial-based windows, preserving
+compatibility with Hardy--Littlewood--style local corrections.
+
+Two operational modes are supported:
+\begin{enumerate}
+\item \emph{Aggregated mode}, in which Hardy--Littlewood windowed predictions and
+measured pair counts are generated in separate runs.
+In this configuration, pointwise verification is not possible, but global extrema
+can be rigorously compared.
+\item \emph{Combined mode}, in which predicted bounds and measured values are
+evaluated jointly, enabling pointwise certification.
+\end{enumerate}
+
+In aggregated mode, prediction runs complete in approximately half a day on an
+Apple M2 processor, while full pair-count runs require approximately six days.
+Combined mode additionally requires evaluating high-precision logarithmic
+products for each admissible odd-pair candidate and consequently incurs a
+computational cost approximately an order of magnitude greater than standard
+Goldbach pair counting.
+
+Across all tested primorial bins, no violations of the predicted bounds were
+observed.
+Moreover, the extremal values of the normalised log-ratio
+\begin{equation}
+\log(\Gmeas/\Gpred)
+\end{equation}
+exhibit local fluctuations but show an overall tightening trend toward zero
+across the tested range.
+
+\preto\subsection{\FloatBarrier}
+\subsection{Contributions}
+
+The principal contributions of this paper are as follows:
+
+\begin{itemize}
+\item Provide an empirical certification of the Prime Curvature Geometry
+Conjecture for Goldbach over the range \(4 \le 2n \le 23\#\), covering a discrete
+family of 81 fixed-scale window parameters and more than 16~billion non-trivial
+test scenarios.
+
+\item Demonstrate that the predicted geometric curvature bounds hold not only
+in aggregated regimes but also pointwise, with no observed violations across the
+entire certified domain.
+
+\item Introduce a reproducible certification methodology that treats geometric
+bounds as falsifiable numerical claims, supported by explicit enumeration,
+archived data products, and independently auditable verification logs.
+
+\item Validate the sensitivity of the computational pipeline through
+controlled perturbation tests, confirming that violations are reliably detected
+when essential geometric structure is removed.
+
+\item Clearly delineate the scope of the certification, distinguishing the
+fixed-scale regime studied here from geometrically distinct short-interval
+problems that require separate analytical and experimental treatment.
+\end{itemize}
+
+\preto\section{\FloatBarrier}
+\section{Fundamental Definitions and Identities}
+\label{sec:fundamental-definitions}
+
+The definitions and identities collected in this section are adapted from
+\cite{Riemers2025-Framework,Riemers2026-PCGH}.
+They are presented here in a condensed form sufficient for the present work;
+for full derivations, motivation, and extended discussion, the reader is
+referred to the cited papers.
+
+\subsection{Admissible Parity}
+
+The parity restriction was introduced in \cite{Riemers2025-Framework}.
+Here it is used purely as an admissibility convention for windowed sums
+and products.
+
+\begin{definition}[Parity--Admissible Window Index Set]
+\label{def:parity-admissible}
+Let \(n\in\mathbb{N}\) and let \(M\in[0,n]\).
+Define the symmetric window
+\begin{equation}
+I_M
+:=
+\{\, m\in\mathbb{Z} : 0<|m|\le M \text{ and } 3\le n-|m| \,\}.
+\end{equation}
+The \emph{parity--admissible index set} is
+\begin{equation}
+\Ipar(n;M)
+:=
+\{\, m\in I_M : n+m \equiv 1 \pmod{2} \,\}.
+\end{equation}
+Equivalently, \(\Ipar(n;M)\) consists of those shifts \(m\) with
+\(0<|m|\le M\) for which both \(n-m\) and \(n+m\) are odd integers at least \(3\).
+Unless stated otherwise, all summations over window variables \(m\) in
+this paper are implicitly restricted to \(m\in\Ipar(n;M)\).
+\end{definition}
+
+\begin{definition}[Euler--Cap Operator]
+\label{def:euler-cap-operator}
+The PCGC--Goldbach conjecture is formulated only for
+\emph{Euler--cap admissible} window radii.
+To allow formulas to be written uniformly in terms of an unconstrained
+window parameter, the following coercion operator is introduced.
+
+Fix \(n\in\mathbb{N}\).  For any \(M\ge 0\) measured in the same units as the
+window radius, define
+\begin{equation}
+\label{eq:ecap-operator}
+\ecap{M}
+\;:=\;
+\left\lfloor
+\min\!\left(
+M,\;
+\Ecap(n)\,n
+\right)
+\right\rfloor
+\;=\;
+\left\lfloor
+\min\!\left(
+M,\;
+\frac{(2n+1)-\sqrt{8n+1}}{2}
+\right)
+\right\rfloor.
+\end{equation}
+
+Thus \(\ecap{M}\) denotes the largest Euler--cap admissible window radius
+not exceeding \(M\).
+\end{definition}
+
+\medskip
+\noindent
+\textbf{Convention.}
+The Euler--cap operator \(\ecap{\cdot}\) enforces admissibility of window
+parameters.  This paper assumes the Euler cap is applied globally and
+will therefore not be explicitly specified.
+
+\subsection{Effective Local Moduli}
+
+\begin{definition}[Effective Local Modulus]
+\label{def:Qp}
+Let \(n\in\mathbb{N}\) and let \(p\) be an odd prime.
+Define the minimum contributing prime by
+\begin{equation}
+p_{\min}(n)
+   :=
+\begin{cases}
+3, & 3 \mid n, \\[4pt]
+5, & 3 \nmid n.
+\end{cases}
+\end{equation}
+
+For each \(n\ge2\), let
+\begin{equation}
+\Peff(n):=\{\,p\in\mathbb{P} : p\ge \pmin(n)\,\}.
+\end{equation}
+We regard \(\EffLocMod_p(n)\) as defined only for \(p\in\Peff(n)\).
+
+For any odd prime \(q_{\min}\), define the partial Euler product
+\begin{equation}
+\EffLocMod_p^{(q_{\min})}
+   :=
+   \prod_{\substack{
+      q \in \mathbb{P} \\
+      q_{\min} \le q \le p
+   }}
+   (q-1).
+\end{equation}
+The \emph{effective local modulus} at \(p\) for the even integer \(2n\) is
+then
+\begin{equation}
+\EffLocMod_p(n)
+   := \EffLocMod_p^{\bigl(p_{\min}(n)\bigr)}.
+\end{equation}
+\end{definition}
+Thus \(\EffLocMod_p(n)\) encodes the cumulative residue structure imposed by the
+odd primes below \(p\), with the only \(n\)-dependence arising from the
+choice of base prime \(p_{\min}(n)\) according to whether \(3\mid n\).
+This convention is tailored to the singular--series geometry underlying
+Goldbach--type problems.
+
+\begin{definition}[Effective Moduli Interval Max]
+\begin{align}
+\EffLocMod(2n;L) 
+&:= \EffLocMod_{P_0(2n;L)}(n), \\[3pt]
+ P_0(2n;L)
+ &:= \max\{\,p\in\Peff(n) :\ p\mid n, \QpleL\,\},
+\\ 
+& \text{with } P_0(2n;L):=\pmin(n)\text{ if the set is empty.}
+\end{align}
+\end{definition}
+
+\subsection{Prime Curvature Constants}
+
+The prime curvature constants encode the cumulative
+medium-- and large--prime contribution to the geometric remainder envelope.
+
+\begin{definition}[Prime Curvature Constants]
+Fix the base prime \(q_{\min}=5\), and recall the auxiliary effective moduli
+\(\EffLocMod_p^{(5)}\) from Definition~\ref{def:Qp}.  
+Define the \emph{prime curvature constant} by the convergent Euler product
+\begin{equation}
+\label{eq:def-OmegaPrime}
+\OmegaPrime
+   :=
+   \prod_{\substack{p\in\Peff(5)}}
+   (p-2)^{1/\EffLocMod_p^{(5)}}
+\end{equation}
+
+For each even integer \(2n\) and Euler--cap admissible window scale \(L\),
+define the \emph{renormalized prime curvature factor} by
+\begin{equation}
+\label{eq:def-OmegaPrimeNorm}
+\OmegaPrimeNorm(2n;L)
+   :=
+   \OmegaPrime^{\kappa(n)}
+   \prod_{\substack{p\in\Peff(n)\\ \EffLocMod_p(n)\le L}}
+      (p-2)^{-1/\EffLocMod_p(n)}
+\end{equation}
+where the exponent \(\kappa(n)\in\{\tfrac12,1\}\) compensates for the
+choice of base prime \(\pmin(n)\in\{3,5\}\) in Definition~\ref{def:Qp}.
+
+Specifically, when \(3\nmid n\) one has \(\pmin(n)=5\) and \(\kappa(n)=1\).
+When \(3\mid n\), the extra contribution from the prime
+\(3\) is absorbed into the exponent \(\kappa(n)=\tfrac12\).
+\end{definition}
+
+
+\begin{definition}[Bounding Envelope Constants]
+Then the envelope for \( L \ge \pmin(n) \) constant is given explicitly by
+\begin{equation}
+\label{eq:c-explicit}
+c(2n;L)=c\!\bigl(2n;\EffLocMod_p(n)\bigr)
+      \;=\;
+      2\prod_{\substack{q \in \Peff(n) \\ \EffLocMod_q(n) > \EffLocMod_p(n)}} (q-2)^{\,\EffLocMod_p(n)/\EffLocMod_q(n)}.
+\end{equation}
+In particular, \(c(2n;L)\) is constant on each envelope interval
+\([\EffLocMod_p(n),\,\EffLocMod_{p^+}(n))\).
+\end{definition}
+
+\subsection{Goldbach Singular Series Factors}
+
+\begin{definition}[Goldbach Singular Series Factors]
+\label{def:SGB-Ssem}
+For an even integer \(2n\), the \emph{local semiprime correction
+factor}~\cite{HardyLittlewood1923} is defined as
+\begin{equation}
+\Ssem(2n)
+   :=
+   \prod_{\substack{p\mid n \\ p>2}}
+      \frac{p-1}{p-2}.
+\end{equation}
+Define the \emph{prime--pair constant}~\cite{HardyLittlewood1923} by
+\begin{equation}
+C_2
+   :=
+   \prod_{p>2}\left(1-\frac{1}{(p-1)^2}\right).
+\end{equation}
+The corresponding \emph{Goldbach singular series factor}~\cite{HardyLittlewood1923} is
+\begin{equation}
+\SGB(2n)
+   :=
+   2\,C_2\,\Ssem(2n).
+\end{equation}
+\end{definition}
+
+\begin{definition}[Hardy-Littlewood Circle Method Correction Factor]
+For \( n \ge 2 \) and \( n > M \ge 1 \), and a weight function \( \frac{1}{\log{n}} \), define,
+ \begin{equation}
+ \HLCorr(2n;M) 
+ := \frac{1}{|\Ipar(n,M)|} \sum_{m \in \Ipar(n,M)} \frac{\log^2{n}}{\log{(n-m)}\log{(n+m)}}.
+\end{equation}
+\label{def:HLCorr}
+\end{definition}
+
+\begin{definition}[Measured Goldbach Count]
+The measured number of Goldbach pairs in the window is
+\begin{equation}
+\Gmeas(2n;M)
+:=
+\sum_{m\in\Ipar(n,M)}
+1_{\mathrm{prime}}(n-m)\,1_{\mathrm{prime}}(n+m).
+\end{equation}
+\end{definition}
+
+\begin{definition}[Hardy--Littlewood Window Predictor (Hl--Windowed)]
+\label{def:GHL}
+Assume the standard prime weight
+(e.g.\ \(\omega(x)=1/\log x\)).
+Define
+\begin{equation}
+\GHL(2n;M)
+:=
+2\,C_2\,\Ssem(2n)\frac{2M}{\log^2{n}}\,\HLCorr(2n;M).
+\end{equation}
+where \(\Ssem(2n)\) is the classical Hardy--Littlewood semiprime correction.
+\end{definition}
+
+\subsection{Complementary and Full Euler--Type Products}
+
+In addition to the local semiprime correction factor \(\Ssem(2n)\) defined
+above, it is occasionally convenient to refer to the complementary and full
+Euler--type products obtained by modifying the divisibility condition on the
+prime index.
+
+\begin{definition}[Complementary and Full Local Semiprime Products]
+\label{def:Ssem-complement-full}
+Define the \emph{complementary} local semiprime product by
+\begin{equation}
+\Ssem^{\complement}(2n)
+   :=
+   \prod_{\substack{p\in\Podd \\ p\nmid n}}
+      \frac{p-1}{p-2},
+\end{equation}
+and the corresponding \emph{full} product by
+\begin{equation}
+\Ssem^{\bullet}(2n)
+   :=
+   \prod_{\substack{p\in\Podd}}
+      \frac{p-1}{p-2}.
+\end{equation}
+\end{definition}
+
+\begin{convention}[Notation]
+A superscript \( \complement \) indicates replacement of the divisibility
+condition \(p\mid n\) by \(p\nmid n\), while a superscript \( \bullet \)
+indicates removal of the divisibility condition entirely. No additional
+structure is implied.
+\end{convention}
+
+\subsection{Additional Series Operators}
+
+The classical Hardy--Littlewood singular series \(\Ssem(2n)\) is naturally an
+asymptotic object.  For finite--window analysis it is convenient to
+introduce auxiliary operators that partition the series into base and
+tail components relative to a square cutoff.
+
+\begin{definition}[Cutoff Operators]
+The square cutoff operator is defined as
+\begin{equation}
+\SquareCap(x):=x^2.
+\end{equation}
+The function \( \EffLocModCap(\cdot) \) may also be used as a cutoff operator.
+\end{definition}
+
+The tags \( \thead \) and \( \ttail \) denote the base (small--prime)
+and tail (large--prime) components relative to a given cutoff.
+
+\begin{definition}[Cutoff Components of \( \Ssem \)]
+Let \( M>0 \) and \( n\ge 2 \). Then, cutoff terms are defined as
+\begin{equation}
+\SsemHead^{\SquareCap}(2n;M)
+:= \prod_{\substack{p\in\Podd \\ p\mid n \\ p^2\le M}}
+\frac{p-1}{p-2} , \qquad
+\SsemTail^{\SquareCap}(2n;M)
+:= \prod_{\substack{p\in\Podd \\ p\mid n \\ p^2> M}}
+\frac{p-1}{p-2}.
+\end{equation}
+\begin{equation}
+ \SsemHead^{\EffLocModCap}(2n;L)
+:= \prod_{\substack{p\in\Peff(n) \\ p\mid n\\ \QpleL}}
+\frac{p-1}{p-2}, \qquad
+\SsemTail^{\EffLocModCap}(2n;L)
+:= \prod_{\substack{p\in\Peff(n) \\ p\mid n \\ \EffLocMod_p(n) > L}}
+\frac{p-1}{p-2}.
+\end{equation}
+\begin{equation}
+\Ssem^{\SquareCap}(2n)
+:= \Ssem(2n), \qquad
+\Ssem^{\EffLocMod}(2n)
+:= \prod_{\substack{p\in\Peff(n)\\ p\mid n}}
+\frac{p-1}{p-2}.
+\end{equation}
+
+Empty products are interpreted as \(1\).
+\end{definition}
+
+\subsection{Specialized Remainder Decomposition}
+
+This leads up to the PCGC--Goldbach Remainder.
+
+\begin{definition}[PCGC--Goldbach Remainder]\label{def:RHL}
+Define for \( M > 0 \),
+\begin{align}
+\RHL(2n;L)
+&:=
+2\,\frac{\EffLocMod(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}\,
+\bigl(\OmegaPrimeNorm(2n;L)\bigr)^L,
+\qquad L := \sqrt{2M} \\[3pt]
+&=
+2\,\frac{\EffLocMod(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}\,\Xi(2n;L),
+\qquad \Xi(2n;L):=\bigl(\OmegaPrimeNorm(2n;L)\bigr)^L.
+\end{align}
+\end{definition}
+
+\noindent
+The associated bounding envelope is defined as:
+
+\begin{definition}[PCGC--Goldbach Bound Envelope]\label{def:RHLbound}
+Define for \( 2M \ge (\pmin(n)-1)^2 \),
+\begin{equation}
+\RHLbound(2n;L)
+:=
+\frac{c(2n;L)\,L}{\SsemHead^{\EffLocModCap,\complement}(2n;L)},
+\qquad L := \sqrt{2M}.
+\end{equation}
+\end{definition}
+
+\subsubsection*{Role of the Remainder Bound}
+
+Lemma~(Overall Bounding Envelope) of \cite{Riemers2025-Framework} shows that
+\begin{equation}
+\RHL(2n;L)\le \RHLbound(2n;L)
+\end{equation}
+for all admissible \(L\).  The purpose of \(\RHLbound\) is therefore
+\emph{pointwise control} (a certified upper bound), not approximation.
+In particular, \(\RHLbound\) does not satisfy
+\(\RHLbound(2n;L)/\RHL(2n;L)\to 1\), and will overestimate some values of \(\RHL(2n;L)\)
+by a scale-dependent factor.
+
+\subsection{Empirical Hl-Normalized Measurements}
+
+\begin{definition}[Empirical Hl-Normalized Measurements (from Semiprime Survivors)]
+\label{semiprime-survivors}
+
+Defining the measured (pairs-scale) normalization factor
+\begin{equation}
+\Cmeas(2n;n\alpha)\ :=\ \frac{\log^2 n}{n\alpha}\,\GHL(2n;n\alpha),
+\end{equation}
+where \(n\alpha\) denotes the Goldbach window half-width used in the measurement.
+
+\smallskip
+\noindent
+For \textbf{primorial-based binning}, small values are treated separately:
+for \(n<15\), bins are singletons \([k,k+1)\), \(k=1,\dots,14\);
+for \(15\le n<30\), a single block \([15,30)\) is used.
+
+For \(n\ge30\), let \(p<q\) be consecutive primes with corresponding primorials
+\(p\#\) and \(q\#\).
+Each primorial plateau \([p\#,q\#)\) is partitioned into bins of width
+\begin{equation}
+w_p := \max\!\Bigl(15,\frac{p\#}{2p}\Bigr), \qquad
+L_p := q\# - p\#, \qquad
+K_p := \Bigl\lceil \frac{L_p}{w_p} \Bigr\rceil .
+\end{equation}
+Then nodes are defined as
+\begin{equation}
+a_j := p\# + \min(j\,w_p,\,L_p), \qquad j=0,1,\dots,K_p ,
+\end{equation}
+so that \(a_0=p\#\) and \(a_{K_p}=q\#\).
+The indexed primorial bins are
+\begin{equation}
+B_{j,p\#} := [\,a_j,\ a_{j+1}\,), \qquad j=0,1,\dots,K_p-1,
+\end{equation}
+forming consecutive intervals of width \(w_p\), with the final bin truncated so
+that its right endpoint is exactly \(q\#\).
+
+Within each primorial bin \(B_{j,p\#}\), with \(n\) ranging over integers in the bin,
+define
+\begin{equation}
+N_0:=\arg\min_{n\in B_{j,p\#}}\Cmeas(2n;n\alpha),\qquad
+N_1:=\arg\max_{n\in B_{j,p\#}}\Cmeas(2n;n\alpha),
+\end{equation}
+and
+\begin{align}
+& \Cmeas_{\min}(j,p\#):=\Cmeas(2N_0;n\alpha),\\
+& \Cmeas_{\max}(j,p\#):=\Cmeas(2N_1;n\alpha),\\
+& \Cmeas_{\tavg}(j,p\#):=
+\frac{1}{\card{B_{j,p\#}}}
+\sum_{n\in B_{j,p\#}}\Cmeas(2n;n\alpha).
+\end{align}
+\end{definition}
+
+\section{Main Conjecture}
+\label{sec:main-conjecture}
+
+\subsection{PCGC--Goldbach}
+
+This work is to verify the PCGC--Goldbach, introduced in
+\cite{Riemers2026-PCGH} over a finite range of data.
+
+\begin{conjecture}[Prime Curvature Conjecture for Goldbach (Pcgc--Goldbach)]
+\label{con:PCGC-Goldbach}
+For every even integer \(2n \ge 4\) and every admissible window size
+Euler Capped \( M \), the Goldbach pair counts satisfy
+\begin{equation}
+  \bigl|
+    \Gmeas(2n;M) - \GHL(2n;M)
+  \bigr|
+  \le
+  \RHL(2n;L),
+  \qquad L := \sqrt{2M},
+\end{equation}
+where the remainder term \(\RHL(2n;L)\) is defined in
+Definition~\ref{def:RHL}.
+\end{conjecture}
+
+\preto\section{\FloatBarrier}
+\section{Aggregated Pair Count Extrema Analysis}
+
+The analysis sections that follow describe empirical structure observed in 
+the data, including higher-order regularities and qualitative trends.
+These observations are intended to be heuristic and descriptive, and 
+are not required for the certification results presented later, but are inherently
+easier to independently verify.  Only the bounds and non-crossing conditions 
+established in the Certification section are used to support formal claims.
+
+Global extrema of Goldbach pair counts aggregated over each primorial 
+window are analysed.  For each bin, we compare measured maxima and 
+minima are compared against the corresponding PCGC--Goldbach bounds.
+
+Across the full tested range \(2n < 23\# \approx 2.5852 \times 10^8\), no 
+violations occur. Moreover, the extrema trace smooth curvature envelopes 
+consistent with the theoretical predictions, providing strong evidence that 
+the geometric model accurately captures aggregate behaviour.
+
+Figures~\ref{fig:CminmaxavgPrim1},~\ref{fig:CminmaxavgPrim}, and
+\ref{fig:CminmaxavgPrim015625} are plots of the measured values 
+compared to the HL--Windowed prediction lines and PCGC--Goldbach 
+bounds for \( \alpha = 1, 0.5, \) and \( 0.015625 \), respectively.
+
+\pgfplotstableread[col sep=comma, trim cells]{pairrangejoin-23PR.5-1-v0.2.0.csv}\pairdata
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+
+\pgfplotsset{every axis/.append style={title style={at={(0.98,0.97)},anchor=north east}}}
+
+\begin{axis}[
+  title={\(\,\alpha=1\)},
+  width=\textwidth, height=0.42\textwidth,
+  xmode=log,
+  xlabel={\(n\) (log scale)},
+  ylabel={\(C\) values},
+  xmin=10,
+  xmax=1.2e8,
+  ymin=0,
+  ymax=15,
+  grid=both, tick align=outside,
+  legend style={at={(0.5,1.05)}, anchor=south, legend columns=-1},
+  unbounded coords=discard, filter discard warning=false,
+  set layers,
+  axis on top=false,  % so the band stays behind gridlines
+]
+
+% ----- styles -----
+\pgfplotsset{
+  myband/.style   ={fill=orange!50, fill opacity=0.30, draw=none, on layer=axis background},
+  mypred/.style   ={no markers, thick, dotted},
+  myavg/.style    ={no markers, semithick, color=black!70},
+  mydots/.style   ={only marks, mark=*, mark size=0.7pt, opacity=0.30},
+  guide/.style    ={gray!45, very thin, on layer=axis foreground}, % draw on top
+}
+
+% ----- band (draw first) -----
+\addplot[name path=Cminpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_0}, y={C_min}] {\pairdata};
+\addplot[name path=Cmaxpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_1}, y={C_max}] {\pairdata};
+\addplot[myband, forget plot] fill between[of=Cminpath and Cmaxpath];
+
+% ----- main lines (legend entries) -----
+\addplot[myavg]
+  table[x={n_geom}, y={C_avg}] {\pairdata};
+\addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={n_a}, y={Cbound_min}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={n_b}, y={Cbound_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max}^{\tbound} \)}
+
+\addplot[mypred, thick, blue!70!black, dashed, sharp plot]
+  table[x={Npred_0}, y={Cpred_min}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min} \)}
+
+\addplot[mypred, thick, green!50!black, dashed, sharp plot]
+  table[x={n_geom}, y={Cpred_avg}] {\pairdata};
+\addlegendentry{\( \Cpred_{\tavg} \)}
+
+\addplot[mypred, red!70!black, dashed, sharp plot]
+  table[x={n_1}, y={Cpred_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max} \)}
+
+% style
+\pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
+
+% draw them last, and don't add to legend
+\foreach \x in {15,105,1155,15015,255255,4849845,111546435}{
+  \addplot[primorial, forget plot] coordinates {(\x,0) (\x,14)};
+}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Scatter plots of \( \Cmeas_{\min} \), \( \Cmeas_{\max} \), and \( \Cmeas_{\tavg} \) versus \( n \) with HL-A prediction lines for \( \alpha = 1 \).   The \( \Cpred_{\min}^{\tbound} \) and \( \Cpred_{\max}^{\tbound} \) curve represents the maximum amount of cancellation that can result from small primes from PCGC--Goldbach.}
+\label{fig:CminmaxavgPrim1}
+\end{figure}
+
+\pgfplotstableread[col sep=comma, trim cells]{pairrangejoin-23PR.5-0.5-v0.2.0.csv}\pairdata
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\pgfplotsset{every axis/.append style={title style={at={(0.98,0.97)},anchor=north east}}}
+
+\begin{axis}[
+  title={\(\,\alpha=0.5\)},
+  width=\textwidth, height=0.42\textwidth,
+  xmode=log,
+  xlabel={\(n\) (log scale)},
+  ylabel={\(C\) values},
+  xmin=10,
+  xmax=1.2e8,
+  ymin=0,
+  ymax=15,
+  grid=both, tick align=outside,
+  legend style={at={(0.5,1.05)}, anchor=south, legend columns=-1},
+  unbounded coords=discard, filter discard warning=false,
+  set layers,
+  axis on top=false,  % so the band stays behind gridlines
+]
+
+% ----- styles -----
+\pgfplotsset{
+  myband/.style   ={fill=orange!50, fill opacity=0.30, draw=none, on layer=axis background},
+  mypred/.style   ={no markers, thick, dotted},
+  myavg/.style    ={no markers, semithick, color=black!70},
+  mydots/.style   ={only marks, mark=*, mark size=0.7pt, opacity=0.30},
+  guide/.style    ={gray!45, very thin, on layer=axis foreground}, % draw on top
+}
+
+% ----- band (draw first) -----
+\addplot[name path=Cminpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_0}, y={C_min}] {\pairdata};
+\addplot[name path=Cmaxpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_1}, y={C_max}] {\pairdata};
+\addplot[myband, forget plot] fill between[of=Cminpath and Cmaxpath];
+
+% ----- main lines (legend entries) -----
+\addplot[myavg]
+  table[x={n_geom}, y={C_avg}] {\pairdata};
+\addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={n_a}, y={Cbound_min}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={n_b}, y={Cbound_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max}^{\tbound} \)}
+
+\addplot[mypred, thick, blue!70!black, dashed, sharp plot]
+  table[x={Npred_0}, y={Cpred_min}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min} \)}
+
+\addplot[mypred, thick, green!50!black, dashed, sharp plot]
+  table[x={n_geom}, y={Cpred_avg}] {\pairdata};
+\addlegendentry{\( \Cpred_{\tavg} \)}
+
+\addplot[mypred, red!70!black, dashed, sharp plot]
+  table[x={n_1}, y={Cpred_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max} \)}
+
+% style
+\pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
+
+% draw them last, and don't add to legend
+\foreach \x in {15,105,1155,15015,255255,4849845,111546435}{
+  \addplot[primorial, forget plot] coordinates {(\x,0) (\x,14)};
+}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Scatter plots of \( \Cmeas_{\min} \), \( \Cmeas_{\max} \), and \( \Cmeas_{\tavg} \) versus \( n \) with HL-A prediction lines for \( \alpha = 0.5 \).   The \( \Cpred_{\min}^{\tbound} \) and \( \Cpred_{\max}^{\tbound} \) curve represents the maximum amount of cancellation that can result from small primes from PCGC--Goldbach.}
+\label{fig:CminmaxavgPrim}
+\end{figure}
+
+\pgfplotstableread[col sep=comma, trim cells]{pairrangejoin-23PR.5-0.015625-v0.2.0.csv}\pairdata
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+
+\pgfplotsset{every axis/.append style={title style={at={(0.98,0.97)},anchor=north east}}}
+
+\begin{axis}[
+  title={\(\,\alpha=0.015625\)},
+  width=\textwidth, height=0.42\textwidth,
+  xmode=log,
+  xlabel={\(n\) (log scale)},
+  ylabel={\(C\) values},
+  xmin=10000,
+  xmax=1.2e8,
+  ymin=0,
+  ymax=15,
+  grid=both, tick align=outside,
+  legend style={at={(0.5,1.05)}, anchor=south, legend columns=-1},
+  unbounded coords=discard, filter discard warning=false,
+  set layers,
+  axis on top=false,  % so the band stays behind gridlines
+]
+
+% ----- styles -----
+\pgfplotsset{
+  myband/.style   ={fill=orange!50, fill opacity=0.30, draw=none, on layer=axis background},
+  mypred/.style   ={no markers, thick, dotted},
+  myavg/.style    ={no markers, semithick, color=black!70},
+  mydots/.style   ={only marks, mark=*, mark size=0.7pt, opacity=0.30},
+  guide/.style    ={gray!45, very thin, on layer=axis foreground}, % draw on top
+}
+
+% ----- band (draw first) -----
+\addplot[name path=Cminpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_0}, y={C_min}] {\pairdata};
+\addplot[name path=Cmaxpath, draw=orange!30!orange, opacity=0.5, forget plot]
+  table[x={n_1}, y={C_max}] {\pairdata};
+\addplot[myband, forget plot] fill between[of=Cminpath and Cmaxpath];
+
+% ----- main lines (legend entries) -----
+\addplot[myavg]
+  table[x={n_geom}, y={C_avg}] {\pairdata};
+\addlegendentry{\( \Cmeas_{\tavg} \) (bin line)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={n_a}, y={Cbound_min}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min}^{\tbound} \)}
+
+\addplot[mypred, thick, purple!70!black, dotted, sharp plot]
+  table[x={n_b}, y={Cbound_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max}^{\tbound} \)}
+
+\addplot[mypred, thick, blue!70!black, dashed, sharp plot]
+  table[x={Npred_0}, y={Cpred_min}] {\pairdata};
+\addlegendentry{\( \Cpred_{\min} \)}
+
+\addplot[mypred, thick, green!50!black, dashed, sharp plot]
+  table[x={n_geom}, y={Cpred_avg}] {\pairdata};
+\addlegendentry{\( \Cpred_{\tavg} \)}
+
+\addplot[mypred, red!70!black, dashed, sharp plot]
+  table[x={n_1}, y={Cpred_max}] {\pairdata};
+\addlegendentry{\( \Cpred_{\max} \)}
+
+% style
+\pgfplotsset{primorial/.style={color=violet!70!black, densely dashdotted, line width=0.6pt, opacity=0.9}}
+
+% draw them last, and don't add to legend
+\foreach \x in {15,105,1155,15015,255255,4849845,111546435}{
+  \addplot[primorial, forget plot] coordinates {(\x,0) (\x,24)};
+}
+
+
+\end{axis}
+\end{tikzpicture}
+\caption{Scatter plots of \( \Cmeas_{\min} \), \( \Cmeas_{\max} \), and \( \Cmeas_{\tavg} \) versus \( n \) with HL-A prediction lines for \( \alpha = 0.015625 \).  The \( \Cpred_{\min}^{\tbound} \) and \( \Cpred_{\max}^{\tbound} \) curve represents the maximum amount of cancellation that can result from small primes from PCGC--Goldbach.}
+\label{fig:CminmaxavgPrim015625}
+\end{figure}
+
+Readers who find these plots visually underwhelming have not missed the point.
+The absence of dramatic features is itself informative.
+
+A sharp change in curvature is clearly visible in the theoretical lower bounding curve
+whenever a new small prime enters the head term.
+This transition reflects a discrete structural update in the bound construction.
+Notably, no corresponding feature appears in the measured data, which remain smooth across
+the same transition.
+
+Heuristic or near-fitting bounds are easy to construct, particularly when parameters are freely adjusted.
+By contrast, parameter-free bounds that are intentionally extremely loose at small and moderate values of \(n\),
+yet still tighten and converge asymptotically, are substantially more difficult to obtain.
+
+This behaviour is essential to their validity.  When Goldbach pair counts exhibit their largest relative variability, 
+the bounds impose the weakest constraints.   Conversely, as \(n\) increases and the intrinsic variability 
+decreases, the bounds tighten asymptotically.
+
+For example, with \(\alpha = 0.5\), the theoretical onset scale \(n_0\) for the bound
+is approximately \(1.1 \times 10^{4}\),
+whereas the measured data exhibit stable behaviour more than two orders of magnitude earlier.
+This substantial buffer renders the lower bound effectively trivial over most of the plotted
+range and ensures that early irregularities cannot threaten certification.
+
+As a consequence, the asymptotic regime in which the geometric behaviour becomes apparent
+occupies only the final decades of the plots.
+Earlier regions are dominated by deliberate slack in the bounds rather than by meaningful
+geometric constraint.
+
+The \(\Lambda\)-analysis of the following sections reveals the strength of the geometric model in a way 
+that extrema plots alone cannot.
+
+\needspace{10\baselineskip}
+
+\preto\subsection{\FloatBarrier}
+\subsection{Definition of the Empirical Range Statistic}
+
+For each primorial bin \(B_{j,p\#}\), the Hardy--Littlewood--normalized
+Goldbach counts are considered.  Within each bin \(B_{j,p\#}\), let
+\begin{equation}
+n_{\min}^{j,p\#,\alpha} \in \arg\min_{n \in B_{j,p\#}} C(2n; n\alpha),
+\qquad
+n_{\max}^{j,p\#,\alpha} \in \arg\max_{n \in B_{j,p\#}} C(2n; n\alpha),
+\end{equation}
+denote values of \(n\) at which the normalized count attains its minimum and
+maximum, respectively.
+The corresponding measured extrema measurements are defined as
+\begin{align}
+\Cmeas_{\min}^{j,p\#}(\alpha)
+&:= \frac{\Gmeas(2n_{\min}^{j,p\#,\alpha};n\alpha)\log^2 n_{\min}^{j,p\#,\alpha}}{n\alpha}, \\
+\Cmeas_{\max}^{j,p\#}(\alpha)
+&:= \frac{\Gmeas(2n_{\max}^{j,p\#,\alpha};n\alpha)\log^2 n_{\max}^{j,p\#,\alpha}}{n\alpha}.
+\end{align}
+
+The associated bound predictions, evaluated over the same bin, are defined by
+\begin{align}
+\Cpred_{\min}^{\tbound,j,p\#}(\alpha)
+&:= \min_{n \in B_{j,p\#}}
+\left(\GHL(2n;n\alpha)-\RHL(2n;\sqrt{2n\alpha})\right)\frac{\log^2 n}{n\alpha}, \\
+\Cpred_{\max}^{\tbound,j,p\#}(\alpha)
+&:= \max_{n \in B_{j,p\#}}
+\left(\GHL(2n;n\alpha)+\RHL(2n;\sqrt{2n\alpha})\right)\frac{\log^2 n}{n\alpha}.
+\end{align}
+
+then the logarithmic deviations are defined as
+\begin{equation}
+\Lambda_{\min}^{\tbound,j,p\#}(\alpha)
+:= \log\!\left(
+\frac{\Cmeas_{\min}^{j,p\#}(\alpha)}{\Cpred_{\min}^{\tbound,j,p\#}(\alpha)}
+\right),
+\qquad
+\Lambda_{\max}^{\tbound,j,p\#}(\alpha)
+:= \log\!\left(
+\frac{\Cmeas_{\max}^{j,p\#}(\alpha)}{\Cpred_{\max}^{\tbound,j,p\#}(\alpha)}
+\right).
+\end{equation}
+
+To visualize finite-scale variability while suppressing bin-to-bin noise,
+we enumerate all primorial bins \(B_{j,p\#}\) in increasing order of their
+left endpoints and denote the resulting ordered sequence by \(\{B_k\}_{k\ge0}\).
+This ordering may cross primorial boundaries.
+For each \(k\), the quantities
+\(\Lambda_{\min}^{\tbound,k}(\alpha)\) and
+\(\Lambda_{\max}^{\tbound,k}(\alpha)\) are defined to be the corresponding
+values associated with the bin \(B_k\).
+
+Then group consecutive bins into blocks of fixed size.
+For each block index \(\ell \ge 0\), the interval is defined as
+\begin{equation}
+\label{eq:K-ell-def}
+\mathcal{K}_\ell := \{\, k : 12\ell \le k < 12(\ell+1) \,\}.
+\end{equation}
+The range extrema over each block are defined as
+\begin{align}
+\Lambda_{\min}^{\tlow,\ell}(\alpha)
+&:= \min_{k \in \mathcal{K}_\ell} \Lambda_{\min}^{\tbound,k}(\alpha),
+&
+\Lambda_{\min}^{\thigh,\ell}(\alpha)
+&:= \max_{k \in \mathcal{K}_\ell} \Lambda_{\min}^{\tbound,k}(\alpha), \\
+\Lambda_{\max}^{\tlow,\ell}(\alpha)
+&:= \min_{k \in \mathcal{K}_\ell} \Lambda_{\max}^{\tbound,k}(\alpha),
+&
+\Lambda_{\max}^{\thigh,\ell}(\alpha)
+&:= \max_{k \in \mathcal{K}_\ell} \Lambda_{\max}^{\tbound,k}(\alpha).
+\end{align}
+
+The corresponding \(n\)-values plotted on the horizontal axis are taken to be
+the values \(n_{\min}^k\) and \(n_{\max}^k\) at which these extremal deviations
+occur within each block.
+Thus, each range block summarizes the spread of the deviations
+\(\Lambda_{\min}^{\tbound,k}\) and \(\Lambda_{\max}^{\tbound,k}\)
+over a fixed collection of consecutive primorial bins, rather than
+representing a pointwise interval at a single value of \(n\).
+
+\begin{remark}[Choice of Block Size]
+The block size of \(12\) consecutive primorial bins was chosen for pragmatic
+and statistical reasons.
+First, sample sizes on the order of ten are commonly regarded as a minimal
+scale at which dispersion statistics become stable, even in non-Gaussian
+settings.
+Second, grouping bins at this scale provides sufficient data reduction to
+allow multiple range bands to be displayed simultaneously without obscuring
+large-scale structure.
+Empirically, smaller block sizes lead to visually noisy envelopes, while
+larger block sizes suppress finite-scale features that remain relevant to
+the interpretation of the data.
+\end{remark}
+
+\preto\subsection{\FloatBarrier}
+\subsection{Minimum Geometric Bounds}
+
+Figure~\ref{fig:min-bounds-envelope} plots eleven representative summary ranges
+for \(\Lambda_{\min}^{\tbound,k}\).
+PCGC--Goldbach predicts that these curves approach zero asymptotically, but it
+does not impose strong restrictions on their detailed shape beyond the
+requirement that the corresponding ratios remain strictly non-negative.
+The observed overall decreasing trend is consistent with the predictions of
+PCGC--Goldbach.
+
+The constants defining \(\RHLbound\) are chosen so that
+\begin{equation}
+\RHLbound(2n;\EffLocMod_p(n))
+=
+\RHL(2n;\EffLocMod_p(n))
+\qquad
+\forall\, n \in \mathbb{N}, \quad \forall\, p \in \Peff(n).
+\end{equation}
+
+Since \(\RHLbound(2n;L)\) decreases monotonically with \(n\), for all
+81 values of \(\alpha\) we plot \(\Lambda_{\min}^{\tbound}\) using
+\begin{equation}
+L \approx \EffLocMod_p(n),
+\qquad
+3 \mid n,
+\qquad
+p \in \{11,13\}.
+\end{equation}
+To avoid division by zero and undefined values of \(\log(0)\), such cases are
+treated as unplottable.
+The approximation is taken to be the closest available value to equality.
+If no plottable value exists on both sides of the target
+\(\EffLocMod_p(n)\), the corresponding point is also considered unplottable.
+
+Figure~\ref{fig:lambdabound-cert-min} plots all 81 values of \(\alpha\).
+The smallest \(\alpha\)-values due to low statistics exhibit excessive 
+finite-scale variability (jitter), making it difficult to confirm a monotonic trend.
+For the remaining values of \(\alpha\), the curves are clearly decreasing.
+Table~\ref{tab:lambdabound-audit-min} lists representative values for twelve
+selected \(\alpha\)-levels.  The table includes all \(\alpha\) values that are powers of \(2\)
+(i.e., \(2^{-n}\) for integer \(n\)), together with the second lowest \(\alpha\) value
+to illustrate the change in standard deviation.
+
+Since \(\RHL \ge \lvert \varepsilon \rvert\), and the plotted quantities are only loosely tied
+to the scale \(\lvert \varepsilon \rvert\), strict inequalities and asymptotic convergence are
+required only once squeezed sufficiently by the upper and lower bounds.
+Nevertheless, the observed decreasing trend provides additional empirical
+support for the conjecture.
+
+Including unplottable data, the inequality \(\RHL \ge \lvert \varepsilon \rvert\) holds
+without exception across the entire computed range.
+
+\pgfplotstableread[col sep=comma, trim cells]{lambdaboundmin-summary-23PR.5-v0.2.0.csv}\banddata
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth,
+  height=0.63\linewidth,
+  xlabel={\(n\)},
+  ylabel={\(\Lambda_{\min}^{\tbound}\)},
+  xmin=100,
+  xmax=1.2e8,
+  ymax=10,
+  ymin=1e-3,
+  xmode=log,
+  ymode=log,
+  grid=both,
+  legend cell align=left,
+  legend style={
+    at={(0.02,0.02)},
+    anchor=south west,
+    draw=none,
+    fill=white,
+    fill opacity=0.85,
+    text opacity=1,
+    font=\small,
+    /tikz/align=left,
+  }
+]
+
+\PlotBand{1.0}{bandA}{1}
+%\PlotBand{0.5}{bandB}{1/2}
+\PlotBand{0.25}{bandC}{1/4}
+%\PlotBand{0.125}{bandD}{1/8}
+\PlotBand{0.0625}{bandE}{1/16}
+%\PlotBand{0.03125}{bandF}{1/32}
+\PlotBand{0.015625}{bandG}{1/64}
+%\PlotBand{0.0078125}{bandH}{1/128}
+\PlotBand{0.00390625}{bandI}{1/256}
+%\PlotBand{0.001953125}{bandJ}{1/512}
+\PlotBand{0.0009765625}{bandK}{1/1024}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Smooth envelope bands for \( \Lambda_{\min}^{\tbound} \) by \( \alpha \).}
+\label{fig:min-bounds-envelope}
+\end{figure}
+
+
+\pgfplotstableread[col sep=comma]{lambdabound-cert-23PR.5-v0.2.0.csv}\eventdataA
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth,
+  height=0.30\linewidth,
+  xlabel={\(\alpha\)},
+  ylabel={\(\Lambda_{\min}^{\tbound}\)},
+  xmode=log,
+  ymode=log,
+  xmin=0.0009765625,
+  xmax=1.0,
+  ymin=1e-3,
+  ymax=0.5,
+  grid=both,
+  legend style={
+    at={(0.02,0.02)},
+    anchor=south west,
+    draw=none,
+    fill=none,
+    font=\small,
+    cells={anchor=west},
+  },
+  legend cell align=left,
+]
+
+% ---- styles ----
+\pgfplotsset{
+  finalLine/.style={thick, solid, opacity=0.75, mark=none},
+  peleven/.style={only marks, mark=triangle*, mark size=1.7pt},
+  pthirteen/.style={only marks, mark=square*,   mark size=1.6pt},
+}
+
+% Drop empty y-cells (treat as NaN so pgfplots discards the coordinate)
+\pgfplotsset{
+  y drop empty/.style={
+    y filter/.code={
+      \edef\temp{\pgfmathresult}%
+      \ifx\temp\empty
+        \def\pgfmathresult{nan}%
+      \fi
+    }
+  }
+}
+
+% ---- p = 11 : markers only ----
+\addplot[peleven, y drop empty]
+  table[x=alpha, y=L11_lo] {\eventdataA};
+\addlegendentry{\(p = 11\)}
+
+% ---- p = 13 : markers only ----
+\addplot[pthirteen, y drop empty]
+  table[x=alpha, y=L13_lo] {\eventdataA};
+\addlegendentry{\(p = 13\)}
+
+% ---- final : line only ----
+\addplot[finalLine, y drop empty]
+  table[x=alpha, y=Lfinal_lo] {\eventdataA};
+\addlegendentry{final}
+\end{axis}
+\end{tikzpicture}
+\caption{All $\alpha$ values showing event and final envelope $\Lambda_{\min}^{\tbound}$ statistics.}
+\label{fig:lambdabound-cert-min}
+\end{figure}
+
+\pgfplotstableread[col sep=comma]{lambdabound-audit-23PR.5-v0.2.0.csv}\auditdataA
+
+\begin{table}[t]
+\centering
+\caption{Selected $\alpha$ values showing event and final envelope $\Lambda_{\min}^{\tbound}$  statistics.}
+\label{tab:lambdabound-audit-min}
+\pgfplotstabletypeset[
+  empty cells with={---},
+  columns={alpha,L11_lo,L13_lo,Lfinal_lo,Lfinal_lo_std},
+  columns/alpha/.style={column name={$\alpha$}, fixed, precision=12,column type=l},
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns/L11_lo/.style={column name={$p{=}11$}, sci, sci zerofill, precision=2},
+  columns/L13_lo/.style={column name={$p{=}13$}, sci, sci zerofill, precision=2},
+  columns/Lfinal_lo/.style={column name={final}, sci, sci zerofill, precision=2,column type={r@{$\,\pm\,$}}},
+  columns/Lfinal_lo_std/.style={column name={std.dev.}, sci, sci zerofill, precision=2, column type=l},
+]{\auditdataA}
+\end{table}
+
+\preto\subsection{\FloatBarrier}
+\subsection{Maximum Geometric Bounds}
+
+The complementary analysis for the upper geometric bounds is done next.
+All definitions, binning conventions, and range constructions are exactly as
+in the preceding subsection, with \(\Lambda_{\max}^{\tbound,k}\) replacing
+\(\Lambda_{\min}^{\tbound,k}\).
+Accordingly, only the behaviour of the resulting range summaries
+and their consistency with the predictions of PCGC--Goldbach are considered.
+
+Figure~\ref{fig:max-bounds-envelope} plots eleven representative summary ranges
+for \(\Lambda_{\max}^{\tbound,k}\).
+As in the lower-bound case, PCGC--Goldbach predicts eventual convergence
+toward zero, while imposing no detailed constraints on the intermediate
+shape of the curves beyond positivity of the underlying ratios.
+The observed envelopes exhibit the same overall decreasing trend, consistent
+with this prediction.
+
+The plotting procedure mirrors that used for the minimum bounds.
+Since \(\RHLbound(2n;L)\) is monotone in \(n\), the approximation
+\(L \approx \EffLocMod_p(n)\) is again employed, with the same restrictions on
+admissible values of \(n\) and the same criteria for excluding unplottable
+points.
+Figure~\ref{fig:lambdabound-cert-max} displays the full set of 81
+\(\alpha\)-values.
+As before, the smallest values of \(\alpha\) are dominated by finite-scale
+variability, while the remaining curves show a clear decreasing trend.
+Table~\ref{tab:lambdabound-audit-max} lists representative values for twelve
+selected \(\alpha\)-levels.
+
+Including unplottable data, no violations of the inequality
+\(\RHL \ge \lvert \varepsilon \rvert\) are observed across the entire computed range.
+
+\pgfplotstableread[col sep=comma, trim cells]{lambdaboundmax-summary-23PR.5-v0.2.0.csv}\banddata
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth,
+  height=0.63\linewidth,
+  xlabel={\(n\)},
+  ylabel={\(\Lambda_{\max}^{\tbound}\)},
+  xmin=7,
+  xmax=1.2e8,
+  ymax=3,
+  ymin=1e-3,
+  xmode=log,
+  ymode=log,
+  grid=both,
+  legend cell align=left,
+  legend style={
+    at={(0.02,0.02)},
+    anchor=south west,
+    draw=none,
+    fill=white,
+    fill opacity=0.85,
+    text opacity=1,
+    font=\small,
+    /tikz/align=left,
+  }
+]
+
+\PlotBand{1.0}{bandA}{1}
+%\PlotBand{0.5}{bandB}{1/2}
+\PlotBand{0.25}{bandC}{1/4}
+%\PlotBand{0.125}{bandD}{1/8}
+\PlotBand{0.0625}{bandE}{1/16}
+%\PlotBand{0.03125}{bandF}{1/32}
+\PlotBand{0.015625}{bandG}{1/64}
+%\PlotBand{0.0078125}{bandH}{1/128}
+\PlotBand{0.00390625}{bandI}{1/256}
+%\PlotBand{0.001953125}{bandJ}{1/512}
+\PlotBand{0.0009765625}{bandK}{1/1024}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Smooth envelope bands for \( \Lambda_{\max}^{\tbound} \) by \( \alpha \).}
+\label{fig:max-bounds-envelope}
+\end{figure}
+
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth,
+  height=0.30\linewidth,
+  xlabel={\(\alpha\)},
+  ylabel={\(-\Lambda_{\max}^{\tbound}\)},
+  xmode=log,
+  ymode=log,
+  xmin=0.0009765625,
+  xmax=1.0,
+  ymin=1e-3,
+  ymax=0.5,
+  grid=both,
+  unbounded coords=discard,
+  filter discard warning=false,
+  legend style={
+    at={(0.02,0.02)},
+    anchor=south west,
+    draw=none,
+    fill=none,
+    font=\small,
+    cells={anchor=west},
+  },
+  legend cell align=left,
+]
+
+% ---------- styles ----------
+\pgfplotsset{
+  final/.style={thick, mark=none},
+  p11/.style={only marks, mark=triangle*, mark size=1.8pt},
+  p13/.style={only marks, mark=square*,   mark size=1.8pt},
+}
+
+% ---------- p = 11 : triangles only ----------
+\addplot[
+  p11,
+  x filter/.code={%
+    \edef\temp{\thisrow{L11_hi}}%
+    \ifx\temp\empty
+      \def\pgfmathresult{nan}%
+    \fi
+  },
+] table[
+  x=alpha,
+  y expr=abs(\thisrow{L11_hi}),
+]{\eventdataA};
+\addlegendentry{\( p=11 \)}
+
+% ---------- p = 13 : squares only ----------
+\addplot[
+  p13,
+  x filter/.code={%
+    \edef\temp{\thisrow{L13_hi}}%
+    \ifx\temp\empty
+      \def\pgfmathresult{nan}%
+    \fi
+  },
+] table[
+  x=alpha,
+  y expr=abs(\thisrow{L13_hi}),
+]{\eventdataA};
+\addlegendentry{\( p=13 \)}
+
+% ---------- final : solid line only ----------
+\addplot[
+  final,
+  x filter/.code={%
+    \edef\temp{\thisrow{Lfinal_hi}}%
+    \ifx\temp\empty
+      \def\pgfmathresult{nan}%
+    \fi
+  },
+] table[
+  x=alpha,
+  y expr=abs(\thisrow{Lfinal_hi}),
+]{\eventdataA};
+\addlegendentry{final}
+
+\end{axis}
+\end{tikzpicture}
+\caption{All $\alpha$ values showing event and final envelope $\Lambda_{\max}^{\tbound}$ statistics.}
+\label{fig:lambdabound-cert-max}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Selected $\alpha$ values showing event and final envelope $\Lambda_{\max}^{\tbound}$ statistics.}
+\label{tab:lambdabound-audit-max}
+\pgfplotstabletypeset[
+  empty cells with={---},
+  columns={alpha,L11_hi,L13_hi,Lfinal_hi,Lfinal_hi_std},
+  columns/alpha/.style={column name={$\alpha$}, fixed, precision=12,column type=l},
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns/L11_hi/.style={column name={$p{=}11$}, sci, sci zerofill, precision=2},
+  columns/L13_hi/.style={column name={$p{=}13$}, sci, sci zerofill, precision=2},
+  columns/Lfinal_hi/.style={column name={final}, sci, sci zerofill, precision=2,column type={r@{$\,\pm\,$}}},
+  columns/Lfinal_hi_std/.style={column name={std.dev.}, sci, sci zerofill, precision=2, column type=l},
+]{\auditdataA}
+\end{table}
+
+\preto\subsection{\FloatBarrier}
+\subsection{Origin of the Structured Envelope Curves}
+The non-monotone structure visible in the range envelopes is not an artifact
+of the aggregation procedure, but a genuine feature of the prediction
+geometry.
+Its origin may be understood heuristically from the residue-based formulation
+introduced in \cite{Riemers2026-PCGH}.
+
+The prediction function is ultimately governed by residue classes modulo
+small primes, with the underlying density model justified by Dirichlet’s
+Theorem on arithmetic progressions~\cite{Apostol1976}.
+In the asymptotic limit, all admissible residue classes are expected to occur
+with equal frequency, yielding a smooth limiting contribution to the
+Hardy--Littlewood correction factors.
+
+To model finite-scale behaviour, a Chinese Remainder Theorem-like threshold is introduced~\cite{NivenZuckermanMontgomery1991} to separate
+primes whose residue distributions may be regarded as effectively uniform from
+those whose contributions have not yet stabilized.
+Primes below this threshold are treated as fully equidistributed and contribute
+to a smooth base term.
+Primes above the threshold are grouped into an exponential tail, whose net
+effect decays rapidly as the scale increases.
+
+As the scale parameter grows, this exponential tail contracts, causing the
+predicted bounds to tighten exponentially.
+However, whenever a new prime crosses below the CRT-like threshold, the
+structure of the residue product changes discretely.
+This transition resets the tail decomposition and produces a localized
+relaxation in the prediction envelope.
+The resulting alternation between exponential tightening and discrete
+re-normalization gives rise to the observed periodic modulation in the
+prediction curves.
+
+The measured values do not exhibit the same sharp periodic structure.
+This is expected: higher-order correlations beyond the leading residue model,
+together with the blockwise aggregation used to construct the range envelopes,
+act to smooth the empirical curves.
+Consequently, the prediction envelopes display clear modular interference
+patterns, while the measured ranges converge more uniformly toward the
+asymptotic limit.
+
+\preto\section{\FloatBarrier}
+\section{Pointwise Pair Count Analysis}
+
+Pointwise analysis for the purpose of certifying the conjecture across all validation checks follows.
+
+For each admissible \(n\), we evaluate 81 distinct windowed pair counts,
+corresponding to the discrete scale parameters
+\begin{equation}
+\alpha_i := 2^{-i/8}, \qquad i = 0,1,\dots,80.
+\end{equation}
+this set of scale parameters is set as
+\begin{equation}
+\label{eq:A-def}
+\mathcal{A} := \{\, \alpha_i : i = 0,1,\dots,80 \,\}.
+\end{equation}
+For each \(\alpha\in\mathcal{A}\), both the upper and lower bounds are tested
+independently.
+
+Within each primorial bin, the measured value that approaches its bound most
+closely is identified.
+In all cases, no crossings are observed.
+Rather than exhibiting monotonic convergence, the extremal deviations display
+bounded local fluctuations while remaining confined within the predicted
+envelope and trending toward the asymptotic \(\lambda\) values.
+This behaviour supports the interpretation of the bounds as genuine geometric
+constraints rather than statistical envelopes.
+
+Due to storage limitations, predicted bounds and measured counts must be generated jointly in this mode.
+The combined computation requires approximately 60 days on an Apple M2 processor, with up to 12 concurrent processes running continuously.
+
+\preto\subsection{\FloatBarrier}
+\subsection{Definition of the Empirical Range Statistic}
+
+Define the logarithmic deviations
+\begin{align}
+& \lambda_{\min}^{j,p\#}(\alpha)
+:= \min_{n \in B_{j,p\#}}
+\log\!\left(
+\frac{\Gmeas(2n;n\alpha)}{\GHL(2n;\sqrt{2n\alpha})-\RHL(2n;\sqrt{2n\alpha})}
+\right), \\
+& \lambda_{\max}^{j,p\#}(\alpha)
+:= \max_{n \in B_{j,p\#}}
+\log\!\left(
+\frac{\Gmeas(2n;n\alpha)}{\GHL(2n;\sqrt{2n\alpha})+\RHL(2n;\sqrt{2n\alpha})}
+\right).
+\end{align}
+
+To visualize finite-scale variability while suppressing bin-to-bin noise,
+all primorial bins \(B_{j,p\#}\) in increasing order of their
+left endpoints and denote the resulting ordered sequence by \(\{B_k\}_{k\ge0}\)
+are enumerated.
+This ordering may cross primorial boundaries.
+For each \(k\), the quantities
+\(\lambda_{\min}^{k}(\alpha)\) and
+\(\lambda_{\max}^{k}(\alpha)\) are defined to be the corresponding
+values associated with the bin \(B_k\).
+
+Then consecutive bins into blocks are aggregated in fixed sized groups.
+For each block index \(\ell \ge 0\), intervals are defined as
+\begin{equation}
+\mathcal{K}_\ell := \{\, k : 12\ell \le k < 12(\ell+1) \,\}.
+\end{equation}
+Then, the range extrema over each block are defined as
+\begin{align}
+\lambda_{\min}^{\tlow,\ell}(\alpha)
+&:= \min_{k \in \mathcal{K}_\ell} \lambda_{\min}^{k}(\alpha),
+&
+\lambda_{\min}^{\thigh,\ell}(\alpha)
+&:= \max_{k \in \mathcal{K}_\ell} \lambda_{\min}^{k}(\alpha), \\
+\lambda_{\max}^{\tlow,\ell}(\alpha)
+&:= \min_{k \in \mathcal{K}_\ell} \lambda_{\max}^{k}(\alpha),
+&
+\lambda_{\max}^{\thigh,\ell}(\alpha)
+&:= \max_{k \in \mathcal{K}_\ell} \lambda_{\max}^{k}(\alpha).
+\end{align}
+
+The corresponding \(n\)-values plotted on the horizontal axis are taken to be
+the values \(n_{\min}^k\) and \(n_{\max}^k\) at which these extremal deviations
+occur within each block.
+Thus, each range block summarizes the spread of the pointwise deviations
+\(\lambda_{\min}^{k}\) and \(\lambda_{\max}^{k}\)
+over a fixed collection of consecutive primorial bins, rather than
+representing an interval at a single value of \(n\).
+
+\preto\subsection{\FloatBarrier}
+\subsection{Pointwise Minimum Bounds}
+
+The pointwise minimum deviations
+\(\lambda_{\min}^{k}(\alpha)\), aggregated into range summaries as defined
+in the previous subsection are examined.
+In contrast to the geometric bounds, these quantities reflect local
+(pointwise) behaviour prior to any block-level aggregation.
+
+Figure~\ref{fig:pointwise-min-envelope} plots representative range envelopes
+for \(\lambda_{\min}^{k}(\alpha)\).
+As predicted by PCGC--Goldbach, these values remain non-negative and exhibit
+an overall downward trend.
+Notably, the fluctuations are less pronounced than in the geometric case.
+This reflects the fact that the geometric aggregation procedure inflates the
+effective bounds and, with them, the apparent variability.
+
+The plotting conventions, admissibility criteria, and handling of unplottable
+points are identical to those used previously.
+Figure~\ref{fig:pointwise-cert-min} displays all 81 \(\alpha\)-values.
+As before, the smallest values of \(\alpha\) are dominated by finite-scale
+effects, while the remaining curves show clear decay.
+Table~\ref{tab:pointwise-audit-min} lists representative values for
+twelve selected \(\alpha\)-levels.
+
+Including unplottable data, no violations of the inequality
+\(\RHL \ge \lvert \varepsilon \rvert \) are observed across the entire computed range.
+
+\pgfplotstableread[col sep=comma, trim cells]{boundratiomin-summary-23PR.5-v0.2.0.csv}\banddata
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth,
+  height=0.63\linewidth,
+  xlabel={\(n\)},
+  ylabel={\(\lambda_{\min}\)},
+  xmin=100,
+  xmax=1.2e8,
+  ymax=1.1,
+  ymin=1e-3,
+  xmode=log,
+  ymode=log,
+  grid=both,
+  legend cell align=left,
+  legend style={
+    at={(0.02,0.02)},
+    anchor=south west,
+    draw=none,
+    fill=white,
+    fill opacity=0.85,
+    text opacity=1,
+    font=\small,
+    /tikz/align=left,
+  }
+]
+
+\PlotBand{1.0}{bandA}{1}
+%\PlotBand{0.5}{bandB}{1/2}
+\PlotBand{0.25}{bandC}{1/4}
+%\PlotBand{0.125}{bandD}{1/8}
+\PlotBand{0.0625}{bandE}{1/16}
+%\PlotBand{0.03125}{bandF}{1/32}
+\PlotBand{0.015625}{bandG}{1/64}
+%\PlotBand{0.0078125}{bandH}{1/128}
+\PlotBand{0.00390625}{bandI}{1/256}
+%\PlotBand{0.001953125}{bandJ}{1/512}
+\PlotBand{0.0009765625}{bandK}{1/1024}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Smooth envelope bands for \( \lambda_{\min} \) by \( \alpha \).}
+\label{fig:pointwise-min-envelope}
+\end{figure}
+\pgfplotstableread[col sep=comma]{bounds-cert-23PR.5-v0.2.0.csv}\eventdata
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth,
+  height=0.30\linewidth,
+  xlabel={\(\alpha\)},
+  ylabel={\(\lambda_{\min}\)},
+  xmode=log,
+  ymode=log,
+  xmin=0.0009765625,
+  xmax=1.0,
+  ymin=1e-3,
+  ymax=0.5,
+  grid=both,
+  legend style={
+    at={(0.02,0.02)},
+    anchor=south west,
+    draw=none,
+    fill=none,
+    font=\small,
+    cells={anchor=west},
+  },
+  legend cell align=left,
+]
+
+% ---- styles ----
+\pgfplotsset{
+  finalLine/.style={thick, solid, opacity=0.75, mark=none},
+  peleven/.style={only marks, mark=triangle*, mark size=1.7pt},
+  pthirteen/.style={only marks, mark=square*,   mark size=1.6pt},
+}
+
+% Drop empty y-cells (treat as NaN so pgfplots discards the coordinate)
+\pgfplotsset{
+  y drop empty/.style={
+    y filter/.code={
+      \edef\temp{\pgfmathresult}%
+      \ifx\temp\empty
+        \def\pgfmathresult{nan}%
+      \fi
+    }
+  }
+}
+
+% ---- p = 11 : markers only ----
+\addplot[peleven, y drop empty]
+  table[x=alpha, y=L11_lo] {\eventdata};
+\addlegendentry{\(p = 11\)}
+
+% ---- p = 13 : markers only ----
+\addplot[pthirteen, y drop empty]
+  table[x=alpha, y=L13_lo] {\eventdata};
+\addlegendentry{\(p = 13\)}
+
+% ---- final : line only ----
+\addplot[finalLine, y drop empty]
+  table[x=alpha, y=Lfinal_lo] {\eventdata};
+\addlegendentry{final}
+\end{axis}
+\end{tikzpicture}
+\caption{All \( \alpha \) values showing event and final envelope \( \lambda_{\min} \) lower statistics.}
+\label{fig:pointwise-cert-min}
+\end{figure}
+
+\pgfplotstableread[col sep=comma]{bounds-audit-23PR.5-v0.2.0.csv}\auditdata
+
+\begin{table}[ht]
+\centering
+\caption{Selected \( \alpha \) values showing event and final envelope \( \lambda_{\min} \) statistics.}
+\label{tab:pointwise-audit-min}
+\pgfplotstabletypeset[
+  empty cells with={---},
+  columns={alpha,L11_lo,L13_lo,Lfinal_lo,Lfinal_lo_std},
+  columns/alpha/.style={column name={$\alpha$}, fixed, precision=12,column type=l},
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns/L11_lo/.style={column name={$p{=}11$}, sci, sci zerofill, precision=2},
+  columns/L13_lo/.style={column name={$p{=}13$}, sci, sci zerofill, precision=2},
+  columns/Lfinal_lo/.style={column name={final}, sci, sci zerofill, precision=2,column type={r@{$\,\pm\,$}}},
+  columns/Lfinal_lo_std/.style={column name={std.dev.}, sci, sci zerofill, precision=2, column type=l},
+]{\auditdata}
+\end{table}
+
+\preto\subsection{\FloatBarrier}
+\subsection{Pointwise Maximum Bounds}
+
+Consider the complementary pointwise maximum deviations
+\(\lambda_{\max}^{k}(\alpha)\).
+These quantify local excursions above the Hardy--Littlewood prediction and
+provide a direct pointwise analogue of the maximum geometric bounds.
+
+Figure~\ref{fig:pointwise-max-envelope} shows representative range envelopes
+for \(\lambda_{\max}^{k}(\alpha)\).
+As in the minimum case, PCGC--Goldbach predicts asymptotic convergence toward
+zero without imposing detailed constraints on the intermediate shape.
+Here again, the observed fluctuations are smaller than those seen in the
+geometric bounds, consistent with the absence of aggregation-induced
+inflation.
+
+The full collection of pointwise maximum bounds for all 81 values of
+\(\alpha\) are shown in Figure~\ref{fig:pointwise-cert-max}.
+Finite-scale effects dominate only at the smallest values of \(\alpha\);
+for the remaining curves a clear decreasing trend is visible.
+Representative values are summarized in
+Table~\ref{tab:pointwise-audit-max}.
+
+Including unplottable data, no violations of the inequality
+\(\RHL \ge \lvert \varepsilon \rvert \) are observed across the entire computed range.
+
+\pgfplotstableread[col sep=comma, trim cells]{boundratiomax-summary-23PR.5-v0.2.0.csv}\banddata
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth,
+  height=0.63\linewidth,
+  xlabel={\(n\)},
+  ylabel={\(\lambda_{\max}\)},
+  xmin=7,
+  xmax=1.2e8,
+  ymax=3,
+  ymin=1e-3,
+  xmode=log,
+  ymode=log,
+  grid=both,
+  legend cell align=left,
+  legend style={
+    at={(0.02,0.02)},
+    anchor=south west,
+    draw=none,
+    fill=white,
+    fill opacity=0.85,
+    text opacity=1,
+    font=\small,
+    /tikz/align=left,
+  }
+]
+
+\PlotBand{1.0}{bandA}{1}
+%\PlotBand{0.5}{bandB}{1/2}
+\PlotBand{0.25}{bandC}{1/4}
+%\PlotBand{0.125}{bandD}{1/8}
+\PlotBand{0.0625}{bandE}{1/16}
+%\PlotBand{0.03125}{bandF}{1/32}
+\PlotBand{0.015625}{bandG}{1/64}
+%\PlotBand{0.0078125}{bandH}{1/128}
+\PlotBand{0.00390625}{bandI}{1/256}
+%\PlotBand{0.001953125}{bandJ}{1/512}
+\PlotBand{0.0009765625}{bandK}{1/1024}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Smooth envelope bands for \( \lambda_{\max} \) by \( \alpha \).}
+\label{fig:pointwise-max-envelope}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=\linewidth,
+  height=0.30\linewidth,
+  xlabel={\(\alpha\)},
+  ylabel={\(-\lambda_{\max}\)},
+  xmode=log,
+  ymode=log,
+  xmin=0.0009765625,
+  xmax=1.0,
+  ymin=1e-3,
+  ymax=0.5,
+  grid=both,
+  unbounded coords=discard,
+  filter discard warning=false,
+  legend style={
+    at={(0.02,0.02)},
+    anchor=south west,
+    draw=none,
+    fill=none,
+    font=\small,
+    cells={anchor=west},
+  },
+  legend cell align=left,
+]
+
+% ---------- styles ----------
+\pgfplotsset{
+  final/.style={thick, mark=none},
+  p11/.style={only marks, mark=triangle*, mark size=1.8pt},
+  p13/.style={only marks, mark=square*,   mark size=1.8pt},
+}
+
+% ---------- p = 11 : triangles only ----------
+\addplot[
+  p11,
+  x filter/.code={%
+    \edef\temp{\thisrow{L11_hi}}%
+    \ifx\temp\empty
+      \def\pgfmathresult{nan}%
+    \fi
+  },
+] table[
+  x=alpha,
+  y expr=abs(\thisrow{L11_hi}),
+]{\eventdata};
+\addlegendentry{\( p=11 \)}
+
+% ---------- p = 13 : squares only ----------
+\addplot[
+  p13,
+  x filter/.code={%
+    \edef\temp{\thisrow{L13_hi}}%
+    \ifx\temp\empty
+      \def\pgfmathresult{nan}%
+    \fi
+  },
+] table[
+  x=alpha,
+  y expr=abs(\thisrow{L13_hi}),
+]{\eventdata};
+\addlegendentry{\( p=13 \)}
+
+% ---------- final : solid line only ----------
+\addplot[
+  final,
+  x filter/.code={%
+    \edef\temp{\thisrow{Lfinal_hi}}%
+    \ifx\temp\empty
+      \def\pgfmathresult{nan}%
+    \fi
+  },
+] table[
+  x=alpha,
+  y expr=abs(\thisrow{Lfinal_hi}),
+]{\eventdata};
+\addlegendentry{final}
+
+\end{axis}
+\end{tikzpicture}
+\caption{All  \( \alpha \) values showing event and final envelope \( \lambda_{\max} \) statistics.}
+\label{fig:pointwise-cert-max}
+\end{figure}
+
+\begin{table}[ht]
+\centering
+\caption{Selected \( \alpha \) values showing event and final envelope \(\lambda_{\max}\) upper statistics.}
+\label{tab:pointwise-audit-max}
+\pgfplotstabletypeset[
+  empty cells with={---},
+  columns={alpha,L11_hi,L13_hi,Lfinal_hi,Lfinal_hi_std},
+  columns/alpha/.style={column name={$\alpha$}, fixed, precision=12,column type=l},
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns/L11_hi/.style={column name={$p{=}11$}, sci, sci zerofill, precision=2},
+  columns/L13_hi/.style={column name={$p{=}13$}, sci, sci zerofill, precision=2},
+  columns/Lfinal_hi/.style={column name={final}, sci, sci zerofill, precision=2,column type={r@{$\,\pm\,$}}},
+  columns/Lfinal_hi_std/.style={column name={std.dev.}, sci, sci zerofill, precision=2, column type=l},
+]{\auditdata}
+\end{table}
+
+\preto\section{\FloatBarrier}
+\section{Certification}
+\label{sec:certification}
+
+\begin{theorem}[Empirical Certification of PCGC--Goldbach Bounds Up To \(23\#/2\)]
+\label{thm:cert-23primorial}
+
+Let \(\mathcal{A}\) denote the discrete set of window parameters used in the certification, as defined in equation~\eqref{eq:A-def}.
+For each \(\alpha\in\mathcal{A}\) and each integer \(2n\ge 4\), let
+\(\Gmeas(2n;n\alpha)\) denote the measured Goldbach pair count in the window
+of half-width \(n\alpha\), and let \(\GHL(2n;n\alpha)\) be the corresponding
+Hardy--Littlewood geometric main term.
+As in \cite{Riemers2026-PCGH}, write
+\begin{equation}
+\Gmeas(2n;n\alpha)
+=
+\GHL(2n;n\alpha) + \varepsilon(2n;L),
+\end{equation}
+where \(\varepsilon(2n;L)\) is the exact remainder term and \(L\) denotes the
+associated effective modulus cutoff.
+
+Fix an admissible effective modulus cutoff \(L=\EffLocMod(2n;\alpha)\).
+Let \(\RHL(2n;L)\) denote the exact geometric remainder envelope, and let
+\(\RHLbound(2n;L)\) denote the associated explicit bounding envelope,
+as in Definitions~\ref{def:RHL} and~\ref{def:RHLbound}, respectively.
+
+\smallskip
+\noindent
+\textbf{(A) Certifiability of the envelope.}
+For all admissible \((n,L)\), the envelope \(\RHLbound(2n;L)\) is nonnegative,
+conservative, and asymptotically sharp in the sense that
+\begin{equation}
+\label{eq:certifiable-envelope}
+|\varepsilon(2n;L)| \le \RHL(2n;L) \le \RHLbound(2n;L),
+\end{equation}
+and moreover \(\RHLbound(2n;L)=\RHL(2n;L)\bigl(1+o_L(1)\bigr)\) uniformly over the
+admissible parameter ranges.
+
+\smallskip
+\noindent
+\textbf{(B) Empirical certification on the computed range.}
+For every \(\alpha\in\mathcal{A}\) and every integer \(n\) with
+\begin{equation}
+4 \le 2n \le 23\#,
+\end{equation}
+the measured counts satisfy the certified two-sided geometric bounds
+
+\begin{equation}
+\label{eq:certified-two-sided-RHL}
+\GHL(2n; n\alpha) - \RHL(2n;\sqrt{2n\alpha})
+\;\le\;
+\Gmeas(2n; n\alpha)
+\;\le\;
+\GHL(2n; n\alpha) + \RHL(2n;\sqrt{2n\alpha}).
+\end{equation}
+
+Since \(\RHLbound(2n;L)\ge \RHL(2n;L)\) for all admissible \(L\),
+by the \emph{Overall Bounding Envelope Lemma} of \cite{Riemers2026-PCGH},
+which establishes uniform dominance of \(\RHLbound\) over \(\RHL\),
+the same certified inequalities hold \emph{a fortiori} with
+\(\RHLbound\) in place of \(\RHL\).
+
+On the full computed range, certification is expressed by the two-sided
+inequality~\eqref{eq:certified-two-sided-RHL}, which is checked directly for
+every \((n,\alpha)\) in the grid.
+For visualization, logarithmic ratio diagnostics on the
+\emph{plottable domain} where the relevant denominators are positive (so that
+division and \(\log\) are defined) are plotted as well.
+On this domain, the lower inequality implies
+\begin{equation}
+\lambda_{\min}(n;\alpha)
+:=
+\log\!\left(
+\frac{\Gmeas(2n;n\alpha)}{\GHL(2n;n\alpha)-\RHL(2n;L)}
+\right)\ge 0,
+\end{equation}
+while the upper inequality implies, equivalently,
+\begin{equation}
+\lambda_{\max}(n;\alpha)
+:=
+\log\!\left(
+\frac{\Gmeas(2n;n\alpha)}{\GHL(2n;n\alpha)+\RHL(2n;L)}
+\right)\le 0.
+\end{equation}
+Points excluded from plots only to avoid division by \(0\) or \(\log(0)\) are
+treated as unplottable; these cases are still included in the direct
+verification of~\eqref{eq:certified-two-sided-RHL}.
+
+\end{theorem}
+
+\begin{proof}
+Part~(A) follows directly from the envelope framework developed in
+\cite{Riemers2026-PCGH}.
+In particular, the \emph{Overall Bounding Envelope Lemma} of \cite{Riemers2025-Framework}
+establishes that the exact remainder term satisfies
+\begin{equation}
+|\varepsilon(2n;L)| \le \RHL(2n;L),
+\end{equation}
+and that the explicit envelope \(\RHLbound(2n;L)\) uniformly dominates
+\(\RHL(2n;L)\) for all admissible \(L\).
+The non-asymptotic-proxy nature of \(\RHLbound\) is likewise a consequence
+of this lemma.
+
+For Part~(B), we certify the inequalities~\eqref{eq:certified-two-sided-RHL} by
+direct computation over the full grid
+\(\{(\alpha,n): \alpha\in\mathcal{A},\; 4\le n\le 23\#/2\}\).
+For each pair \((\alpha,n)\), the computational pipeline evaluates
+\(\Gmeas(2n;n\alpha)\), \(\GHL(2n;n\alpha)\), and
+\(\RHLbound(2n;\sqrt{2n\alpha})\), and explicitly checks the two inequalities
+in~\eqref{eq:certified-two-sided-RHL}.
+All checks pass with no exceptions on the computed range.
+The stated nonnegativity of the plotted logarithmic deviations is equivalent to
+the same inequalities wherever the denominators are positive; points excluded
+from plots for numerical reasons were nevertheless checked against
+\eqref{eq:certified-two-sided-RHL} and likewise show no violations.
+
+The certified data products, executable pipeline, and verification logs used in
+this computation are archived and made available via the accompanying software
+package~\cite{Riemers2025-SieveGoldbach}, enabling independent reproduction and
+audit of all certified claims.
+\end{proof}
+
+\preto\section{\FloatBarrier}
+\section{Conclusion}
+
+This work establishes an empirical certification of geometric confinement for
+Goldbach pair counts over the range \(4 \le 2n \le 23\#\), evaluated across
+the discrete family of fixed-scale windows
+\(\mathcal{A}=\{2^{-i/8}: i=0,1,\dots,80\}\).
+Within this domain, no violations of the certified two-sided inequalities occur,
+either in plotted data or in the full set of values checked but excluded from
+visualization for numerical reasons.
+In this sense, the tested range admits no empirical escape route: every measured
+value lies within the geometric envelopes predicted by the Prime Curvature
+Geometry Conjecture—Goldbach case.
+
+A central distinction of this work is the separation between probabilistic
+heuristics and geometric confinement.
+While classical Hardy--Littlewood heuristics describe average behaviour,
+the present certification concerns pointwise and blockwise control by explicit
+geometric envelopes.
+The absence of violations is therefore not an assertion of likelihood or
+statistical typicality, but a falsifiable geometric statement verified over a
+finite, explicitly enumerated domain.
+
+The certification framework employed here is deliberately reproducible.
+All claims are grounded in direct computation over a fully specified grid of
+parameters, with archived data products, executable pipelines, and verification
+logs enabling independent audit.
+In this respect, certification is treated not as an informal observational
+claim, but as a concrete experimental standard: any counterexample within the
+tested regime would be detectable, reproducible, and decisive.
+
+It is important to delineate the scope of this result.
+The present analysis is restricted to fixed-scale Goldbach windows indexed by
+constant \(\alpha\), organized using primorial-based binning.
+No claims are made regarding short-interval regimes in the offset variable \(m\),
+including windows of fixed or slowly growing size.
+Such regimes are geometrically distinct and would require a different
+experimental design, coverage strategy, and certification criterion than those
+used here.
+
+Although one could, in principle, project certified points from the fixed-scale
+\(\alpha_i\) lines onto shorter interval regimes, such projections are inherently
+loose and do not constitute meaningful short interval certification.
+At best, they provide consistency checks rather than independent validation.
+A serious short-interval analysis would instead require tracing a family of
+scale functions \(\alpha(n)\) across the full data range, with bounds evaluated
+pointwise along these dynamically varying trajectories.
+That problem lies outside the scope of the present in this paper.
+
+Within its stated domain, however, the conclusion is unambiguous:
+across all tested scales and throughout the full certified range,
+the Goldbach pair counts exhibit no empirical deviations from the geometric
+constraints predicted by the Prime Curvature Geometry Conjecture.
+
+\preto\subsection{\FloatBarrier}
+\subsection{Outlook and Open Directions}
+
+The present work establishes certified geometric bounds for primorial-based
+window families over a fixed-scale parameter grid.
+Several natural extensions suggest themselves, particularly in regimes that
+are not amenable to the fixed-scale framework employed here.
+
+One such direction is the development of a dedicated certification program for
+short-interval behaviour in the offset variable \(m\).
+While projections from the fixed-scale \(\alpha_i\) lines are possible, such
+projections are inherently loose and do not support meaningful certification.
+A genuine short-interval analysis would instead require tracing dynamically
+varying scale functions \(\alpha(n)\) across the full data range, with bounds
+certified pointwise along these trajectories.
+
+This regime constitutes a geometrically distinct problem and would necessitate
+different experimental design principles and coverage strategies than those
+used in the present study.
+This is a natural and well-defined direction for future investigation.
+
+\preto\section{\FloatBarrier}
+\section{Reproducibility}
+
+All empirical results and certifications reported in this paper are derived
+from deterministic computations over explicitly enumerated parameter grids.
+The full computational pipeline—including executable code, configuration files,
+and verification scripts—has been archived to enable independent reproduction
+and audit of all certified claims.
+
+The certification procedure does not rely on stochastic sampling, heuristic
+filtering, or post hoc selection.
+Every admissible pair \((\alpha,n)\) in the certified domain is evaluated
+explicitly, and all inequalities are checked directly.
+Any counterexample within the tested range would therefore be detectable and
+reproducible using the archived materials.
+
+The software package associated with this work also records version
+information, build parameters, and platform details sufficient to reproduce
+the numerical results across standard computing environments.\cite{Riemers2025-SieveGoldbach}
+
+\preto\subsection{\FloatBarrier}
+\subsection{Data Availability}
+
+The certified data products generated for this study, including all evaluated
+Goldbach pair counts, geometric envelope values, and verification logs, are
+archived alongside the computational pipeline.
+Data are provided in machine-readable formats with documented field
+specifications and fixed ordering conventions.
+
+Checksum files are included to verify data integrity, and all datasets are
+labelled by the corresponding parameter values \((\alpha,n)\) to permit
+independent validation of individual certified inequalities.
+The complete archive is available via the software repository 
+\cite{Riemers2025-SieveGoldbach} , and contains all information necessary to
+reproduce the figures, tables, and certification results reported in this paper.
+
+\clearpage
+\bibliographystyle{plain}
+\bibliography{pcgc-goldbach-empirical}
+
+\end{document}
+

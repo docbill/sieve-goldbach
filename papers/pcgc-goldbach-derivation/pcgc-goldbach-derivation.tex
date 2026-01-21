@@ -1,0 +1,3051 @@
+% Copyright (C) 2025 Bill C. Riemers
+% SPDX-License-Identifier: CC-BY-4.0
+%
+% Licensed under the Creative Commons Attribution 4.0 International License.
+% You may obtain a copy of the License at:
+%     https://creativecommons.org/licenses/by/4.0/
+%
+% You are free to:
+%   - Share ,  copy and redistribute the material in any medium or format
+%   - Adapt ,  remix, transform, and build upon the material for any purpose
+% Under the following terms:
+%   - Attribution ,  You must give appropriate credit, provide a link to the license,
+%     and indicate if changes were made.
+
+\documentclass[11pt]{article}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{mathtools}
+
+\title{\textbf{Prime Curvature Geometry and the Structure of Additive Prime Deviations}}
+\author{Bill C. Riemers}
+\date{\today}
+
+\newtheoremstyle{inline}% for remarks/notes
+  {}{}{\normalfont}{}{\itshape}{.}{ }{}
+  
+\newtheoremstyle{break}  % Name
+  {1ex}                  % Space above
+  {1ex}                  % Space below
+  {\normalfont}          % Body font
+  {}                     % Indent
+  {\bfseries}            % Theorem head font
+  {.}                    % Punctuation after theorem head
+  {\newline}             % Space after theorem head (THIS FORCES LINE BREAK)
+  {}                     % Theorem head spec
+
+\theoremstyle{inline}
+\newtheorem*{remark}{Remark}
+
+\theoremstyle{inline}
+\newtheorem*{convention}{Convention}
+
+\theoremstyle{break}
+\newtheorem{lemma}{Lemma}
+
+\makeatletter
+\renewenvironment{proof}[1][\proofname]{%
+  \par\pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\mbox{}\\  % This line forces the break
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+\theoremstyle{break}
+\newtheorem*{conclusion}{Conclusion}
+
+\theoremstyle{break}
+\newtheorem{theorem}{Theorem}
+
+\theoremstyle{break}
+\newtheorem{proposition}{Proposition}
+
+\theoremstyle{break}
+\newtheorem{identity}{Identity}
+
+\theoremstyle{break}
+\newtheorem{conjecture}{Conjecture}
+
+\theoremstyle{break}
+\newtheorem{corollary}{Corollary}
+
+\theoremstyle{break}
+\newtheorem{definition}{Definition}
+
+\theoremstyle{break}
+\newtheorem{hypothesis}{Hypothesis}
+
+\theoremstyle{inline}
+\newtheorem*{note}{Note}
+
+% constants
+\newcommand{\xOmegaPrime}{1.42157163942565258183\dots}
+
+% --- Base (unchanged) ---
+\newcommand{\Gmeas}{G}
+\newcommand{\Gpred}{\mathring{G}}
+\newcommand{\Gproxy}{\widehat{G}}
+
+% tiny tags
+\newcommand{\talign}{{\scriptscriptstyle\mathrm{align}}}
+\newcommand{\thead}{{\scriptscriptstyle\mathrm{head}}}
+\newcommand{\ttail}{{\scriptscriptstyle\mathrm{tail}}}
+\newcommand{\tavg}{{\scriptscriptstyle\mathrm{avg}}}
+\newcommand{\tbound}{{\scriptscriptstyle\mathrm{bound}}}
+\newcommand{\tdensity}{{\scriptscriptstyle\mathrm{density}}}
+\newcommand{\tenv}{{\scriptscriptstyle\mathrm{env}}}
+\newcommand{\tpairs}{{\scriptscriptstyle\mathrm{pairs}}}
+\newcommand{\ttrivial}{{\scriptscriptstyle\mathrm{trivial}}}
+\newcommand{\tsem}{{\scriptscriptstyle\mathrm{sem}}}
+\newcommand{\tsieve}{{\scriptscriptstyle\mathrm{sieve}}}
+\newcommand{\twin}{{\scriptscriptstyle\mathrm{win}}}
+\newcommand{\tref}{{\scriptscriptstyle\mathrm{ref}}}
+\newcommand{\tana}{{\scriptscriptstyle\mathrm{analytical}}}
+\newcommand{\tgb}{{\scriptscriptstyle\mathrm{GB}}}
+\newcommand{\thl}{{\scriptscriptstyle\mathrm{HL}}}
+\newcommand{\teff}{{\scriptscriptstyle\mathrm{eff}}}
+\DeclareMathOperator{\SquareCap}{\mathsf{Sq}}
+\DeclareMathOperator{\EffLocModCap}{\mathsf{\EffLocMod}}
+
+\newcommand{\Ecap}{\mathrm{Ecap}}
+\newcommand{\pmin}{\mathrm{p_{\min}}}
+\newcommand{\ecap}[1]{\left\langle #1 \right\rangle_{\mathrm{ec}}}
+\newcommand{\GHL}{\Gpred^{\thl}}
+\newcommand{\GHLproxy}{\Gproxy^{\thl}}
+\newcommand{\OmegaPrime}{\Omega_{\mathrm{prime}}}
+\newcommand{\OmegaPrimeNorm}{\widehat{\Omega}_{\mathrm{prime}}}
+\newcommand{\Ipar}{I^{\mathrm{par}}}
+\newcommand{\EffLocMod}{\mathcal{Q}}
+\newcommand{\Peff}{\mathbb{P}_{\teff}}
+\newcommand{\Podd}{{\mathbb{P}\setminus\{2\}}}
+\newcommand{\RHLbound}{\widehat{R}^{\thl}}
+\newcommand{\RHLboundEnv}{\RHLbound_{\tenv}}
+\newcommand{\Ssem}{\mathfrak{S}}
+\newcommand{\SsemHead}{\Ssem_{\thead}}
+\newcommand{\SsemTail}{\Ssem_{\ttail}}
+\newcommand{\SGB}{\mathfrak{S_{\tgb}}}
+\newcommand{\HHL}{H^{\thl}}
+\newcommand{\THL}{T^{\thl}}
+\newcommand{\RHL}{R^{\thl}}
+\newcommand{\QpleL}{\EffLocMod_p(n) \le L}
+\newcommand{\QpProduct}{\prod_{\substack{p\in\Peff(n) \\ \QpleL}}}
+\newcommand{\pZeroProduct}{\prod_{\substack{p\in\Peff(n) \\ p \le P_0}}}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This paper develops a geometric framework for analyzing remainder terms in additive prime and prime-like problems. The approach is based on a multiplicative decomposition of the deviation into an explicit small-prime residue structure and a medium-to-large-prime tail exhibiting intrinsic exponential curvature. This decomposition leads to the formulation of the \textbf{Prime Curvature Geometry Hypothesis (PCGH)}, together with an associated curvature constant \( \Omega \), intended to govern pointwise remainder envelopes beyond the scope of the classical Fundamental Lemma of sieve theory.~\cite{IwaniecKowalski2004}
+
+Specializing the framework to the Goldbach problem yields the \textbf{Prime Curvature Geometry Conjecture for Goldbach (PCGC--Goldbach) }
+and an explicit curvature constant 
+\( \OmegaPrime \). The resulting conjectural bounds are compatible with Hardy–Littlewood A predictions in the asymptotic limit, while providing a geometric mechanism that organizes deviation behaviour across finite analytic windows and cutoff scales.
+
+An explicit bounding envelope for the Goldbach remainder is derived and shown to control the exact remainder uniformly. This envelope is proved not to be an asymptotic proxy: the exact remainder exhibits non-vanishing exponential curvature within cutoff cells, preventing pointwise asymptotic equivalence. This distinction clarifies the limits of scale-based approximations and isolates the geometric source of deviation.
+
+The present paper is restricted to the derivation and formal statement of the geometric framework, associated hypotheses, and bounding envelopes. Numerical validation, certified bounds over large finite ranges, and reduction theorems relating PCC–Goldbach to Hardy–Littlewood–A and Bombieri–Vinogradov–type hypotheses~\cite{Bombieri1965,Vinogradov1965}  are developed in subsequent work.
+\end{abstract}
+
+\clearpage
+\tableofcontents
+
+\clearpage
+\section{Introduction}
+
+\subsection{Motivation for a General Geometric Framework}
+
+Additive problems involving primes share a common structural feature:
+their main terms are governed by local congruence conditions imposed by
+the small primes, while their error terms reflect global fluctuations
+in the distribution of primes.  Classical conjectures such as the
+Hardy--Littlewood prime--pair conjectures incorporate this observation
+by introducing finite correction factors derived from the sieve.
+
+However, the Hardy--Littlewood framework is not a universal predictive
+principle.  Its successes and limitations both indicate that a deeper,
+more structural description of analytic remainders is required.
+
+\paragraph{HL--A Encodes Small-Prime Structure But Does Not Generalize.}
+For problems such as Goldbach representations, the normalized
+Hardy--Littlewood predictions match empirical data with striking
+accuracy.  This agreement is explained by the fact that Harding--Littlewood 
+Conjecture A (HL--A) captures precisely the finite congruence restrictions
+enforced by the small primes.
+
+Yet HL--A fails to organize the full behaviour of primes.  It does not
+supply a coherent global model of remainder terms; it ties the
+abundance of twin primes to that of ``lucky primes''; and it provides
+no mechanism for describing fluctuations across multiple analytic
+scales.  Thus HL--A is an effective \emph{particular solution} for
+certain additive problems, but it is not a \emph{general framework} from which
+all such predictions can be derived.
+
+This limitation is a primary motivation for first developing a general
+geometric model, and only afterwards tuning it to the Goldbach setting.
+
+\paragraph{Primorial Structure and Scale Separation.}
+The sieve of Eratosthenes imposes deterministic exclusion patterns
+modulo the primorials \(p_k^\#\).  As \(k\) increases, these patterns refine
+but still arise from the same finite rule set.  This hierarchy induces
+a natural separation of scales in the behavior of primes:
+\begin{itemize}
+    \item \textbf{Small primes:} rigid congruence obstructions.
+    \item \textbf{Intermediate scales:} structured but non-deterministic
+          fluctuations, responsible for the ``curvature'' phenomena
+          observed in localized prime correlations.
+    \item \textbf{Large scales:} weak correlations resembling
+          statistically independent noise.
+\end{itemize}
+Any analytic model that respects sieve structure must therefore
+separate remainder terms according to these scales.
+
+\paragraph{The Need For a Remainder Geometry.}
+Empirical data from Goldbach pair counts, prime tuples, and short
+intervals show that analytic deviations cannot be represented by a
+single global error term.  Rather, they decompose into
+\begin{itemize}
+    \item a \emph{small-prime factor} capturing deterministic congruence
+          structure,
+    \item a \emph{curvature term} describing intermediate-scale deviations,
+    \item and a \emph{tail term} reflecting large-scale fluctuations.
+\end{itemize}
+HL--A implicitly models only the first of these components.  A general
+``remainder geometry'' is required to describe the other two.
+
+\paragraph{Why the General Model Must Precede the Goldbach Case.}
+If one begins directly with the Goldbach problem, any proposed
+correction or curvature equation risks appearing ad hoc.  In contrast,
+if the deviation structure is derived from a general geometric
+decomposition compatible with sieve constraints, then the Goldbach
+geometry becomes the \emph{unique specialization} of the framework.
+HL--A appears as one particular class of main-term corrections, and the
+resulting conjecture becomes structurally motivated and falsifiable.
+
+In this sense, HL--A motivates the general geometric model precisely
+because it fails to generalize: its partial successes identify the
+small-prime contribution that any model must contain, while its
+limitations reveal the necessity of a broader framework.
+
+
+\subsection{Goals of This Paper}
+
+The objectives of this work are:
+\begin{itemize}
+\item to develop a hypothesis of general curvature geometry of primes from first principles,
+\item to specialize this framework to the Goldbach setting,
+\item to state PCGC--Goldbach,
+\item to provide the theoretical foundation for empirical validation and reduction theorems (treated in subsequent papers).
+\end{itemize}
+
+\subsection{Main Statements}
+
+Goldbach's conjecture asserts that every sufficiently large even integer \(2n\)
+can be expressed as a sum of two primes.
+Let
+\begin{equation}
+\Gmeas(2n)
+   = \sum_{m \in \mathbb{Z}}
+       1_{\mathrm{prime}}(n-m)\,
+       1_{\mathrm{prime}}(n+m)
+\end{equation}
+denote the number of such Goldbach representations.
+The Hardy--Littlewood A conjecture (HL--A)~\cite{HardyLittlewood1923} predicts the
+asymptotic behaviour
+\begin{equation}
+\Gmeas(2n)
+   \sim \SGB(2n)
+        \frac{2n}{\log^2(n)},
+\end{equation}
+where \(\SGB(2n) := 2 C_2 \Ssem(2n)\) is the twin prime constant \( C_2 \)  multiplied by the classical singular series.
+
+Despite overwhelming heuristic support, particularly after incorporating
+Hardy--Littlewood circle-method corrections, HL--A remains unproved and lies
+beyond the reach of classical sieve methods~\cite{IwaniecKowalski2004}.
+The obstruction is the well-known sieve barrier: after sieving by primes up to
+\(x^{1/2}\), no further cancellation is available to control prime correlations
+at the scale required for HL--A.
+Nevertheless, extensive heuristic and computational evidence indicates that
+Hardy--Littlewood–type predictions accurately describe Goldbach pair counts
+across wide finite ranges; see, for example, the computational validation in~\cite{Riemers2025GoldbachSieve}.
+This tension between strong empirical agreement and the limitations of existing
+analytic tools motivates the search for additional underlying structure.
+
+This barrier suggests that any successful approach must exploit additional
+structure beyond classical sieve estimates.
+
+\medskip
+
+The purpose of the present paper is not to prove HL--A, but to derive a
+\emph{geometric framework} that governs deviations from Hardy--Littlewood–type
+predictions in additive prime problems.
+Goldbach’s problem serves as a motivating example, but the framework developed
+here applies more generally to prime-like sets and structured configuration
+families.
+
+\medskip
+
+Then, for a symmetric window of radius \(M\), define the localized Goldbach count
+\begin{equation}
+\Gmeas(2n;M)
+   = \sum_{0 < |m|\le M}
+       1_{\mathrm{prime}}(n-m)\,
+       1_{\mathrm{prime}}(n+m),
+\end{equation}
+and let \(\Gpred(2n;M)\) denote a corresponding Hardy--Littlewood–type predictor
+restricted to the same window.
+The deviation
+\begin{equation}
+\varepsilon(2n,M)
+   := \Gmeas(2n;M) - \Gpred(2n;M)
+\end{equation}
+may be viewed as a function on the two-parameter space \((2n,M)\).
+
+\medskip
+
+\textbf{New contribution.}
+This paper introduces a \emph{prime curvature geometry} for such deviations.
+The central hypothesis is that remainder terms in additive prime problems admit
+a multiplicative decomposition separating:
+\begin{itemize}
+\item a finite structural factor determined by very small primes, and
+\item a tail factor arising from medium and large primes, whose dominant
+      behaviour is governed by a renormalized curvature constant.
+\end{itemize}
+This decomposition induces a natural geometric interpretation of remainder
+growth across analytic scales and explains the emergence of exponential-type
+bounds in short-interval problems.
+
+\medskip
+
+The goal of this paper is to derive this geometric framework and formulate the
+corresponding general curvature hypothesis.
+Its specialization to Goldbach, numerical validation, and reduction theorems
+are treated in after this paper.
+
+\section{Fundamental Definitions}
+
+\subsection{Euler--Cap}
+
+The Euler--cap constraint was introduced and motivated in previous work~\cite{Riemers2025GoldbachSieve}
+as a structural regulator for finite--scale Goldbach analysis.
+In the present work it is adopted uniformly as an admissibility condition
+on window parameters; its use here is inherited from that framework rather
+than introduced for the purposes of the present conjecture.
+
+\begin{definition}[Euler--cap and admissible window size]
+\label{def:euler-cap}
+For a given central value \(n\), define the \emph{Euler cap} by
+\begin{equation}
+\Ecap(n)
+   :=
+   \frac{(2n+1)-\sqrt{8n+1}}{2n}.
+\end{equation}
+The Euler cap determines the maximal fractional size of a symmetric window
+about \(n\) for which the mapping
+\begin{equation}
+m \longmapsto (n-m)(n+m)
+\end{equation}
+remains injective, with both factors positive and distinct.
+
+Given a window parameter \(\alpha\in(0,1]\), the associated window radius is
+defined by
+\begin{equation}
+M
+   :=
+   \Bigl\lfloor
+      \min\!\bigl(\alpha,\Ecap(n)\bigr)\,n
+   \Bigr\rfloor.
+\end{equation}
+Thus \(\Ecap(n)\) enforces a structural upper bound on admissible window
+sizes, while \(\alpha\) allows additional restriction when required.
+
+Unless explicitly stated otherwise, all window parameters in this paper are
+assumed to satisfy the Euler--cap constraint.  Since \(\Ecap(n)\to 1\) as
+\(n\to\infty\), the choice \(\alpha=1\) is asymptotically admissible and may
+be used safely in large--\(n\) regimes.
+
+The Euler--cap restriction is therefore treated as part of the ambient
+analytic framework throughout this paper, and not as a conjectural or
+optimizable parameter.  Its effect of bypassing small-prime weight sensitivity 
+is a convenient but secondary consequence.
+
+More generally, this serves as an example of the normalization issues that
+must be addressed when applying the PCGH framework to the formulation of
+new conjectures.
+\end{definition}
+
+\subsection{Geometric Terms}
+
+Many variables in this paper are treated as \emph{geometric parameters}
+rather than as functions in the analytic sense.
+Just as one would not normally write
+\(
+x = r(x,y,z)\cos\theta(x,y,z)
+\),
+we avoid functional notation for quantities that are best understood as
+coordinates, lengths, or changes of scale.
+
+Our primary coordinate system is \((n,m)\).
+The variable \(n\) denotes a position along the central axis, while \(m\)
+denotes a displacement from that position.
+Capital letters such as \(M\) and \(N\) represent \emph{lengths} measured
+along the same axis, rather than coordinates themselves.
+
+The parameter
+\begin{equation}
+L := \sqrt{2M}
+\end{equation}
+is introduced as a change of scale corresponding to the effective length
+of a short interval.
+It should not be interpreted as a function of \(M\), but rather as a
+coordinate transformation to a different scale.
+Accordingly, \(L\) is treated as a continuous parameter.
+
+When it is necessary to relate the window size to the central coordinate,
+a dimensionless scale parameter \(\alpha\) is introduced.
+This parameter specifies a window length via
+\begin{equation}
+M = n\alpha,
+\end{equation}
+and should be interpreted as a relative scale, not as a slope or direction
+in the \((n,m)\)-plane.
+In particular, \(\alpha\) converts a coordinate magnitude into a length;
+it does not define a line or trajectory in the coordinate space.
+
+In contexts where \(\alpha\) varies with \(n\), \(\alpha(n)\) denotes a varying scale, so that \(M=n\alpha(n)\).
+This represents a family of window sizes indexed by \(n\), rather than a
+curve in the \((n,m)\)-plane.
+
+Because this framework mixes discrete variables with continuous scale
+parameters, care is required when interpreting non-integer quantities.
+Unless stated otherwise, an expression of the form \(n\alpha(n)\) is
+interpreted as \(\lfloor n\alpha(n)\ \rfloor\) when discretization is
+required and the Euler--cap is not in effect, and otherwise as specified in
+Definition~\ref{def:euler-cap}.
+By contrast, the parameter \(L\) is treated as continuous; applying a floor
+operation to \(L\) generally leads to inaccurate results and is avoided.
+
+\subsection{Admissible Parity}
+
+The parity restriction was introduced in previous work~\cite{Riemers2025GoldbachSieve}.
+Here it is used purely as an admissibility convention for windowed sums
+and products.
+
+\begin{definition}[Parity--admissible window index set]
+\label{def:parity-admissible}
+Let \(n\in\mathbb{N}\) and let \(M\ge 1\).  The symmetric window is defined as
+\begin{equation}
+I_M := \{\, m\in\mathbb{Z} : 0<|m|\le M \,\}.
+\end{equation}
+The \emph{parity--admissible index set} is defined as
+\begin{equation}
+\Ipar(n;M)
+   :=
+   \{\, m\in I_M : n+m \equiv 1 \pmod 2 \,\}.
+\end{equation}
+Equivalently, \(\Ipar(n;M)\) consists of those shifts \(m\) with
+\(0<|m|\le M\) for which both \(n-m\) and \(n+m\) are odd.
+Unless stated otherwise, all summations over window variables \(m\) in
+this paper are implicitly restricted to \(m\in\Ipar(n;M)\).
+\end{definition}
+
+\subsection{Goldbach Singular Series Factors}
+
+\begin{definition}[Goldbach singular series factors]
+\label{def:SGB-Ssem}
+For an even integer \(2n\), the \emph{local semiprime correction
+factor}~\cite{HardyLittlewood1923} is defined as
+\begin{equation}
+\Ssem(2n)
+   :=
+   \prod_{\substack{\substack{p\in\Podd \\ p\mid n}}}
+      \frac{p-1}{p-2}.
+\end{equation}
+The \emph{prime--pair constant}~\cite{HardyLittlewood1923} is defined as
+\begin{equation}
+C_2
+   :=
+   \prod_{p\in\Podd}\left(1-\frac{1}{(p-1)^2}\right).
+\end{equation}
+The corresponding \emph{Goldbach singular series factor}~\cite{HardyLittlewood1923} is defined as
+\begin{equation}
+\SGB(2n)
+   :=
+   2\,C_2\,\Ssem(2n).
+\end{equation}
+\end{definition}
+
+\subsection{Complementary and Full Euler--Type Products}
+
+In addition to the local semiprime correction factor \(\Ssem(2n)\) defined
+above, it is occasionally convenient to refer to the complementary and full
+Euler--type products obtained by modifying the divisibility condition on the
+prime index.
+
+\begin{definition}[Complementary and full local semiprime products]
+\label{def:Ssem-complement-full}
+The \emph{complementary} local semiprime product is defined as
+\begin{equation}
+\Ssem^{\complement}(2n)
+   :=
+   \prod_{\substack{p\in\Podd \\ p\nmid n}}
+      \frac{p-1}{p-2},
+\end{equation}
+and the corresponding \emph{full} product is defined as
+\begin{equation}
+\Ssem^{\bullet}(2n)
+   :=
+   \prod_{\substack{p\in\Podd}}
+      \frac{p-1}{p-2}.
+\end{equation}
+\end{definition}
+
+\begin{convention}[Notation]
+A superscript \( \complement \) indicates replacement of the divisibility
+condition \(p\mid n\) by \(p\nmid n\), while a superscript \( \bullet \)
+indicates removal of the divisibility condition entirely. No additional
+structure is implied.
+\end{convention}
+
+\subsection{Effective Local Modulus}
+
+\begin{definition}[Effective local modulus]
+\label{def:Qp}
+Let \(n\in\mathbb{N}\) and let \(p\) be an odd prime.
+Then the minimum contributing prime is defined as
+\begin{equation}
+\pmin(n)
+   :=
+\begin{cases}
+3, & 3 \mid n, \\[4pt]
+5, & 3 \nmid n.
+\end{cases}
+\end{equation}
+
+\begin{definition}[Admissible primes for effective moduli]
+For each \( n\ge2 \), let
+\begin{equation}
+\Peff(n):=\{\,p\in\mathbb{P} : p\ge \pmin(n)\,\}.
+\end{equation}
+\label{def:peff}
+\end{definition}
+
+\noindent
+Throughout this paper, \( \EffLocMod_p(n) \) is regarded as defined only for
+\( p\in\Peff(n) \).
+
+For any odd prime \(q_{\min}\), define the partial Euler product
+\begin{equation}
+\EffLocMod_p^{(q_{\min})}
+   :=
+   \prod_{\substack{
+      q \in \mathbb{P} \\
+      q_{\min} \le q \le p
+   }}
+   (q-1).
+\end{equation}
+
+In analogy with the prime--indexed quantity \(\EffLocMod_p(n)\), it is
+useful to name the cumulative small--prime contribution associated to a
+cutoff scale \(L\).
+Accordingly, the envelope--scale effective local modulus is defined as
+\begin{equation}
+\EffLocMod_p(n)
+   := \EffLocMod_p^{\bigl(\pmin(n)\bigr)}.
+\end{equation}
+
+Thus \(\EffLocMod_p(n)\) encodes the cumulative residue structure imposed by the
+odd primes up to \(p\), with the only \(n\)-dependence arising from the choice
+of base prime \(\pmin(n)\) according to whether \(3\mid n\).
+This convention is tailored to the singular--series geometry underlying
+Goldbach--type problems.
+
+\medskip
+For the geometric analysis of monotonic changes in aggregated quantities,
+it is useful to introduce a natural envelope scale along the \(n\)-axis.
+Let \(\{p_i\}\) denote the increasing sequence of odd primes starting at
+\(\pmin(n)\).
+Then the envelope length associated to the prime interval
+\([p_i,p_{i+1})\) is defined as
+\begin{align}
+N_i^{(3)}
+   &:= \bigl(\EffLocMod_{p_{i+1}}^{(3)}\bigr)^2
+      - \bigl(\EffLocMod_{p_i}^{(3)}\bigr)^2,\\
+N_i^{(5)}
+   &:= \bigl(\EffLocMod_{p_{i+1}}^{(5)}\bigr)^2
+      - \bigl(\EffLocMod_{p_i}^{(5)}\bigr)^2.
+\end{align}
+
+These quantities represent the natural block sizes over which the local
+residue structure induced by the primes below \(p_{i+1}\) remains fixed.
+
+The squaring reflects the Goldbach geometry
+\((n-m)(n+m)=n^2-m^2\), so that changes in the effective modulus
+\(\EffLocMod_p(n)\) induce corresponding blocks along the \(n\)-axis.
+Within each such envelope, aggregated quantities are expected to exhibit
+coherent (and typically monotonic) behavior.
+
+\medskip
+For convenience, and for use in short--interval and envelope--scale
+expressions, we define the effective local modulus at scale \(L\) by
+\begin{equation}
+\EffLocMod(2n;L)
+   :=
+   \prod_{\substack{
+      p \in \Peff(n) \\
+      Q_p(n) \le L
+   }}
+   (p-1)
+   \;=\;
+   \QpProduct (p-1).
+\end{equation}
+\end{definition}
+
+
+\begin{convention}[Interpretation of Cutoff Inequalities]
+Throughout this paper, whenever an inequality or cutoff condition of the
+form
+\(
+\QpleL
+\)
+is used, it is understood that the effective local modulus
+\(\EffLocMod_p(n)\) is defined with the base prime \(\pmin(n)\) fixed as in
+Definition~\ref{def:Qp}.
+No restriction on \(p\) is imposed beyond \(p\ge \pmin(n)\).
+\end{convention}
+
+\subsection{Additional Series Operators}
+
+The classical Hardy--Littlewood singular series $\Ssem(2n)$ is naturally an
+asymptotic object.  For finite--window analysis it is convenient to
+introduce auxiliary operators that partition the series into base and
+tail components relative to a square cutoff.
+
+\begin{definition}[Cutoff operators]
+Define the square cutoff operator
+\begin{equation}
+\SquareCap(x):=x^2.
+\end{equation}
+The function \( \EffLocModCap(\cdot) \) may also be used as a cutoff operator.
+\end{definition}
+
+We use the tags \( \thead \) and \( \ttail \) to denote the base (small--prime)
+and tail (large--prime) components relative to a given cutoff.
+
+\begin{definition}[Cutoff components of \( \Ssem \)]
+Let \( M>0 \) and \( n\ge 2 \). Then define
+\begin{equation}
+\SsemHead^{\SquareCap}(2n;M)
+:= \prod_{\substack{p\in\Podd \\ p\mid n \\ p^2\le M}}
+\frac{p-1}{p-2} , \qquad
+\SsemTail^{\SquareCap}(2n;M)
+:= \prod_{\substack{p\in\Podd \\ p\mid n \\ p^2> M}}
+\frac{p-1}{p-2}.
+\end{equation}
+\begin{equation}
+ \SsemHead^{\EffLocModCap}(2n;L)
+:= \prod_{\substack{p\in\Peff(n) \\ p\mid n\\ \QpleL}}
+\frac{p-1}{p-2}, \qquad
+\SsemTail^{\EffLocModCap}(2n;L)
+:= \prod_{\substack{p\in\Peff(n) \\ p\mid n \\ \EffLocMod_p(n) > L}}
+\frac{p-1}{p-2}.
+\end{equation}
+\begin{align}
+\Ssem^{\SquareCap}(2n)
+&:= \Ssem(2n), \\[3pt]
+\Ssem^{\EffLocMod}(2n)
+&:= \prod_{\substack{p\in\Peff(n)\\ p\mid n}}
+\frac{p-1}{p-2}.
+\end{align}
+
+Empty products are interpreted as $1$.
+\end{definition}
+
+\noindent
+
+\begin{identity}[\(\Ssem \) Head--Tail Products]
+\begin{align}
+\Ssem(2n) = \Ssem^{\SquareCap}(2n)
+&= \SsemHead^{\SquareCap}(2n;M)\;
+\SsemTail^{\SquareCap}(2n;M) \qquad \forall M > 0, \\[3pt]
+\Ssem^{\EffLocMod}(2n)
+&= \SsemHead^{\EffLocModCap}(2n;L)\;
+\SsemTail^{\EffLocModCap}(2n;L) \qquad \forall L > 0.
+\end{align}
+\end{identity}
+\begin{proof}
+These identities follow by design of having the \( \ttail \) term continue immediately after
+the \( \thead \) term ends.
+\end{proof}
+
+\begin{identity}[\(\Ssem\) Equality]
+\begin{equation}
+\Ssem^{\SquareCap}(2n) = \Ssem^{\EffLocModCap}(2n)
+\end{equation}
+\end{identity}
+
+\begin{proof}
+Both products are taken over primes dividing \(n\), with admissibility
+restricted to \(p\in\Peff(n)\) as in Definition~\ref{def:peff}.
+The only term that could appear in
+\(\Ssem^{\SquareCap}(2n)\) but not in
+\(\Ssem^{\EffLocModCap}(2n)\)
+is \(p=3\).
+
+However, \(\Ssem^{\SquareCap}(2n)\) contains a \(p=3\) factor only if
+\(3\mid n\). In that case \(\pmin(n)=3\), so \(3\in\Peff(n)\), and the
+corresponding term also appears in
+\(\Ssem^{\EffLocModCap}(2n)\).
+Thus both products range over the same prime divisors of \(n\), and are
+identical.
+\end{proof}
+
+\begin{definition}[Effective Moduli Interval Max]
+\begin{align}
+\EffLocMod(2n;L) 
+&:= \EffLocMod_{P_0(2n;L)}(n), \\[3pt]
+P_0(2n;L)
+&:= \max\{\,p\in\Peff(n):\ p\mid n,\ \EffLocMod_p(n)\le L\,\}, \\[3pt]
+&\qquad\text{with } P_0(2n;L):=\pmin(n)\text{ if the set is empty.}
+\end{align}
+\end{definition}
+
+\begin{identity}[Equivalent Tail Terms]
+\begin{equation}
+\SsemTail^{\EffLocModCap}(2n;L)
+=
+\SsemTail^{\SquareCap}(2n;(P_0(2n;L))^2)
+\qquad \forall L \ge \pmin(n)-1.
+\end{equation}
+\end{identity}
+
+\begin{proof}
+Both tail products are taken over primes \(p\in\Peff(n)\) dividing \(n\).
+By definition of \(P_0(2n;L)\), the condition \(\EffLocMod_p(n)>L\) is
+equivalent to \(p>P_0(2n;L)\).
+Hence both sides are products over the same index set
+\begin{equation}
+\{\,p\in\Peff(n):\ p\mid n,\ p>2,\ p>P_0(2n;L)\,\},
+\end{equation}
+and therefore agree.
+\end{proof}
+
+\begin{identity}[Equivalent Header Terms]
+\begin{equation}
+\SsemHead^{\EffLocModCap}(2n;L)
+=
+\SsemHead^{\SquareCap}(2n;(P_0(2n;L))^2)
+\qquad \forall L \ge \pmin(n)-1.
+\end{equation}
+\end{identity}
+
+\begin{proof}
+Both header products are taken over primes \(p\in\Peff(n)\) dividing \(n\).
+By definition of \(P_0(2n;L)\), the condition \(\EffLocMod_p(n)\le L\) is
+equivalent to \(p\le P_0(2n;L)\).
+Hence both sides are products over the same index set
+\begin{equation}
+\{\,p\in\Peff(n):\ p\mid n,\ p>2,\ p\le P_0(2n;L)\,\},
+\end{equation}
+and therefore agree.
+\end{proof}
+
+The above identities do not necessarily hold for \( \bullet \) and \( \complement \) operators.
+As the \( \EffLocModCap \) operator will retain exclusion of primes not in \( \Peff(n) \), while
+the \( \SquareCap \) operator will essentially flip an exclusion to an inclusion.  As such the 
+following identity is added:
+
+\begin{identity}[\(\Ssem\) complement conversion at the \(\pmin\) cutoff]
+\label{id:Ssem-complement-conversion}
+For every \(n\ge 2\),
+\begin{equation}
+\Ssem^{\SquareCap,\complement}(2n)
+=
+\SsemHead^{\SquareCap,\complement}\!\left(2n;(\pmin(n)-1)^2\right)\;
+\Ssem^{\EffLocModCap,\complement}(2n) \qquad \forall n \ge \pmin(n).
+\end{equation}
+\end{identity}
+
+\subsection{HL--A Predictor Corrected for Density and Short Intervals}
+
+\begin{definition}[Short--Interval HL--A predictor]
+\label{def:GHL}
+For Goldbach configurations \( (n-m,n+m) \) with local window \(0 < |m| \le M \), define
+the Hardy--Littlewood Conjecture A predictor (including the standard circle--method
+correction) (HL--Windowed) for \emph{ordered} pairs by
+\begin{equation}
+\GHL(2n;M)
+:=
+2C_2\,
+\Ssem(2n)\,
+\sum_{m\in \Ipar(2n;M)}
+\omega(n-m)\,\omega(n+m).
+\end{equation}
+\end{definition}
+\noindent
+The decomposition of \( \Ssem \)  into base and tail components and the resulting
+restriction of prime contributions are specific to the present work.  The
+use of weighted summation in place of the classical \( x/\log^2{x} \) density factor
+was introduced in previous work~\cite{Riemers2025GoldbachSieve} and is retained here to permit finite--scale
+bounds.
+
+
+\section{A General Predictive Geometry for Prime--Like Sets}
+\label{sec:general-geometry}
+
+Many problems in analytic number theory can be formulated as follows:
+one seeks to count how often certain structured candidate configurations 
+fall into specified ``prime--like'' sets, in order to construct a suitable analytic
+prediction for that count and to understand the deviation between measurement
+and prediction.  
+This section establishes a unified framework for that purpose and serves as the general backbone
+for the specialized Goldbach geometry in later sections.
+
+\subsection{Prime--Like Sets and Candidate Configurations}
+
+Let
+\begin{equation}
+S_1, S_2, S_3, \dots
+\end{equation}
+be a sequence of \emph{prime--like sets}.  
+
+\begin{definition}[Prime--like set]
+A subset \(S_j \subset \mathbb{N}\) is called \emph{prime--like} if membership is
+determined by a multiplicative divisibility--type rule; that is, there exists
+a \(\{0,1\}\)--valued indicator \(\mathcal{D}_j(n)\), depending only on residue
+constraints for \(n\), such that
+\begin{equation}
+n \in S_j \quad \Longleftrightarrow \quad \mathcal{D}_j(n)=1.
+\end{equation}
+\end{definition}
+
+Examples include: primes, primes in fixed congruence classes, integers avoiding
+a set of forbidden prime factors, survivors of iterated sieves, or any
+structured set defined by local multiplicative restrictions.
+
+Let
+\begin{equation}
+C=\{ C_i : i\in I \}
+\end{equation}
+be a family of \emph{candidate vectors}, where
+\begin{equation}
+C_i = \bigl(C_i^{(1)}, C_i^{(2)}, C_i^{(3)}, \dots \bigr).
+\end{equation}
+Each coordinate \(C_i^{(j)}\) is to be tested for membership in the
+corresponding prime--like set \(S_j\).
+
+\subsection{Measured Joint Incidence}
+
+The total measured incidence is defined by
+\begin{equation}
+\Gmeas(C; S_1,S_2,\dots)
+   := \sum_{i\in I} \sum_{j\ge 1}
+        \mathbf{1}_{S_j}\!\left(C_i^{(j)}\right),
+\end{equation}
+which counts how many components of how many candidate vectors lie in the
+respective prime--like sets.
+
+This formulation includes, as special cases:
+\begin{itemize}
+\item Goldbach configurations \((n-m,n+m)\) with \(S_1=S_2=\{\text{primes}\}\),
+\item twin--prime patterns \((n,n+2)\),
+\item prime \(k\)--tuples,
+\item survivors of restricted sieves,
+\item cross--correlation patterns of primes across multiple offsets.
+\end{itemize}
+
+\subsection{The Prediction Problem}
+
+The objective is to construct a closed--form analytic predictor
+\begin{equation}
+\Gpred(C; S_1,S_2,\dots),
+\end{equation}
+which satisfies:
+\begin{itemize}
+\item dependence only on the structural residue data defining the sets \(S_j\);
+\item multiplicative behavior analogous to Hardy--Littlewood type predictions;
+\item incorporation of both small--prime constraints (CRT--type)
+      and medium--prime geometric fluctuations;
+\item accurate specialization to the case where the \(S_j\) are genuine primes.
+\end{itemize}
+
+This is the \emph{general prediction problem}, of which the classical
+Hardy--Littlewood heuristics are a special instance.
+
+\subsection{Deviation}
+
+Once \(\Gpred\) is defined, the deviation is set as
+\begin{equation}
+\varepsilon(C; S_1,S_2,\dots)
+   := \Gmeas(C; S_1,S_2,\dots)
+      - \Gpred(C; S_1,S_2,\dots).
+\end{equation}
+
+Two questions then arise:
+\begin{enumerate}
+\item How large can \(\varepsilon\) be, relative to the structure of the sets \(S_j\)?
+\item How does the geometry of the small and medium primes dictate the size,
+      curvature, and oscillatory behaviour of these deviations?
+\end{enumerate}
+
+The framework developed in the sequel interprets deviation not as an analytic
+error, but as a \emph{geometric curvature quantity} built multiplicatively
+from contributions of the residue structure of the small primes and a tail
+factor encoding medium--prime fluctuations.
+
+\subsection{Purpose and Scope of This Section}
+
+The remainder of this section develops:
+\begin{itemize}
+\item a CRT--inspired multiplicative base product capturing small--prime
+      structure across the sets \(S_j\);
+\item a medium--prime tail factor producing a universal curvature term;
+\item a corresponding curvature constant governing asymptotic fluctuations;
+\item a generalized Hardy--Littlewood--type prediction functional \(\Gpred\);
+\item a deviation bound of the form
+\begin{equation}
+      |\varepsilon|
+         \;\lesssim\; 
+         \text{(window normalization)} \times \text{(curvature term)}.
+\end{equation}
+\end{itemize}
+
+This provides the structural foundation for the specialized Goldbach geometry
+studied later and prepares the ground for reductions and applications in subsequent sections.
+
+\subsection{Predicted Counts}
+
+Given a family of candidate vectors \(C=\{C_i\}\) and prime--like sets 
+\(S_1,S_2,\dots\); consider the task of constructing an analytic prediction
+for the joint incidence count
+\begin{equation}
+\Gpred(C; S_1,S_2,\dots).
+\end{equation}
+Two classical approaches exist, one based on local density heuristics and one
+based on sieve theoretic product series, but neither is adequate on its own.
+A blended multiplicative--geometric predictor will ultimately emerge as the
+appropriate generalization.
+
+\subsubsection{Density--Based Prediction}
+
+Using a method specified by Iwaniec and Kowalski, if the coordinates of the candidates \(C_i^{(j)}\) behave with little correlation,
+one may attempt a purely density--based estimate~\cite{IwaniecKowalski2004}:
+\begin{equation}
+\Gpred_{\tdensity}(C;S_1,S_2,\dots)
+   \;:=\;
+   \sum_{i}
+   \prod_{j} \omega\!\left(C_i^{(j)}, S_j\right),
+\end{equation}
+where \(\omega(x,S_j)\) denotes the local density or ``probability weight'' for an
+integer \(x\) to lie in the prime--like set \(S_j\).
+Such estimates work well for uncorrelated random models, but even mild
+arithmetic correlations can render them unreliable.
+The multiplicative structure \(\prod_j \omega(C_i^{(j)}, S_j)\) implicitly assumes
+independence across coordinates, but arithmetic progressions modulo small primes
+create systematic dependencies that violate this assumption.
+These correlations accumulate multiplicatively across the product, leading to
+systematic over- or under-estimation that cannot be corrected by normalization
+alone.
+Correct normalization of the weights \(\omega\) is also essential.
+
+\subsubsection{Pointwise Sieve Prediction}
+
+A second approach mentioned in works by Harman and by Iwaniec and Kowalski uses pointwise sieve estimates~\cite{Harman2007,IwaniecKowalski2004}, typically expressed as product
+series describing local sieving constraints:
+\begin{equation}
+\Gpred_{\tsieve}(C;S_1,S_2,\dots)
+   \;:=\; 
+   \sum_{i}
+   \prod_{j}
+   \Bigl(1 - f\!\left(C_i^{(j)},S_1,S_2,\dots\right)\,
+               P_j(S_j)\Bigr).
+\end{equation}
+Here \(P_j(S_j)\) encodes the local exclusion probability induced by the small
+primes defining \(S_j\), while the correction factor
+\(f(\,\cdot\,)\) accounts for residual terms, local obstructions, and 
+normalization discrepancies arising in the sieve.
+pointwise sieves capture local structure accurately, but they do not correctly
+handle medium--prime correlations or global normalization.
+
+\subsubsection{A Combined Predictor}
+
+A more accurate predictive functional blends density weighting with explicit
+sieve corrections~\cite{Harman2007,IwaniecKowalski2004}, yielding
+\begin{equation}
+\Gpred(C;S_1,S_2,\dots)
+   \;:=\;
+   \sum_{i}
+   \prod_{j}
+   \Bigl(1 - f\!\left(C_i^{(j)},S_1,S_2,\dots\right)\,
+               P_j(S_j)\Bigr)
+   \,\omega\!\left(C_i^{(j)},S_j\right).
+\end{equation}
+This form simultaneously
+\begin{itemize}
+\item incorporates local sieving structure through the multiplicative
+      correction factors \(1-fP_j\),
+\item adjusts global normalization via the density weights \(\omega\),
+\item and captures both rigid small--prime obstructions and coarse
+      medium--prime statistical behavior.
+\end{itemize}
+
+
+In the special case where the sets \(S_j\) correspond to the primes, this
+functional reduces to a generalized Hardy--Littlewood--type predictor.
+
+For such an expression to be meaningful beyond heuristic averaging,
+the resulting prediction must be \emph{asymptotically convergent}
+and \emph{uniformly controlled} with respect to the underlying scale
+parameters.  In particular, convergence must hold at the level of
+finite windows or logical groupings, rather than only after global
+averaging.
+
+\begin{remark}
+Failure of uniform asymptotic control at finite scales is precisely the
+obstruction encountered in classical sieve methods~\cite{IwaniecKowalski2004}, and motivates the
+introduction of a geometric correction framework.
+\end{remark}
+
+The failure of existing predictors to achieve uniform asymptotic control
+at finite scales motivates the introduction of a geometric correction,
+developed in the sections that follow.
+
+\subsection{Remainder Deficits}
+
+Given a candidate configuration family \(C\) and prime--like sets
+\(S_1,S_2,\dots\), the \emph{remainder deficit} is defined as
+\begin{equation}
+\varepsilon(C;S_1,S_2,\dots)
+   := \Gmeas(C;S_1,S_2,\dots)
+      - \Gpred(C;S_1,S_2,\dots).
+\end{equation}
+
+There are two fundamentally different types of bounds one may attempt
+to place on \(\varepsilon\):
+
+\paragraph{(1) Statistical bounds.}
+Once \(\Gmeas\) and \(\Gpred\) are well understood on average, one can
+typically show that \(\varepsilon\) is statistically small.
+For Goldbach pairs, for instance, numerical data up to the limits of
+modern computations indicate that
+\begin{equation}
+|\varepsilon(2n;M)| 
+   = O\!\left(\sqrt{2M}\right)
+\end{equation}
+for the ranges of \(n\) that can be measured directly.
+Such bounds, while empirically robust, are extremely difficult to
+establish analytically.
+
+\paragraph{(2) Uniform analytic bounds.}
+More interesting, and far more delicate, are \emph{strict analytic}
+bounds valid for all sufficiently large \(C\):
+\begin{equation}
+-\,R^{-}(C;S_1,S_2,\dots)
+   \;\le\;
+   \varepsilon(C;S_1,S_2,\dots)
+   \;\le\;
+   R^{+}(C;S_1,S_2,\dots).
+\end{equation}
+By defining
+\begin{equation}
+R(C;S_1,S_2,\dots)
+   := \max\!\left(R^{-}(C;S_1,S_2,\dots),
+                  R^{+}(C;S_1,S_2,\dots)\right),
+\end{equation}
+one obtains the symmetric form
+\begin{equation}
+R(C;S_1,S_2,\dots)
+   \;\ge\;
+   \bigl|\varepsilon(C;S_1,S_2,\dots)\bigr|.
+\end{equation}
+
+\medskip
+Because both \(\Gmeas\) and \(\Gpred\) decompose naturally over local
+blocks, the inequality can be refined pointwise:
+\begin{equation}
+R(C;S_1,S_2,\dots)
+   \;\ge\;
+   \biggl|\sum_i
+      \varepsilon\bigl(C^{(i)};S_1,S_2,\dots\bigr)
+   \biggr|.
+\end{equation}
+This immediately yields the trivial bound
+\begin{equation}
+R_{\ttrivial}(C;S_1,S_2,\dots)
+   \;\ge\;
+   \sum_i
+   \bigl|\varepsilon\bigl(C^{(i)};S_1,S_2,\dots\bigr)\bigr|,
+\end{equation}
+which is sharp only when all local deficits have the same sign.
+In general this overestimates the true remainder by double--counting
+correlated fluctuations between nearby blocks.
+
+To obtain meaningful bounds, the remainder functional must be expressed
+in a form parallel to the predictor:
+\begin{equation}
+\Gpred(C;S_1,S_2,\dots)
+   :=
+   \sum_{i}
+   \prod_{j}
+     \Bigl(
+     1 - f(C_i^{(j)},S_1,S_2,\dots)\,P_j(S_j)
+     \Bigr)
+     \,\omega(C_i^{(j)},S_j).
+\end{equation}
+When \(R\) shares the same structural decomposition, substantial portions
+of each term can be factored outside the summation, preventing the
+double--counting that plagues \(R_{\ttrivial}\).
+
+\medskip
+At first glance, one might expect that the error in such expressions is
+governed by the Chinese Remainder Theorem (CRT), as summarized by 
+Hardy and Wright~\cite{HardyWright2008}.
+However, direct CRT application to even simple problems such as
+Goldbach immediately predicts remainders of the order \(O(n)\), which is
+entirely incompatible with observed behaviour.
+One remedy is to assume that all remainder contributions arise from
+a short interval.
+Using an interval of size \(O(\sqrt{2M})\) indeed yields empirically
+correct bounds on the extremal error fluctuations, but only after
+introducing two additional elements:
+\begin{itemize}
+\item an independent tail factor accounting for primes not controlled by
+      the short interval, and
+\item a measured curvature constant determining the effective interval
+      scale.
+\end{itemize}
+
+While a single measured constant together with a new short--interval
+hypothesis \emph{would} be sufficient for many applications, the aim here is
+a more universal and structurally transparent theory.
+
+\medskip
+The remainder is therefore modelled through a \emph{geometric}
+decomposition.  
+The total remainder is written as a sum of local contributions:
+\begin{equation}
+R(C;S_1,S_2,\dots)
+   := \sum_i R\bigl(C^{(i)};S_1,S_2,\dots\bigr).
+\end{equation}
+Each block \(C^{(i)}\) is assigned a scalar parameter for the scale
+\(L_i = \Lambda(C^{(i)})\), and the local remainder is postulated to
+factor as
+\begin{equation}
+\label{eq:RHHTT}
+R\bigl(C^{(i)};S_1,S_2,\dots\bigr)
+   =
+   H(L_i;S_1,S_2,\dots)\,
+   H_2(L_i;S_1,S_2,\dots)\,
+   T(L_i;S_1,S_2,\dots)\,
+   T_2(L_i;S_1,S_2,\dots).
+\end{equation}
+
+The terms of Equation~\eqref{eq:RHHTT} will be defined in the following sections.
+
+\begin{remark}[Which set does \(p\) range over?]
+\label{rem:which-p-set}
+
+Throughout this section the Euler products are written schematically,
+without fixing a single ambient set from which the primes \(p\) are
+drawn.  This is intentional.
+
+In the simplest situations, such as the Goldbach problem treated in
+later sections, there is a single prime--like set \(S\), and all Euler
+products are taken over \(p\in S\).  In that case no ambiguity arises.
+
+In more general configurations, however, different components of a
+candidate representation may be governed by \emph{different}
+prime--like sets.  For example, in Chen--type problems one variable is
+restricted to primes while the other is restricted to semiprimes, and
+the relevant sieving constraints are naturally expressed using more than
+one underlying set.  In such cases the index set for \(p\) in each Euler
+product is the set appropriate to the factor being modelled: small--prime
+products \(H,H_2\) range over primes enforcing local congruence
+restrictions, while the tail factors \(T,T_2\) range over primes (or
+prime--like elements) whose influence is only felt through global density
+and curvature.
+
+Formally, one may regard each Euler product as taken over an
+\emph{effective prime--like support} determined by the candidate family
+\(C\) and the structural role of the factor under consideration.  The
+precise specification of this support is part of the modelling choice
+and must be fixed on a case--by--case basis.
+
+For clarity, all later specializations in this paper, and in particular
+the Goldbach specialization, use a single prime--like set, so that the
+indexing of the Euler products is unambiguous.
+\end{remark}
+
+\subsection{Construction of the Factors \texorpdfstring{\(H\)}{H}, \texorpdfstring{\(H_2\)}{H2},
+            \texorpdfstring{\(T\)}{T}, and \texorpdfstring{\(T_2\)}{T2}}
+
+The multiplicative decomposition (repeated from \eqref{eq:RHHTT}
+\begin{equation}
+R\bigl(C^{(i)};S_1,S_2,\dots\bigr)
+   = H(L_i;S_1,S_2,\dots)\,
+      H_2(L_i;S_1,S_2,\dots)\,
+     T(L_i;S_1,S_2,\dots)\,
+     T_2(L_i;S_1,S_2,\dots)
+\end{equation}
+was motivated above as the only structure capable of
+avoiding the double--counting inherent in
+\(R_\ttrivial = \sum_i|\varepsilon(C^{(i)})|\).
+A general method for constructing these factors is now outlined.
+This construction is not intended to be unique, but rather to isolate the
+distinct regimes of behaviour that naturally arise in sieve--type
+problems.
+
+\subsubsection{Small--Prime Structure: The Factors \(H\) and \(H_2\)}
+
+The small primes play a qualitatively different role from the medium and
+large primes.
+Their contribution to the remainder is not governed by a smooth Euler
+tail, but instead arises from \emph{discrete residue effects}, parity
+constraints, and local structural obstructions.
+Unlike medium-- and large--prime contributions, these effects do not
+average out over a local block \(C^{(i)}\) and therefore require explicit
+treatment.
+
+Crucially, the influence of the small primes decomposes into two distinct
+components:
+\begin{itemize}
+\item a \emph{global}, residue--averaged contribution that is stable under
+      summation and exponentiation, and
+\item a \emph{local}, residue--sensitive correction that depends on the
+      specific configuration of the block.
+\end{itemize}
+These are captured respectively by the factors \(H\) and \(H_2\).
+
+\medskip
+For each configuration block \(C^{(i)}\) with associated scale
+\(L_i=\Lambda(C^{(i)})\), choose a cutoff
+\begin{equation}
+P_0 = P_0(L_i),
+\end{equation}
+representing the largest prime whose residue behaviour remains
+structurally significant on the scale of \(C^{(i)}\).
+Primes \(p \le P_0\) contribute through explicit small--prime structure,
+while primes \(p > P_0\) are absorbed into the tail factors \(T\) and
+\(T_2\).
+
+As before, assume that to each prime \(p\) and family of prime--like sets
+\((S_j)\) a scale parameter is associated
+\begin{equation}
+\beta\bigl(p;S_1,S_2,\dots\bigr) > 0,
+\end{equation}
+such that the small--prime regime for the block \(C^{(i)}\) is defined by
+\begin{equation}
+p \le P_0(L_i)
+\quad\Longleftrightarrow\quad
+\beta\bigl(p;S_1,S_2,\dots\bigr) \le L_i.
+\end{equation}
+This compatibility between the cutoff \(P_0(L_i)\) and the scale function
+\(\beta\) is essential: it ensures that all residue effects that fail to
+average on the scale \(L_i\) are treated explicitly, while all remaining
+prime contributions may be incorporated into the curvature tail.
+
+\medskip
+\(H(L_i)\) is a finite Euler product over the small primes
+\(p \le P_0(L_i)\) capturing the \emph{global} small--prime sieving error.
+It incorporates no pointwise residue corrections, except for effects
+that have global structural impact (for example, those splitting the
+problem into a fixed finite family of cases independent of
+\(P_0(L_i)\)).  The \emph{global} small--prime contribution is defined by the finite Euler
+product
+\begin{equation}
+\label{eq:hli}
+H(L_i;S_1,S_2,\dots)
+   :=
+   \prod_{\substack{p \le P_0(L_i)}}
+      h\bigl(p;S_1,S_2,\dots\bigr),
+\end{equation}
+where \(h(p;\cdot)\) is a residue--averaged multiplier describing the net
+sieving distortion introduced by the prime \(p\).
+The factor \(H\) contains no pointwise residue information except for
+effects that have global structural impact (for example, splitting the
+problem into a fixed finite set of cases independent of \(P_0\)).
+At fixed scale \(L_i\), \(H\) behaves as a constant and may be factored
+outside local summations.
+
+\medskip
+\(H_2(L_i)\) is a finite Euler product over the same primes
+\(p \le P_0(L_i)\) encoding \emph{pointwise and residue--sensitive}
+structural effects arising from the small primes.   The \emph{local} 
+small--prime correction is captured by
+\begin{equation}
+\label{eq:hli2}
+H_2(L_i;S_1,S_2,\dots)
+   :=
+   \prod_{p \le P_0(L_i)} h_2\bigl(p;L_i,S_1,S_2,\dots\bigr).
+\end{equation}
+where \(h_2(p;\cdot)\) encodes residue--sensitive and configuration--dependent
+effects of the prime \(p\).
+Unlike \(H\), this factor does not exponentiate cleanly and must remain
+attached to individual blocks.
+Its role is to correct the global constant \(H\) for local residue
+patterns that do not average out on the scale \(L_i\).
+
+\medskip
+Together, the factors \(H\) and \(H_2\) represent the deficits of from small primes for our more general
+framework.  The decomposition
+\begin{equation}
+R\bigl(C^{(i)};S_1,S_2,\dots\bigr)
+   =
+   H(L_i)\,H_2(L_i)\,T(L_i)\,T_2(L_i)
+\end{equation}
+correctly separates:
+\begin{itemize}
+\item global small--prime structure (\(H\)),
+\item local residue corrections (\(H_2\)),
+\item multiplicative curvature from medium primes (\(T\)), and
+\item higher--order and genuinely large--prime effects (\(T_2\)).
+\end{itemize}
+If the small--prime contribution were treated as a single factor, these
+roles would be conflated, leading to incorrect scaling and spurious
+overestimates of the remainder.
+
+\medskip
+\noindent
+\textbf{Remark.}
+In the classical Hardy--Littlewood A formulation of Goldbach, the small--prime
+structure separates into a global constant \(C_2\) and a residue--dependent
+correction \(\mathfrak{S}_{\mathrm{sem}}(2n)\).
+The present decomposition \(H\,H_2\) is directly analogous:
+\(H\) plays the role of the constant, while \(H_2\) is the correct
+term to that constant.
+The advantage of the present framework is that this separation arises
+naturally from the geometric scale \(L\) of each block, rather than
+being imposed \emph{a priori}.
+
+\subsubsection{The Medium--Prime Tail \(T\) (Unified Euler Product)}
+
+In classical sieve decompositions, small--prime effects are often separated
+into a finite factor, with the remaining primes treated as an exponential tail.
+For the present framework this separation is undesirable: it obscures the
+dependence on the cutoff scale and prevents a clean analytic description of the
+remainder.
+
+Instead, the sieve correction is treated as a single Euler--type object with a
+scale--dependent cutoff.
+Let \(P_0 = P_0(L_i)\) denote the cutoff prime associated with the configuration
+block \(C^{(i)}\), typically determined by its scale parameter
+\(L_i = \Lambda(C^{(i)})\).
+Primes \(p \le P_0\) contribute through explicit residue and parity structure,
+while primes \(p > P_0\) contribute multiplicatively through a medium--prime
+tail.
+
+The tail factor is defined by the Euler product
+\begin{equation}
+\label{eq:tli}
+T(L_i;S_1,S_2,\dots)
+   :=
+   \prod_{p > P_0(L_i)}
+      t\bigl(p;S_1,S_2,\dots\bigr)^{\,L_i/\beta(p;S_1,S_2,\dots)},
+\end{equation}
+where \(t(p;\cdot)\) encodes the local contribution of the prime \(p\).
+
+To normalize this infinite product, introduce the global curvature constant
+\begin{equation}
+\label{eq:definition-omega}
+\Omega
+   :=
+   \prod_{p}
+      t\bigl(p;S_1,S_2,\dots\bigr)^{\,1/\beta(p;S_1,S_2,\dots)}.
+\end{equation}
+The finite renormalization induced by the cutoff is then
+\begin{equation}
+\Theta(L_i;S_1,S_2,\dots)
+   :=
+   \prod_{p \le P_0(L_i)}
+      t\bigl(p;S_1,S_2,\dots\bigr)^{-1/\beta(p;S_1,S_2,\dots)}.
+\end{equation}
+
+With these definitions, the tail admits the normalized representation
+\begin{equation}
+\label{eq:tail-normalized}
+T(L_i)
+   \;=\;
+   \bigl(\Omega\,\Theta(L_i)\bigr)^{L_i},
+\end{equation}
+where \(\Omega\) captures the global prime--like structure, while
+\(\Theta(L_i)\) accounts for the slowly varying correction associated with the
+finite cutoff.
+Formally, \(\Theta(L_i) \to \Omega^{-1}\) as \(P_0(L_i) \to \infty\).
+
+Two key structural features follow immediately:
+\begin{enumerate}
+\item
+\textbf{The quantity raised to the power \(L_i\) is the renormalized curvature constant.}
+Define
+\begin{equation}
+\widetilde{\Omega}(P_0)
+   := \Omega\,\Theta(P_0),
+\qquad
+\Theta(P_0)
+   := \prod_{\substack{p\le P_0}}
+        t\bigl(p;S_1,S_2,\dots\bigr)^{-1/\beta(p;S_1,S_2,\dots)}.
+\end{equation}
+All medium-- and large–prime contributions appear only through this
+single renormalized constant \(\widetilde{\Omega}(P_0)\), while \(\Omega\)
+remains the global curvature constant attached to the full infinite
+Euler product.  No small primes are absorbed into \(T\); their effects are
+entirely contained in \(A\).
+
+\item
+\textbf{The cutoff dependence of \(\widetilde{\Omega}(P_0)\) is structural rather than
+perturbative.}
+Each time the cutoff \(P_0(L_i)\) crosses a prime \(p\), the factor
+\(t(p)^{-1}\) moves from the infinite tail into the finite renormalization
+product.  The bracket
+\begin{equation}
+\widetilde{\Omega}(L_i)
+   :=
+   \Omega 
+   \prod_{\substack{p \le P_0(L_i)}} t(p;S_1,S_2,\dots)^{-1/\beta(p;S_1,S_2,\dots)}
+\end{equation}
+therefore changes by an explicitly controlled multiplicative step at
+each cutoff transition.  This is not a small perturbation in general;
+rather, it is the correct normalization ensuring that the truncated
+Euler product remains consistent with the underlying geometry.
+Because all cutoff-dependence is confined to the finite product,
+the tail retains the clean exponential form
+\begin{equation}
+T(L_i) \;=\; \widetilde{\Omega}(L_i)^{\,L_i},
+\end{equation}
+and the geometry remains stable under cutoff variation.
+\end{enumerate}
+
+This unified formulation is essential.  
+Because no small primes are artificially moved into \(H\), the tail factor
+retains a coherent multiplicative structure, and the resulting curvature
+term \(\widetilde{\Omega}(P_0)\) becomes the natural geometric object
+governing remainder deviations.
+
+In later sections, when specific sieve problems are introduced, this
+general tail structure will specialize to explicit formulas for \(t(p)\),
+\(P_0(L_i)\), and the resulting renormalized curvature constant.
+
+\subsubsection{The Medium and Large--Prime Correction \(T_2\)}
+
+Large primes (those exceeding both \(P_0(L_i)\) and a second stability
+threshold) contribute only residue–level fluctuations.
+Their individual contributions are far below the natural scale of the
+problem, and their aggregate effect is conjecturally bounded.
+
+A final term \(T_2(L_i)\) is introduced with the following
+three axioms:
+\begin{enumerate}
+\item \(T_2(L_i)\) is uniformly bounded above and below:
+\begin{equation}
+      0 < c_1 \le T_2(L_i) \le c_2 < \infty,
+\end{equation}
+\item \(T_2(L_i)\) absorbs all higher--order correlations not handled by
+      \(H\), \(H_2\), or \(T\),
+\item and in many applications, including the Goldbach case studied in
+      Section~\ref{sec:geometry-HLA}, \(T_2\) can be absorbed into
+      the \(T\) term once an appropriate scaling is chosen.
+\end{enumerate}
+
+Thus, \(T_2(L_i)\) collects higher--order residue effects and genuinely
+large--prime corrections and conjecturally bounded:
+\begin{equation}
+\label{eq:tli2}
+T_2(L_i)
+   :=
+   \prod_{p > P_0(L_i)}
+      t_2\bigl(p;L_i,S_1,S_2,\dots\bigr)^{\,L_i/\beta(p;S_1,S_2,\dots)}.
+\end{equation}
+
+\subsubsection{Summary and General Hypothesis}
+
+The multiplicative decomposition
+\begin{equation}
+R(C^{(i)})
+   = 
+   H(L_i)\,
+   H_2(L_i)\,
+   T(L_i)\,
+   T_2(L_i)
+\end{equation}
+encapsulates, in a structured and modular way, the four principal
+sources of sieve deviation:
+\begin{enumerate}
+\item
+\emph{Small primes.}  
+\(H(L_i)\) records the dominant residue-class distortions arising from
+primes \(p\) whose structural scale satisfies
+\(\beta(p;S_1,S_2,\dots)\le L_i\).  
+
+\item
+\emph{Small primes corrections.}  
+\(H_2(L_i)\) records the dominant residue-class corrections arising from
+primes \(p\) whose structural scale satisfies
+\(\beta(p;S_1,S_2,\dots)\le L_i\).  
+These are the primes for which local obstruction terms do not average
+out over the block \(C^{(i)}\).
+
+\item
+\emph{Medium primes.}  
+\(T(L_i)\) collects the multiplicative tail of all primes with
+\(\beta(p)>L_i\), and its leading behaviour is governed by a
+\emph{renormalized curvature constant}
+\begin{equation}
+\widetilde{\Omega}(P_0)
+   :=
+   \Omega\,
+   \Theta(P_0),
+\qquad
+\Theta(P_0)
+   :=
+   \prod_{\substack{\beta(p)\le L_i}} t(p;S_1,S_2,\dots)^{-1/\beta(p;S_1,S_2,\dots)}.
+\end{equation}
+Here \(\Omega\) is the global curvature constant associated with the full
+(idealized) infinite product, while \(\Theta(P_0)\) removes exactly the
+portion already absorbed into \(A(L_i)\).  
+The combined constant \(\widetilde{\Omega}(P_0)\) is the quantity that
+enters the exponent, and it remains stable under cutoff variation
+because \(P_0=P_0(L_i)\) grows only polylogarithmically in \(L_i\).
+
+\item
+\emph{Medium and large primes and higher correlations.}  
+\(T_2(L_i)\) absorbs all remaining fluctuations, including large-prime
+residue effects and higher–order interactions, and is conjecturally
+bounded or slowly varying.  
+It does not influence the exponential scale of \(R(C^{(i)})\).
+\end{enumerate}
+
+\medskip
+\noindent
+These components motivate the following hypothesis:
+
+\begin{hypothesis}[Prime Curvature Geometry Hypothesis (PCGH)]
+\label{hyp:PCGH}
+Let \(S_1,S_2,\dots\) be any admissible family of prime--like sets, and let
+\(C\) be a structured configuration set admitting a decomposition into
+local blocks \(C^{(i)}\), each equipped with a scale
+\(L_i=\Lambda(C^{(i)})\).
+
+Let \(\Gpred(C;S_1,S_2,\dots)\) be an admissible prediction functional
+satisfying the following conditions:
+\begin{itemize}
+\item
+(\emph{Density normalization})
+\(\Gpred\) agrees with the expected cardinality of \(C\) under an
+uncorrelated prime--like model.
+
+\item
+(\emph{Explicit small--prime structure})
+\(\Gpred\) incorporates all deterministic local sieve obstructions arising
+from primes \(p\) whose residue behaviour is structurally significant on
+the scale \(L_i\).
+
+\item
+(\emph{Finite--scale evaluability})
+\(\Gpred\) admits a well--defined evaluation on each block \(C^{(i)}\),
+uniformly in \(L_i\), without reliance on global averaging.
+\end{itemize}
+
+The analytic remainder is defined as
+\begin{equation}
+\varepsilon(C)
+   :=
+   \Gmeas(C) - \Gpred(C).
+\end{equation}
+Then \(\varepsilon(C)\) admits a uniform bound of the form
+\begin{equation}
+\bigl|\varepsilon(C)\bigr|
+   \;\le\;
+   R(C)
+   :=
+   \sum_i
+      H(L_i)\,H_2(L_i)\,T(L_i)\,T_2(L_i),
+\end{equation}
+where the factors satisfy the following structural properties:
+
+\begin{itemize}
+\item
+(\emph{Global small--prime factor})
+\(H(L_i)\) is a finite Euler product over primes \(p\) satisfying
+\(\beta(p;S_1,S_2,\dots)\le L_i\).
+It is residue--averaged, non--pointwise, and depends only on the scale
+\(L_i\) and the prime--like structure \((S_j)\).
+
+\item
+(\emph{Local small--prime correction})
+\(H_2(L_i)\) is a finite product over the same primes, encoding
+residue--sensitive and configuration--dependent corrections that do not
+average out on the scale \(L_i\).
+
+\item
+(\emph{Geometric curvature tail})
+\(T(L_i)\) is a non--pointwise geometric term with exponential scaling
+\begin{equation}
+T(L_i)
+   =
+   \bigl(\widetilde{\Omega}(P_0(L_i))\bigr)^{L_i},
+\end{equation}
+where \(\widetilde{\Omega}(P_0)\) is a finite curvature factor obtained by
+aggregating the contribution of primes \(p > P_0(L_i)\).
+The role of \(T(L_i)\) is to capture the cumulative geometric effect of the
+medium--prime tail at scale \(L_i\).
+
+
+
+\item
+(\emph{Residual corrections})
+\(T_2(L_i)\) consists of higher--order residue effects and genuinely
+large--prime contributions and remains uniformly bounded as
+\(L_i\to\infty\).
+\end{itemize}
+
+Moreover, the decomposition above is \emph{structural}: collapsing the
+small--prime factors \(H\) and \(H_2\) into a single term destroys the
+scale separation required for a uniform bound.
+\end{hypothesis}
+
+\begin{remark}
+No assumption is made in the Prime Curvature Geometry Hypothesis that the
+finite curvature factor \(\widetilde{\Omega}(P_0)\) converges to a
+nontrivial limit as \(P_0\to\infty\).
+In practice, for all physically meaningful choices of the local tail
+functions \(t(p)\), one expects \(\widetilde{\Omega}(P_0)\to 1\), reflecting
+the rapid stabilization of large--prime contributions.
+Nonconvergent behavior would require deliberately nonphysical tail models
+and does not arise in standard prime--like settings.
+\end{remark}
+
+\begin{remark}
+The admissibility conditions above exclude predictors whose apparent accuracy
+arises solely from global averaging or implicit absorption of remainder terms.
+This restriction is essential for PCGH to address the classical sieve barrier.
+\end{remark}
+
+\begin{remark}
+The scale parameter \(L_i=\Lambda(C^{(i)})\) is not restricted to contiguous
+intervals or uniform windows.  
+It may represent \emph{any logical grouping of candidates} appropriate to the
+problem at hand, including arithmetic progressions, divisor--class partitions,
+primorial blocks, or other structured subsets.
+This flexibility allows the Prime Curvature Geometry Hypothesis to be applied in
+settings where specialized averaging, conditional structures, or nonstandard
+decompositions are required.
+\end{remark}
+
+\medskip
+
+\subsection{Final Note on Geometry}
+
+The argument above selects an exponential tail because the multiplicative
+structure of sieve deviations becomes additive under logarithmic scaling,
+naturally leading to exponential behavior at the level of aggregated
+remainders.  
+
+This choice is therefore canonical within the present framework.
+Nevertheless, there is no \emph{a priori} reason that the underlying geometry 
+must be strictly exponential in all settings. Alternative functional families, such 
+as hyperbolic profiles (e.g. \( \sinh^2 \), or, in more structured contexts, Jacobi 
+elliptic functions described by Abramowitz and Stegun~\cite{AbramowitzStegun1964} or Lambert–W 
+transforms described by Corless et al.~\cite{CorlessJeffreyKnuth1996}--may arise when the interaction 
+between local constraints and global renormalization exhibits cyclic or 
+quasi-periodic behavior across scales. A problem as rigid as Goldbach’s 
+conjecture does not probe sufficiently many degrees of freedom to 
+distinguish most such higher-order geometric features; however, a derivation 
+that explicitly incorporates Euler-cap effects may provide the additional structure 
+needed to do so.
+
+Accordingly, even a complete proof of the Goldbach specialization would not,
+by itself, uniquely determine the full geometric form of the tail factor
+\(T\) beyond the leading order.  
+More refined distinctions are expected to emerge only in problems involving
+additional structural parameters or higher-dimensional configurations.
+
+Finally, standard geometric operations, such as angle addition and
+subtraction, may be formulated abstractly in terms of set operations on the
+underlying candidate classes \(C_i\), providing a natural algebraic
+interpretation of curvature interactions within the framework.
+
+\medskip
+\noindent
+\textbf{Remark.}
+PCGH is motivated by structural
+considerations and by the behaviour of explicit sieve computations, but
+is not offered as a theorem.  
+Its purpose is to supply a coherent organizing principle for the remainder
+phenomena across many prime-like configurations.  
+In the next section, the framework is specialized to the
+Goldbach/HL--Windowed setting and a concrete conjecture
+tailored to that problem is derived.  
+Eventual proof of such an individual conjecture should not be interpreted 
+as a universal confirmation of the hypothesis itself.
+
+\section{Specialization to the Goldbach / HL--Windowed Geometry}
+\label{sec:geometry-HLA}
+
+This section instantiates PCGH~\ref{hyp:PCGH} in the
+classical Goldbach setting.
+The aim is to obtain an explicit analytic form of the remainder
+functional
+\begin{equation}
+\varepsilon(2n;L)
+   := \Gmeas(2n;M) - \GHL(2n;M),
+\end{equation}
+where \(\Gmeas(2n;M)\) denotes the measured number of Goldbach pairs in the
+window \(|m|\le M\), \(\GHL(2n;M)\) is the HL--A
+prediction restricted to the same window, and \(L\) is a scale parameter
+governing the geometry of the remainder.
+
+At this stage \(L\) is treated as an abstract scale; its concrete
+identification in terms of \(M\) will be justified below.
+As in Section~\ref{sec:general-geometry}, all remainder behavior is
+organized through the multiplicative decomposition
+\begin{equation}
+\RHL(2n;L)
+   \;=\;
+   \HHL(2n;L)\,\HHL_2(2n;L)\,\THL(2n;L)\,\THL_2(2n;L).
+\end{equation}
+
+\subsection{Hardy--Littlewood Conjecture~A for Goldbach Windows}
+
+In order to apply PCGH to the Goldbach problem, we must first select an
+appropriate predictor function.
+
+Hardy and Littlewood proposed the following asymptotic predictor
+Hardy--Littlewood Conjecture~A (HL--A) for Goldbach representations:
+\begin{equation}
+2C_2\,\Ssem(2n)\,\frac{2n}{\log n}.
+\end{equation}
+
+In previous work~\cite{Riemers2025GoldbachSieve}, this predictor was adapted to long intervals by replacing
+the global density factor with a general weighted sum,
+\begin{equation}
+2C_2\,\Ssem(2n)
+\sum_{m\in \Ipar(2n;M)} \omega(n-m)\,\omega(n+m).
+\end{equation}
+
+Motivated by this formulation, let the
+\emph{Hardy--Littlewood Windowed} predictor (HL--Windowed) restrict
+the same structure to a local Goldbach window,
+\begin{equation}
+\GHL(2n;M)
+:=
+2C_2\,
+\Ssem(2n)\,
+\sum_{m\in \Ipar(2n;M)}
+\omega(n-m)\,\omega(n+m),
+\end{equation}
+as specified in Definition~\ref{def:GHL}.  This represents a finite--window
+specialization of Hardy--Littlewood Conjecture~A rather than a distinct conjecture.
+
+Equivalently, for Goldbach configurations $(n-m,n+m)$ with local window
+$|m|\le M$, the Hardy--Littlewood~A predictor (including the standard
+circle--method correction) for \emph{ordered} pairs may be written schematically as
+\begin{equation}
+2\;
+ \left(\prod_{\substack{p\in\Podd}}
+       \left(1 - \frac{1}{(p-1)^2}\right)\right)
+ \left(\prod_{\substack{p\in\Podd \\ p\mid n}}
+       \frac{p-1}{p-2}\right)
+ \sum_{m \in \Ipar(n,M)}
+      \omega(n-m)\,\omega(n+m),
+\end{equation}
+where $\Podd$ denotes the set of odd primes.
+
+\noindent
+Here:
+\begin{itemize}
+\item the first product is the classical singular series, converging to the
+      twin Hardy--Littlewood constant $C_2$;
+\item the second product represents the small-- and medium--prime sieve
+      residual arising from the obstruction $p\mid n$;
+\item the sum over $m$ encodes the local density within the Goldbach window.
+\end{itemize}
+
+This HL--A predictor is a special case of the general predictive framework
+introduced previously, with irrelevant primes omitted once their associated
+local moduli exceed the window scale.
+
+\begin{remark}
+A naïve replacement of the Hardy--Littlewood weight \(1/\log x\) by
+\(\operatorname{li}(x)/x\) is inappropriate in a windowed setting.
+The correct analogue requires integration over the window itself,
+which induces a continuous correction that must be paired with a
+corresponding window-normalized constant.
+When both effects are included, the resulting corrections largely
+cancel, explaining the empirical effectiveness of the classical
+Hardy--Littlewood normalization in finite windows.
+\end{remark}
+
+\begin{remark}[Predictor Improvements]
+The framework developed here naturally suggests more accurate finite-\(n\) predictors,
+obtained by incorporating additional cutoff-dependent correction factors.
+Such refinements may improve numerical agreement over limited ranges.
+
+The objective of the present work, however, is not to optimize finite-range
+accuracy, but to formulate a conjecture grounded in a predictive structure that has
+withstood more than a century of scrutiny. For this reason, the 
+classical Hardy--Littlewood form, deferring any modified predictors, whose
+finite-\(n\) behaviour remains comparatively untested, to potential future studies.
+\end{remark}
+
+\noindent
+Hardy--Littlewood Conjecture~A proposes an asymptotic predictor for Goldbach
+representations, but no proof is known that this predictor converges to the
+measured Goldbach count $\Gmeas$.  Empirical investigations, including
+the computational study in~\cite{Riemers2025GoldbachSieve}, nevertheless indicate 
+strong agreement over large ranges.
+
+\begin{remark}[Euler cap in the HL--A normalization]
+\label{rem:HLA-euler-cap}
+The Hardy--Littlewood prediction
+\begin{equation}
+  \GHLproxy(2n)
+  \;=\;
+  2\,C_2\,\Ssem(2n)\,n\,\omega^{2}(n)
+\end{equation}
+necessarily entails the presence of a saturation mechanism: the total
+Goldbach mass at level \(2n\) cannot grow without bound as the size of a
+local window increases. In this sense, HL--A implicitly assumes the
+existence of a cap. In the present framework, this saturation
+is known explicitly via what we call the \emph{Euler cap}, which bounds the total
+mass by a fixed multiple of \(2n\,\omega^2(n)\).
+
+Accordingly, while a local proxy of the form
+\begin{equation}
+  \sum_{m \in \Ipar(n,M)} \omega(n-m)\,\omega(n+m)
+  \;\approx\;
+  2M\,\omega^{2}(n)
+\end{equation}
+is accurate whenever \(M=o(n)\), it must necessarily saturate as \(M\)
+approaches \(n\).
+
+The Euler cap does not affect the geometric structure developed in this
+paper. Its role becomes relevant only when analytic proxy formulas are
+invoked, where it suppresses spurious growth, such as additional
+logarithmic factors, that would otherwise arise for large
+\(\alpha = M/n\).
+
+A detailed discussion of the Euler cap and its role in the HL--A
+normalization is given in previous work~\cite{Riemers2025GoldbachSieve}. Throughout the present paper,
+the analysis remains in the pre-cap regime, where \(M\) is sufficiently small that the
+linear local proxy remains valid.
+\end{remark}
+
+\begin{remark}[Goldbach notation and conventions]
+Throughout the Goldbach section:
+\begin{itemize}
+\item
+\(\Gmeas(2n;M)\) denotes the number of Goldbach pairs
+\((n-m,n+m)\) with \(m \in \Ipar(n,M)\);
+\item
+\(\GHL(2n;M)\) denotes the Hardy--Littlewood~A
+circle--method prediction restricted to the same window, dropping unnecessary primes;
+\item
+\(\EffLocMod(2n;L)\) denotes the effective local modulus;
+\item
+\(\Ssem^\complement(2n;L)\) is the complement truncated semiprime correction factor;
+\item
+\(\OmegaPrimeNorm(2n;L)\) is the renormalized prime curvature factor
+defined in~\eqref{eq:def-OmegaPrimeNorm}.
+\end{itemize}
+Unless otherwise stated, Goldbach pairs are counted as ordered pairs
+\((n-m,n+m)\); for unordered pairs the factor \(2\) is omitted.
+\end{remark}
+
+\subsection{The Goldbach Configuration and Natural Scale}
+
+For fixed even \(2n\), the configuration set is
+\begin{equation}
+C^{(i)} = \{(n-m,n+m)\colon m \in \Ipar(n,M).
+\end{equation}
+This is a symmetric block of size \(2M\); its natural scale is
+\begin{equation}
+L := \sqrt{2M}.
+\end{equation}
+
+This scale is not arbitrary: it is the unique one for which (i) the
+classical HL--A prediction stabilizes, (ii) residue-class distortions
+from small primes remain controlled, and (iii) extremal deviations grow
+no faster than \(O(L\log n/\log\log n)\).  
+The scale \(L:=\sqrt{2M}\) therefore plays the same role here that the
+block scale \(\Lambda(C^{(i)})\) played in the general hypothesis.
+
+\subsection{Prime--Like Sets and the Scale Function \texorpdfstring{\(\beta(p)\)}{beta(p)}}
+
+In the Goldbach setting, all arithmetic structure is generated by the genuine
+primes.  Accordingly,  a single prime--like set
+\begin{equation}
+S = \mathbb{P},
+\end{equation}
+with focus on the construction of an appropriate scale function
+\begin{equation}
+\beta(p),
+\qquad\text{with}\qquad
+p \le P_0(L_i)
+\;\Longleftrightarrow\;
+\beta(p) \le L_i,
+\end{equation}
+is compatible with the geometry of a symmetric Goldbach window.
+
+For a fixed even integer \(2n\), the local configuration is considered
+\begin{equation}
+m \in \Ipar(2n;M),
+\end{equation}
+to seek to understand which primes exert structurally significant influence
+on the distribution of Goldbach pairs within this window.
+
+\medskip
+
+Empirical inspection and heuristic analysis indicate that the relevant residue
+structure is governed by a family of rapidly growing \emph{effective moduli}.
+The lower cutoff prime is first introduced
+\begin{equation}
+\pmin(n) :=
+\begin{cases}
+3, & 3 \nmid n, \\
+5, & 3 \mid n .
+\end{cases}
+\end{equation}
+This definition reflects a peculiarity of the Goldbach configuration:
+when \(3 \nmid n\), exactly one of \(n-m\) or \(n+m\) is divisible by \(3\) for
+every odd \(m\).  In that case, the prime \(3\) acts as a fixed sieving prime
+across the entire window and does not contribute to local variation.
+Only when \(3 \mid n\) does the prime \(3\) participate nontrivially in the
+local residue structure, necessitating its inclusion among the small primes.
+This behavior is unique to Goldbach-type configurations and motivates the
+definition of \(\pmin(n)\).
+
+\medskip
+
+For each odd prime \(p\), recall from Definition~\ref{def:Qp} that the
+effective local modulus attached to the even integer \(2n\) is
+\begin{equation}
+\EffLocMod_p(n)
+   :=
+   \prod_{\substack{q \in \Peff(n) \\ q \le p}} (q-1),
+\end{equation}
+where \(\pmin(n)\in\{3,5\}\) is chosen according to the condition
+\(3\mid n\).  Thus \(\EffLocMod_p(n)\) measures the size of the residue–class
+orbit induced by all odd primes \(q<p\), with each factor \((q-1)\)
+reflecting the effective sieving density at modulus \(q\).
+
+In contrast to the raw primorial \(\prod_{q<p} q\) suggested by a
+naïve application of the Chinese Remainder Theorem, the use of
+\((q-1)\) aligns with the Hardy–Littlewood singular–series geometry:
+for Goldbach–type problems, each prime contributes according to its
+admissible residue classes rather than its full modulus.
+
+\medskip
+
+The rapid growth of \(\EffLocMod_p(n)\) induces a natural and empirically accurate
+cutoff criterion for the influence of a prime \(p\) on a Goldbach window.
+In writing
+\begin{equation}
+\QpleL
+\qquad\Longleftrightarrow\qquad
+\EffLocMod_p(n) \le L := \sqrt{2M},
+\end{equation}
+it is shown that primes satisfying this condition exert coherent local influence
+on the window \(m \in \Ipar(n,M)\).
+Primes beyond this threshold affect the count only through smooth,
+aggregate fluctuations and are therefore absorbed into the medium--prime
+tail \(\THL(2n;L)\) in the remainder decomposition.
+
+\medskip
+
+This construction yields a Goldbach--specific realization of the general scale
+separation framework developed in
+Section~\ref{sec:general-geometry}.  The effective moduli \(\EffLocMod_p(n)\) determine
+the appropriate small--prime cutoff \(P_0(L)\), and hence the scale function
+\(\beta(p)\), in a manner consistent with both the Hardy--Littlewood prediction
+and the observed geometry of Goldbach deviations.
+
+
+\subsection{The Small--Prime Factors
+\texorpdfstring{\(\HHL(2n;L)\)}{HHL(2n;L)} and
+\texorpdfstring{\(\HHL_2(2n;L)\)}{HHL2(2n;L)}}
+
+Only a few small primes appear in the effective modulus \(\EffLocMod_p(n)\), but
+these primes impose the dominant, non--averaging residue--class
+constraints on the Goldbach window.
+It is therefore natural to expect the finite--scale factors \(\HHL\) and
+\(\HHL_2\) to mirror the respective roles of the prime--pair constant \(C_2\)
+and the local correction factor \(\Ssem\) in the Hardy--Littlewood
+formulation.
+
+The combined small--prime contribution \(\HHL(2n;L)\,\HHL_2(2n;L)\) is given by
+the finite product
+\begin{equation}
+\HHL(2n;L)\,\HHL_2(2n;L)
+   :=
+   \QpProduct
+      h(p;n)\,h_2(p;n),
+\end{equation}
+where, in the Goldbach setting, the local factor satisfies
+\begin{equation}
+h(p;n)\,h_2(p;n)
+=
+\begin{cases}
+p-2, & \text{if \(n\) lies in an admissible residue class modulo \(p\)},\\[4pt]
+p-1, & \text{if \(p\mid n\)}.
+\end{cases}
+\end{equation}
+
+This decomposition motivates separating the residue--averaged and
+configuration--dependent components.
+The \emph{global small--prime factor} is defined as
+\begin{equation}
+\HHL(2n;L)
+   :=
+   \QpProduct
+      (p-2),
+\end{equation}
+and the \emph{local correction factor} as
+\begin{equation}
+\HHL_2(2n;L)
+   :=
+   \prod_{\substack{p\in\Peff(n) \\ p\mid n \\ \QpleL}}
+      \frac{p-1}{p-2}.
+\end{equation}
+
+The latter quantity is the finite--scale analogue of the classical
+Hardy--Littlewood semiprime correction.  Therefore the notation
+\(\Ssem\) is extended to the cutoff scale \(L\) by setting
+\begin{equation}
+\label{eq:Ssem-finite}
+\Ssem(2n;L) := \SsemHead^{\EffLocModCap}(2n;L) := \HHL_2(2n;L).
+\end{equation}
+
+Likewise, \(\SsemHead^{\complement}(2n;L)\) uses the
+condition \(p\nmid n\), while \(\SsemHead^{\bullet}(2n;L)\) removes the
+divisibility restriction.
+
+Both \(\HHL(2n;L)\) and \(\SsemHead^{\EffLocModCap}(2n;L)\) are finite Euler products.
+Indeed, the cutoff condition \(\QpleL\) is satisfied only by the
+first few primes, since \(\EffLocMod_p(n)\) grows super--factorially with \(p\).
+As a result, the cutoff index increases only when \(L\) grows by several
+orders of magnitude.
+In this context, rapid convergence is not meaningful: the contribution of
+the small--prime factors is determined entirely by very small primes.
+
+Consequently, \(\HHL(2n;L)\) and \(\SsemHead^{\EffLocModCap}(2n;L)\) are piecewise constant
+functions of \(L\), changing only at isolated ``phase transition'' points
+where a new prime \(p\) enters the small--prime range.
+Between these transitions, the small--prime contribution is fixed, and
+the variation in the remainder geometry is driven almost entirely by the
+tail factor \(\THL(2n; L)\).
+
+At this point it is worth noting the following relationship,
+\begin{align}
+\HHL(2n;L)\HHL_2(2n;L)
+&\;=\;  \HHL(2n;L)\SsemHead^{\EffLocModCap}(2n;L). \\
+&\;=\;  \frac{\HHL(2n;L)\SsemHead^{\EffLocModCap}(2n;L)\SsemHead^{\EffLocModCap,\complement}(2n;L)}{\Ssem^{\EffLocModCap,\complement}(2n;L)}, \\
+&\;=\;  \frac{\HHL(2n;L)\SsemHead^{\EffLocModCap,\bullet}(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}, \\
+&\;=\;  \left( \QpProduct p-2 \right) \left( \prod_{\substack{p\in\Peff(n) \\ p\mid n \\ \QpleL}}\frac{p-1}{p-2} \right)/\SsemHead^{\EffLocModCap,\complement}(2n;L). \\
+&\;=\;  \left( \QpProduct p-1 \right)/\SsemHead^{\EffLocModCap,\complement}(2n;L).
+\end{align}
+
+This leads to more natural notation for header terms,
+\begin{equation}
+\label{eq:hl-header-terms}
+\HHL(2n;L)\HHL_2(2n;L) = \frac{\EffLocMod(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}
+\end{equation}
+
+
+\subsection{The Medium--Prime Tail \texorpdfstring{\(T^{\mathrm{HL}}(2n;L)\)}{THL(2n;L)}}
+\label{subsec:THL}
+
+For the Goldbach specialization, the medium primes are those with
+\(\QpleL\). Their contribution to the remainder is encoded in the
+tail factor
+\begin{equation}
+T^{\mathrm{HL}}(2n;L)
+   :=
+   \QpProduct
+      t(p;n)^{\,L/\EffLocMod_p(n)},
+\end{equation}
+where \(\EffLocMod_p(n)\) is the effective local modulus from
+Definition~\ref{def:Qp}.  
+In the HL--A Goldbach setting the PCGH tail multiplier is
+\begin{equation}
+t(p;n) = p-2,
+\end{equation}
+reflecting the loss of two residue classes modulo \(p\) for admissible
+Goldbach pairs.
+
+In the abstract PCGH geometry the tail is re-expressed as an exponential
+curvature term \(T(L) = \bigl(\Omega\,\Theta(L)\bigr)^{L}\).  For the
+HL--A setting it is convenient to separate a single global constant and
+a finite renormalization factor that depends on \(2n\) and the cutoff
+\(L\).
+
+\medskip
+Fix the base prime \(q_{\min}=5\) and recall the auxiliary moduli
+\(\EffLocMod_p^{(5)}\) from Definition~\ref{def:Qp}.  The
+\emph{prime curvature constant} by the convergent Euler product is defined as
+\begin{equation}
+\label{eq:def-OmegaPrime}
+\OmegaPrime
+   :=
+   \prod_{\substack{p\in\mathbb{P}\\ p \ge 5}} (p-2)^{1/\EffLocMod_p^{(5)}}.
+\end{equation}
+This constant depends only on the Goldbach prime--pair geometry and is
+independent of \(n\) and \(M\).
+
+For each even integer \(2n\) and Euler--cap admissible window size \(M\),
+the \emph{renormalized curvature factor} is defined as
+\begin{equation}
+\label{eq:def-OmegaPrimeNorm}
+\OmegaPrimeNorm(2n;L)
+   :=
+   \OmegaPrime^{\kappa(n)}
+   \QpProduct
+      (p-2)^{-1/\EffLocMod_p(n)},
+\end{equation}
+where \(\kappa(n)\in\{\tfrac12,1\}\) is a bounded exponent accounting
+for the choice \(\pmin(n)\in\{3,5\}\) in
+Definition~\ref{def:Qp}.  When \(3\nmid n\) one has \(\pmin(n)=5\) and
+\(\kappa(n)=1\); when \(3\mid n\) the extra contribution from the prime
+\(3\) is absorbed into the exponent \(\kappa(n)=\tfrac12\).  The precise
+value of \(\kappa(n)\) is not important for the bounds that follow;
+only that it is uniformly bounded and depends at most on the residue
+class of \(n\bmod 3\).
+
+A straightforward rearrangement of the Euler products then shows that
+\begin{equation}
+\label{eq:THL-OmegaPrimeNorm}
+T^{\mathrm{HL}}(2n;L)
+   =
+   \bigl(\OmegaPrimeNorm(2n;L)\bigr)^{L}.
+\end{equation}
+Thus all dependence on the medium primes above the cutoff is captured by
+a single scale--invariant curvature constant \(\OmegaPrime\), together
+with a finite renormalization determined by the small primes below the
+cutoff and the residue of \(n\) modulo \(3\).  Between successive
+renormalization scales (when a new prime enters the small--prime range)
+the map \(L\mapsto\OmegaPrimeNorm(2n;L)\) is constant, and all variation
+in the tail is carried by the power \(L\).
+
+\begin{remark}[Role of the renormalized curvature factor]
+\label{rem:Omega-calibration}
+The factor \(\OmegaPrimeNorm(2n;L)\) is not introduced to create
+additional growth in the remainder term, but to ensure that the
+\emph{small--prime block together with its tail} behaves smoothly as the
+cutoff moves.
+
+Corollary~\ref{cor:goldbach-cutoff-interpolation} shows that, when a new
+prime \(p_\ast\) crosses the cutoff, its factor \((p_\ast-2)\) is
+gradually transferred from the tail into the small--prime product:
+just before the transition it appears in the tail with a fractional
+exponent \(L/\EffLocMod_{p_\ast}(n)\in(0,1)\), and at the transition it is fully
+absorbed into \(\HHL(2n;L)\).
+The renormalization in \(\OmegaPrimeNorm(2n;L)\) is chosen so that this
+transfer leaves the product
+\begin{equation}
+\HHL(2n;L)\,\THL(2n;L)
+\end{equation}
+continuous as a function of \(L\), even though \(\HHL(2n;L)\) and
+\(\THL(2n;L)\) separately have discrete jumps at the
+renormalization scales.
+
+As more primes are shifted from the tail into the small--prime base, the
+finite renormalization in~\eqref{eq:def-OmegaPrimeNorm} cancels an
+increasing portion of the infinite product defining the curvature
+constant.  Along any sequence of scales passing through successive
+cutoffs this drives
+\begin{equation}
+\OmegaPrimeNorm(2n;L) \;\longrightarrow\; 1,
+\end{equation}
+while \(\log T^{\mathrm{HL}}(2n;L)\) retains exactly the leading
+\(L/\log\log{L}\) behaviour from
+Lemma~\ref{lem:bounding-env-overall-explicit}, in the sense that
+\begin{equation}
+\frac{\log T^{\mathrm{HL}}(2n;L)}
+     {L/\log\log{L}}
+   \;=\; 1 + o(1)
+   \qquad (L\to\infty),
+\end{equation}
+for each fixed residue class of \(n \bmod 3\).
+Thus \(\OmegaPrimeNorm(2n;L)\) serves as a renormalizing bridge: it
+enforces continuity of the curvature geometry for the \(\HHL\cdot \THL\) block
+across phase transitions, while its deviation from \(1\) remains
+uniformly bounded and asymptotically negligible at the scale of the
+overall remainder.
+\end{remark}
+
+\begin{remark}[Alternate Notation]
+While the usage of \( \OmegaPrimeNorm(2n;L)^L \) allows for analytic analysis, the
+exponent really just reminds one it is a curvature.  A more abbreviated notation:
+\begin{equation}
+\Xi(2n;L) := \OmegaPrimeNorm(2n;L)^L.
+\end{equation}
+eliminates the need to record the exponent separately.
+\end{remark}
+
+\subsection{The Residual Factor \texorpdfstring{\(\THL_2(2n;L)\)}{THL2(2n;L)}}
+
+Conceptually, the factor \(T_2(2n;L)\) collects all residue--dependent
+corrections coming from primes \(p\) with
+\begin{equation}
+\EffLocMod_p(n) > L := \sqrt{2M},
+\end{equation}
+that is, primes whose effective moduli are so large that they do not
+create coherent structure inside the Goldbach window
+\(m \in \Ipar(n,M)\), but still distinguish cases such as \(p\mid n\)
+versus \(p\nmid n\).
+
+Without loss of generality, and to make the dependence on \(3\mid n\)
+transparent, consider first the case \(3\mid n\), so that
+\(\pmin(n)=3\) and
+\begin{equation}
+\EffLocMod_p(n) \;=\; \EffLocMod_p^{(3)}
+   :=
+   \prod_{\substack{q\in\mathbb{P} \\ 3 \le q < p}} (q-1),
+\end{equation}
+with the complementary case \(3\nmid n\) handled with slight adjustment, the same applies
+by replacing \(\EffLocMod_p^{(3)}\) with \(\EffLocMod_p^{(5)}\).
+
+At the level of a single prime, there is no reason to expect
+\(T_2(2n;L)\) to be numerically close to \(1\): for the first
+“very small’’ prime \(p_\ast\) above the cutoff, the residue correction
+at that prime multiplies the tail by
+\begin{equation}
+\frac{p_\ast-1}{p_\ast-2}
+\quad\text{when }p_\ast\mid n.
+\end{equation}
+For instance, if \(p_\ast=11\) then this local factor is
+\(10/9 \approx 1.11\).
+Globally, however, the corresponding change in \(\log T_2\) is
+attenuated by the large modulus \(\EffLocMod_{p_\ast}(n)\), so the net effect on
+the tail at scale \(L\) is already small.
+
+The key point is that this local correction is already included  in the definition of the effective moduli.
+A naive primorial geometry would use
+\begin{equation}
+\EffLocMod_p^{\mathrm{prim}}
+   :=
+   \prod_{\substack{q\in\Peff(n) \\ q < p}} q,
+\end{equation}
+so that the loss of one residue class at \(p_\ast\) would appear in the
+tail as an extra factor of order \((p_\ast-1)/(p_\ast-2)\).
+Instead, Definition~\ref{def:Qp} replaces each \(q\) by \((q-1)\),
+so that in the \(3\mid n\) case 
+\begin{equation}
+\EffLocMod_p^{(3)}
+   =
+   \prod_{\substack{q\in\mathbb{P} \\ 3 \le q < p}} (q-1).
+\end{equation}
+This \((q-1)\)--based scaling makes the main tail \(\THL(2n;L)\)
+slightly larger than in the primorial model, by essentially the same
+amount that \(T_2(2n;L)\) contributes.
+
+Moreover, \(T_2(2n;L)\) only contains residue adjustments for primes
+with \(\EffLocMod_p(n) > L\), and these adjustments always \emph{reduces} 
+the effective tail when \(p\mid n\).  Since the choice of \(\EffLocMod_p(n)\) makes \(\THL(2n;L)\)
+conservative even in the semiprime--saturated case where every small
+prime divides \(n\), the overall remainder bound
+\begin{equation}
+|\varepsilon(2n,L)|
+   \;\le\;
+   2\,\frac{\EffLocMod(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}\,
+   \bigl(\widetilde{\Omega}(2n;L)\bigr)^L
+\end{equation}
+remains valid if one simply sets
+\begin{equation}
+\THL_2(2n;L) \equiv 1
+\end{equation}
+in the geometry.  The corresponding statements for the case \(3\nmid n\)
+follow by the same argument with \(\EffLocMod_p^{(5)}\) in place of \(\EffLocMod_p^{(3)}\).
+
+In summary, \(T_2\) is not numerically \(1\) at the level of a single
+prime, but its effect is (i) diluted by the large moduli \(\EffLocMod_p(n)\) and
+(ii) pre-compensated by the \((q-1)\)--based definition of \(\EffLocMod_p(n)\).
+For the purpose of conservative upper bounds on \(|\varepsilon(2n,L)|\),
+it is therefore safe and conceptually cleaner to set \(\THL_2(2n;L)=1\).
+
+\subsection{Specialized Remainder Decomposition}
+
+Collecting the small--prime factors \(\HHL(2n;L)\), the semi–local
+correction \(\SsemHead^{\EffLocModCap,\complement}(2n;L)\), and the medium--prime tail
+\(T^{\mathrm{HL}}(2n;L)\) from the preceding subsections, and taking
+\(\THL_2(2n;L)\equiv 1\) as justified above, the Goldbach remainder
+envelope takes the form
+\begin{align}
+\label{eq:def-RHL}
+\RHL(2n;L)
+&:=
+   2\,\frac{\EffLocMod(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}\,
+   \bigl(\OmegaPrimeNorm(2n;L)\bigr)^L
+   \qquad L := \sqrt{2M}, \\
+&= 
+   2\,\frac{\EffLocMod(2n;L)\Xi(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}
+   \qquad \Xi(2n;L) := \bigl(\OmegaPrimeNorm(2n;L)\bigr)^L.
+\end{align}
+where \(\OmegaPrimeNorm(2n;L)\) is the renormalized curvature factor
+defined in~\eqref{eq:def-OmegaPrimeNorm}, built from the universal
+constant \(\OmegaPrime\) of~\eqref{eq:def-OmegaPrime}.
+The factor \(2\) reflects the standard convention of counting
+\emph{ordered} Goldbach pairs \((n-m,n+m)\); for unordered pairs this
+factor is omitted.
+
+The expression \eqref{eq:def-RHL} will serve as the exact geometric
+remainder envelope in the Goldbach specialization of the Prime Curvature
+framework.  Its conjectural role is stated explicitly in the next
+section.
+
+\begin{remark}[Primorial vs.\ \((q-1)\) scaling]
+It is instructive to contrast the \((q-1)\)–based moduli \(\EffLocMod_p(n)\) with
+the more naive “primorial’’ choice
+\(\prod_{3<q<p} q\).
+In a primorial model one would retain an explicit residual tail factor
+\(T_2\) to account for residue corrections at primes just above the
+cutoff.  The resulting bound can be tuned to match extremal deviations,
+but it is less well behaved away from those spikes.
+
+By working instead with the \((q-1)\)–scaled moduli \(\EffLocMod_p(n)\) and
+absorbing the corresponding cost into \(T^{\mathrm{HL}}(2n;L)\), the
+residual factor \(T_2\) becomes superfluous: its effect is already
+accounted for in the conservative choice of tail exponent, and the
+simplified envelope \(\RHL(2n;L)\) still captures the correct
+\(L/\log\log{L}\) scale from
+Lemma~\ref{lem:bounding-env-overall-explicit}.
+In this sense the \((q-1)\) scaling trades a small loss of extremal
+sharpness for a gain in \emph{uniform coverage}, which is precisely what
+is needed for a remainder geometry intended to control
+\(\varepsilon(2n;L)\) pointwise rather than only at its extremes.
+\end{remark}
+
+\subsection{Prime Curvature Geometry Conjecture For Goldbach}
+\label{sec:PCGC--Goldbach}
+
+We now state the specialization of the general curvature framework to
+the Goldbach configuration.
+The full conjectures are expressed using the exact remainder functional
+\(\RHL(2n;L)\) derived in this section; bounding envelope forms, when used, serve
+only as analytic tools and are not part of the statement.
+
+\begin{conjecture}[Prime Curvature Geometry Conjecture for Goldbach (PCGC--Goldbach)]
+\label{con:PCGC--Goldbach}
+For every even integer \(2n \ge 4\) and every admissible window size
+\(M\) within the Euler cap, the Goldbach pair counts satisfy
+\begin{equation}
+  \bigl|
+    \Gmeas(2n;M) - \GHL(2n;M)
+  \bigr|
+  \le
+  \RHL(2n;L),
+  \qquad L := \sqrt{2M},
+\end{equation}
+where the remainder envelope \(\RHL(2n;L)\) is defined in
+\eqref{eq:def-RHL}.
+\end{conjecture}
+
+\begin{remark}[Strength relative to HL--Windowed]
+As discussed in the entrance criteria for PCGH, the curvature framework developed in this paper is
+formulated under a pointwise asymptotic assumption on the main term.
+In the Goldbach setting, this takes the form
+\begin{equation}
+\Gmeas(2n;M) = \GHL(2n;M)\,(1+o(1)),
+\end{equation}
+which is obtained via control of the normalized remainder
+\(
+\RHL(2n;M)/\GHL(2n;M).
+\)
+
+This assertion is strictly stronger than the classical Hardy--Littlewood~A
+conjecture, which governs averaged behaviour and does not claim pointwise
+convergence of individual Goldbach counts.
+Accordingly, it is logically possible for Hardy--Littlewood~A to hold while
+PCGC--Goldbach fails.
+
+The role of PCGH is therefore not to justify the Hardy--Littlewood main term,
+but to isolate the additional geometric regularity required for pointwise
+control of deviations once such a main term is assumed.
+\end{remark}
+
+\begin{remark}[On power--envelope variants]
+One might consider a family of envelope inequalities of the form
+\begin{equation}\label{eq:power-envelope}
+  \bigl|
+    \Gmeas(2n;M)^A - \GHL(2n;M)^A
+  \bigr|
+  \le
+  \RHL(2n;L)^A,
+  \qquad L := \sqrt{2M},
+  \qquad A \ge 1.
+\end{equation}
+For $A\neq 1$, this implicitly imposes additional shape constraints on the
+deviation $\Gmeas-\GHL$ (e.g.\ penalizing large excursions differently) and,
+absent an independent structural justification, effectively introduces a
+tunable parameter into the conjecture.
+Accordingly, PCGC--Goldbach is stated with the canonical choice $A=1$.
+Nevertheless, it is informative to test~\eqref{eq:power-envelope} empirically
+for other values of $A$, since such measurements may suggest a sharper
+(falsifiable) refinement if a natural value of $A$ emerges from the data.
+\end{remark}
+
+\begin{remark}[From pair counts to densities]
+The quantities \( \Gmeas(2n;M) \) and \( \GHL(2n;M) \) are best interpreted not as
+fundamental combinatorial objects, but as finite-window measurements of an
+underlying Goldbach pair density.  From this perspective, the role of
+HL--Windowed is not to assert the existence of individual
+pairs, but to provide an asymptotic model for this density.
+
+The conjectures formulated in this paper therefore concern the boundedness
+and convergence of these density measurements, rather than pointwise pair
+counts.  This places the Goldbach problem in direct analogy with the theory
+of singular series, where convergence and normalization, rather than exact
+enumeration, are the primary analytic objects.
+\end{remark}
+\subsection{Bounding Envelope (Derived)}
+
+The Goldbach deviation satisfies the abstract bound
+\begin{equation}
+\label{eq:RHL-bound}
+|\varepsilon(2n;L)| \;\le\; \RHL(2n;L),
+\end{equation}
+where \(\RHL(2n;L)\) is the exact geometric remainder envelope defined in
+\eqref{eq:def-RHL}.
+
+For analytic comparison and for identifying admissible growth regimes,
+it is convenient to work with an explicit bounding envelope derived from
+Lemma~\ref{lem:bounding-env-overall-explicit}.
+With \(L=\EffLocMod(2n;L)\), define
+\begin{equation}
+\label{eq:RHLbound}
+\RHLbound(2n;L)
+   :=
+   \frac{c(2n;L)\,L}{\SsemHead^{\EffLocModCap,\complement}(2n;L)},
+\end{equation}
+where the correction factor \(c(2n;L)\) is given by the explicit product
+formula~\eqref{eq:c-explicit}.
+
+By Lemma~\ref{lem:c-monotone}, the factor \(c(2n;L)\) satisfies
+\begin{equation}
+c(2n;L)\ge 2,
+\qquad
+c(2n;L)\;\searrow\;2
+\quad(L\to\infty),
+\end{equation}
+uniformly in \(n\).
+In particular, \(c(2n;L)\) decreases monotonically as the effective
+modulus cutoff increases, reflecting the progressive absorption of
+medium--prime curvature into the exact envelope.
+
+Combining this with the definition of \(\RHL\) in~\eqref{eq:def-RHL},
+Lemma~\ref{lem:bounding-env-overall-explicit} implies that the bounding envelope
+\(\RHLbound(2n;L)\) is conservative and asymptotically sharp:
+\begin{equation}
+\label{eq:RHLbound-dominates-RHL}
+\RHL(2n;L)
+   \;\le\;
+   \RHLbound(2n;L)
+   \;=\;
+   \RHL(2n;L)\bigl(1+o_L(1)\bigr),
+\end{equation}
+uniformly over the admissible parameter ranges.
+
+\begin{remark}[Logical status of derived bounds]
+Any theorem or lemma derived conditionally from PCGC--Goldbach may be viewed
+as a weaker conjecture obtained by relaxing the exact geometric envelope
+\(\RHL\) to a dominating bound.
+Such weakened statements retain substantial analytic content; sufficient
+for growth estimates, admissible window analysis, and comparison
+arguments; while discarding detailed geometric assumptions that are not
+essential for these purposes.
+\end{remark}
+
+The bounding envelope \(\RHLbound\) is \emph{not} part of the conjectural framework
+itself.  It is a derived analytic tool used for comparison arguments,
+growth estimates, and the identification of admissible window scales.
+No claim is made here regarding how frequently the true deviation
+approaches saturation of this bound.
+
+\medskip
+
+In summary, PCGC--Goldbach isolates a single geometric envelope governing
+the deviation of windowed Goldbach counts from the
+Hardy--Littlewood prediction.  The remainder is controlled by:
+\begin{itemize}
+\item explicit small--prime structure through the effective moduli
+      \(\EffLocMod_p(n)\);
+\item finite divisibility corrections through
+      \(\SsemHead^{\EffLocModCap,\complement}(2n;L)\); and
+\item a renormalized exponential curvature factor associated with the
+      medium--prime tail.
+\end{itemize}
+The conjecture itself is stated entirely in terms of the exact envelope
+\(\RHL\); the bounding envelope \(\RHLbound\) serves solely as an analytic
+surrogate.
+
+\section{Conclusion}
+
+This paper develops a finite--scale geometric framework for analyzing
+remainder terms in additive prime problems and formulates a precise
+curvature bound for Goldbach representations.  The central structural
+feature is the separation of arithmetic effects into three distinct
+components: a finite small--prime factor governed by effective moduli,
+a divisibility correction capturing genuine discontinuities in the
+central parameter \(n\), and a renormalized medium--prime tail that
+controls scale--dependent fluctuations.
+
+In the Goldbach setting, the effective moduli \(\EffLocMod_p(n)\) induce a
+sequence of scale thresholds at which new primes enter the small--prime
+range.  Each such transition produces a discrete change in the finite
+Euler product, while the associated tail factor interpolates smoothly
+across the cutoff.  This mechanism explains how piecewise--constant
+local structure can coexist with globally stable remainder envelopes
+without recourse to global averaging or asymptotic smoothing.
+
+PCGC--Goldbach asserts that
+the deviation from the Hardy--Littlewood prediction is uniformly bounded
+by an explicit geometric envelope constructed from these components.
+The conjecture is stated in its full, non--proxy form; simplified bounding 
+envelope expressions are introduced to simplify calculations and to elucidate 
+growth rates and threshold behaviour and play no role in the formulation of 
+the bound itself.
+
+A key feature of the framework is that divisibility--driven
+discontinuities are retained explicitly, rather than being absorbed
+into error terms.  This preserves honesty at finite scales and avoids
+spurious smoothness in regimes where arithmetic structure is dominant.
+At the same time, scale--induced discontinuities are neutralized by the
+renormalized tail, yielding a stable geometric description across all
+admissible window sizes.
+
+The curvature formulation presented here provides a clean structural
+alternative to classical sieve--based remainder analysis.  It isolates
+the precise sources of non--averaging behaviour and organizes them into a
+scale--consistent bound.  Subsequent work will address numerical
+calibration of the curvature envelope and extensions to related
+additive problems, including mixed prime--semiprime configurations,
+where multiple prime--like sets interact at finite scales.
+
+
+\subsection{Consequences and Outlook}
+
+The curvature framework developed here is intentionally local: it
+separates the Goldbach geometry into a small--prime block, a finite
+divisibility correction, and a renormalized medium--prime tail, with an
+explicit remainder functional \(\RHL(2n;L)\).  PCGC--Goldbach asserts that
+this remainder envelope is globally valid for all admissible windows
+\(M\) and all  \(2n \ge 4\).
+
+In subsequent work on reductions, this geometric envelope will be used to
+in attempt to translate PCGC--Goldbach into more classical consequences.  Under the
+conjecture one recovers, for example:
+\begin{itemize}
+\item asymptotic agreement between the measured Goldbach counts and the
+      Hardy--Littlewood prediction on a large range of logarithmic
+      window scales;
+\item existence of prime pairs in intervals of length \(M = n\alpha(n)\)
+      down to scales where \(\alpha(n)\) barely dominates
+      \(\log^4(2n)/n\);
+\item and a pathway to strengthening short--interval Goldbach results
+      by improving the curvature threshold for \(\alpha(n)\).
+\end{itemize}
+If successful, these reductions will show that PCGC--Goldbach is not merely a reformulation
+of the circle--method heuristics, but a genuinely geometric hypothesis
+whose validity would propagate through a wide class of Goldbach--type
+statements.
+
+Beyond Goldbach, the same renormalization mechanism applies to other
+additive problems whose remainder terms are governed by Hardy--Littlewood
+singular series.  PCGH indicates that, once a
+curvature envelope is established for a given configuration, one may
+systematically transfer it into asymptotic predictions and short--interval
+existence results for the corresponding prime patterns.  Developing
+these extensions, and sharpening the curvature thresholds in the
+Goldbach case, is delegated for future papers.
+
+\subsection{Conceptual Motivation}
+The geometric organization adopted in this paper was shaped in part by
+structural ideas encountered outside analytic number theory.  In
+particular, several mechanisms that arise naturally in energy--based and
+hierarchical learning frameworks provided useful conceptual guidance.
+
+In energy--based models~\cite{lecun2006predictive} by LeCun et al., the introduction of new
+degrees of freedom reshapes the effective energy landscape, requiring a
+global rebalancing of previously stable configurations.  Analogously, in
+the present framework, the entry of a new prime into the small--prime
+range induces a discrete renormalization step, while the associated tail
+factor compensates to preserve global stability.
+
+Related phenomena appear in large--scale optimization methods~\cite{bottou2018optimization,bottou2012stochastic} by Bottou et al., where local updates
+propagate globally only after crossing scale--dependent thresholds.
+Hierarchical representations in document and graph processing~\cite{haffner1991graph} by Haffner and LeCun exhibit similar behavior: discrete structural
+augmentations produce phase--like transitions in global representations.
+
+These parallels are not intended as formal analogies or sources of
+mathematical justification.  Rather, they reflect a shared structural
+pattern, namely, that global behaviour can remain stable despite discrete,
+scale--triggered updates to the underlying structure.  Recognizing this
+pattern informed the separation of small--prime factors, divisibility
+effects, and curvature tails employed in this paper.
+
+
+\clearpage
+\appendix
+\counterwithin{equation}{section}
+\numberwithin{lemma}{section}
+\numberwithin{conjecture}{section}
+\numberwithin{corollary}{section}
+\numberwithin{definition}{section}
+
+\section{Appendix: Additional Lemmas}
+
+\subsection{Cutoff Interpolation via Geometric Tail}
+
+\begin{lemma}[Cutoff interpolation via geometric tail]
+\label{lem:cutoff-interpolation}
+Let \(\beta(p)\) be a strictly increasing scale function on the primes.
+Let \(h(p)>0\) and \(t(p)>0\) be local multiplicative factors.
+
+Define the cutoff index \(P_0(L)\) by
+\begin{equation}
+p \le P_0(L) \quad\Longleftrightarrow\quad \beta(p)\le L,
+\end{equation}
+and define
+\begin{equation}
+H(L) := \prod_{p \le P_0(L)} h(p),
+\qquad
+T(L) := \prod_{\beta(p)>L} t(p)^{\,L/\beta(p)}.
+\end{equation}
+
+Let \(p_1\) be the smallest prime with \(\beta(p_1)>L\).
+Then as \(L\) increases through the cutoff value \(L=\beta(p_1)\),
+the product \(H(L)T(L)\) undergoes a multiplicative jump given by
+\begin{equation}
+\frac{H(\beta(p_1))\,T(\beta(p_1))}
+     {H(\beta(p_1)^-)\,T(\beta(p_1)^-)}
+=
+\frac{h(p_1)}{t(p_1)}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+For \(L<\beta(p_1)\), the prime \(p_1\) belongs to the tail, so
+\begin{equation}
+T(L)
+=
+t(p_1)^{\,L/\beta(p_1)}
+\prod_{p>\,p_1} t(p)^{\,L/\beta(p)}.
+\end{equation}
+Since \(0<L/\beta(p_1)<1\), this contribution varies continuously in \(L\).
+
+At the cutoff \(L=\beta(p_1)\), the exponent of \(t(p_1)\) reaches \(1\),
+and the prime \(p_1\) moves from the tail into the header. Thus
+\begin{equation}
+T(\beta(p_1))
+=
+\prod_{p>\,p_1} t(p)^{\,\beta(p_1)/\beta(p)},
+\qquad
+H(\beta(p_1))
+=
+h(p_1)\prod_{p<\,p_1} h(p).
+\end{equation}
+
+Immediately before the cutoff,
+\begin{equation}
+H(\beta(p_1)^-)
+=
+\prod_{p<\,p_1} h(p),
+\qquad
+T(\beta(p_1)^-)
+=
+t(p_1)\prod_{p>\,p_1} t(p)^{\,\beta(p_1)/\beta(p)}.
+\end{equation}
+
+Taking the ratio gives
+\begin{equation}
+\frac{H(\beta(p_1))\,T(\beta(p_1))}
+     {H(\beta(p_1)^-)\,T(\beta(p_1)^-)}
+=
+\frac{h(p_1)}{t(p_1)},
+\end{equation}
+as claimed.
+\end{proof}
+
+\begin{corollary}[Goldbach cutoff interpolation]
+\label{cor:goldbach-cutoff-interpolation}
+In the Goldbach setting, let the scale function be
+\begin{equation}
+\beta(p) := \EffLocMod_p(n),
+\end{equation}
+and take the local factors
+\begin{equation}
+h(p) = t(p) := p-2.
+\end{equation}
+Then the geometric tail is given by
+\begin{equation}
+\THL(2n;L)
+   :=
+   \prod_{\substack{p\in\Peff(n) \\ \EffLocMod_p(n)>L}}
+      (p-2)^{\,L/\EffLocMod_p(n)}.
+\end{equation}
+
+Across each cutoff transition \(L=\EffLocMod_{p_1}(n)\), the factor \((p_1-2)\)
+passes from the tail into the small--prime product exactly as its tail
+exponent reaches \(1\).
+Since \(h(p)=t(p)\), the cutoff interpolation introduces no discontinuity:
+the combined product \(\HHL(2n;L)\,\THL(2n;L)\) is continuous across all
+prime cutoffs.
+\end{corollary}
+
+\subsection{Overall Bounding Envelope}
+
+\begin{lemma}[Overall bounding envelope]
+\label{lem:bounding-env-overall-explicit}
+Let \(n\in\mathbb{N}\) and let \(M\ge 1\) be Euler--cap admissible, and set
+\(L:=\sqrt{2M}\).
+Define the Goldbach remainder bounding envelope
+\begin{equation}
+\RHLbound(2n;L):=
+\frac{c(2n;L)\,L}{\SsemHead^{\EffLocModCap,\complement}(2n;L)},
+\end{equation}
+where \(c(2n;L)\) is defined by~\eqref{eq:c-explicit}.
+Then \(\RHLbound(2n;L)\ge \RHL(2n;L)\) for all admissible \(L\).
+Moreover, \(\RHLbound\) cannot serve as an asymptotic proxy for \(\RHL\):
+there is no function \(\eta(2n;L)\to 0\) as \(L\to\infty\)
+(along Euler--cap admissible scales) such that
+\begin{equation}
+\RHL(2n;L)=\RHLbound(2n;L)\bigl(1+\eta(2n;L)\bigr)
+\end{equation}
+for all sufficiently large admissible \(L\).
+Equivalently,
+\(\RHL(2n;L)/\RHLbound(2n;L)\not\to 1\).
+\end{lemma}
+
+
+\begin{proof}
+Fix an admissible \(L\), and define the cutoff endpoints of its cell by
+\begin{equation}
+L_0 := \max\{\EffLocMod_p(n): \EffLocMod_p(n)\le L\},
+\qquad
+L_1 := \min\{\EffLocMod_p(n): \EffLocMod_p(n)> L\},
+\end{equation}
+and set \(c_i:=c(2n;L_i)\) for \(i\in\{0,1\}\).
+Then \(L\in(L_0,L_1]\), and on this cutoff cell the quantities \(L_0,L_1,c_0,c_1\) are fixed.
+
+By definition of \(\RHLbound\) and the cutoff identities, then
+\begin{equation}
+\RHL(2n;L_i)=\RHLbound(2n;L_i)=\frac{c_i\,L_i}{\SsemHead^{\EffLocModCap,\complement}(2n;L_i)},
+\qquad i\in\{0,1\}.
+\end{equation}
+By Corollary~\ref{cor:goldbach-cutoff-interpolation}, the envelope admits a continuous
+interpolation between successive cutoffs, and normalizing at \(L_1\) we may write
+\begin{equation}
+\RHL(2n;L)
+=
+\frac{c_0\,L_0}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}
+\left(
+\frac{c_1\,L_1}{c_0\,L_0}
+\right)^{L/L_1}.
+\end{equation}
+Dividing by \(\RHLbound(2n;L)=\frac{c_0\,L}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}\) gives
+\begin{equation}
+\rho(2n;L):=\frac{\RHL(2n;L)}{\RHLbound(2n;L)}
+=
+\frac{L_0}{L}\left(\frac{c_1\,L_1}{c_0\,L_0}\right)^{L/L_1}
+=
+\gamma^{-1}e^{(\gamma-1)\omega},
+\end{equation}
+where
+\begin{equation}
+\gamma:=\frac{L}{L_1}\in\Bigl(\frac{L_0}{L_1},1\Bigr],
+\qquad
+\omega:=\log\!\Bigl(\frac{c_1\,L_1}{c_0\,L_0}\Bigr)>0.
+\end{equation}
+Differentiation yields
+\begin{equation}
+\frac{d\rho}{d\gamma}
+=\gamma^{-2}e^{(\gamma-1)\omega}\,(-1+\gamma\omega),
+\end{equation}
+so \(\rho\) has a unique stationary point at \(\gamma_*:=1/\omega\), which is a minimum when
+\(\gamma_*\in(\frac{L_0}{L_1},1)\). At this point,
+\begin{equation}
+\rho_{\min}=\rho(\gamma_*)=\omega e^{1-\omega}.
+\end{equation}
+In particular, along any sequence of cutoff cells for which \(\omega\to\infty\),
+we have \(\rho_{\min}\to 0\), hence there exists an admissible sequence \(L_*\to\infty\)
+(with \(L_*\) chosen at the within-cell minimizer) such that
+\begin{equation}
+\frac{\RHL(2n;L_*)}{\RHLbound(2n;L_*)}=\rho(2n;L_*)\longrightarrow 0.
+\end{equation}
+On the other hand, at the endpoint \(L=L_1\) we have \(\rho(2n;L_1)=1\).
+
+Now suppose for contradiction that there exists \(\eta(2n;L)\to 0\) such that
+\(\RHL(2n;L)=\RHLbound(2n;L)(1+\eta(2n;L))\) for all sufficiently large admissible \(L\).
+Then
+\begin{equation}
+\rho(2n;L)=\frac{\RHL(2n;L)}{\RHLbound(2n;L)}=1+\eta(2n;L)\longrightarrow 1,
+\end{equation}
+as \(L\to\infty\), contradicting the admissible sequence \(L_*\to\infty\) with \(\rho(2n;L_*)\to 0\).
+Therefore no such \(\eta\) exists, and \(\RHLbound\) is not an asymptotic proxy for \(\RHL\).
+
+In particular, \(\RHLbound\) provides a uniform upper envelope for the
+Goldbach remainder but does not capture its pointwise asymptotic behaviour.
+\end{proof}
+
+\begin{remark}[Stress--test regimes for scale--only envelopes]
+Lemma~\ref{lem:bounding-env-overall-explicit} shows that the Goldbach remainder
+\(\RHL(2n;L)\) cannot be captured, even asymptotically, by any envelope
+depending only on the scale \(L\) up to a vanishing relative error.
+The obstruction is the intrinsic exponential interpolation of the
+remainder within cutoff cells, which is not controlled by scale alone.
+
+Consequently, the framework identifies admissible regimes in which any
+uniform \(O(L)\) or \(O(\sqrt{2M})\)--type bound must necessarily be either
+non--tight or overly conservative.  These regimes provide natural
+stress tests for scale--based remainder models.
+\end{remark}
+
+
+\subsection{Bounding Envelope Constant Per Envelope}
+
+\begin{lemma}[Bounding envelope constant per envelope]
+\label{lem:explicit-c}
+Assume the analytic remainder bounding envelope is written in the form
+\begin{equation}
+\RHLbound(2n;L)
+   :=
+   \frac{c(2n;L)\,L}{\SsemHead^{\EffLocModCap,\complement}(2n;L)},
+\end{equation}
+where \(c(2n;L)\) is chosen so that
+\begin{equation}
+\RHL(2n;L) \;\le\; \frac{c(2n;L)\,L}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}
+\qquad\text{for all admissible } L \ge \pmin(n) - 1 .
+\end{equation}
+Fix \(n\), and let \(p=p(L)\) be the cutoff prime determined by
+\begin{equation}
+\EffLocMod_p(n)\le L < \EffLocMod_{p^+}(n),
+\end{equation}
+where \(p^+\) denotes the next cutoff prime after \(p\) in the cutoff order.
+(Equivalently, \(p\) is the largest cutoff prime with \(\EffLocMod_p(n)\le L\).)
+Then the envelope constant is given explicitly by
+\begin{equation}
+\label{eq:c-explicit}
+c(2n;L)=c\!\bigl(2n;\EffLocMod_p(n)\bigr)
+      \;=\;
+      2\prod_{\substack{q \in \Peff(n) \\ \EffLocMod_q(n) > \EffLocMod_p(n)}} (q-2)^{\,\EffLocMod_p(n)/\EffLocMod_q(n)}.
+\end{equation}
+In particular, \(c(2n;L)\) is constant on each envelope interval
+\([\EffLocMod_p(n),\,\EffLocMod_{p^+}(n))\).
+\end{lemma}
+
+\begin{proof}
+Fix \(n\).  On a cutoff envelope interval \([\EffLocMod_p(n),\EffLocMod_{p^+}(n))\), the index
+set \(\{q:\,\EffLocMod_q(n)\le L\}\) is unchanged, so the envelope normalization used
+to define \(c(2n;L)\) is unchanged; hence \(c(2n;L)\) is constant on this
+interval and equals its cutoff value \(c(2n;\EffLocMod_p(n))\).
+
+At the cutoff \(L=\EffLocMod_p(n)\), the exact remainder in the product form is expressed as
+\begin{equation}
+\RHL(2n;\EffLocMod_p)
+=
+2\,\frac{\EffLocMod(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;\EffLocMod_p)}\,\Xi(2n;\EffLocMod_p),
+\end{equation}
+
+Using the envelope definition
+\begin{equation}
+\label{eq:env-constant-def}
+c(2n;\EffLocMod_p)
+:=
+\frac{\RHL(2n;\EffLocMod_p)\,\SsemHead^{\EffLocModCap,\complement}(2n;\EffLocMod_p)}{\EffLocMod_p},
+\end{equation}
+then
+\begin{equation}
+c(2n;\EffLocMod_p) 
+  =
+    2\EffLocMod_p\SsemHead^{\EffLocModCap,\complement}(2n;\EffLocMod_p)\left(\prod_{\substack{q \in \Peff(n) \\ q>p}}(q-2)^{\EffLocMod_p/\EffLocMod_q}\right)/\left(\SsemHead^{\EffLocModCap,\complement}(2n;\EffLocMod_p)\EffLocMod_p\right)
+\end{equation}
+Simplifying,
+\begin{equation}
+c(2n;\EffLocMod_p)=2\prod_{\substack{q \in \Peff(n) \\ q>p}}(q-2)^{\,\EffLocMod_p/\EffLocMod_q}.
+\end{equation}
+Since \(c(2n;L)\) is constant on \([\EffLocMod_p,\EffLocMod_{p^+})\), this also gives
+\(c(2n;L)=c(2n;\EffLocMod_p)\) for all \(L\) in the envelope, proving
+\eqref{eq:c-explicit}.
+\end{proof}
+
+\subsection{Monotonic Envelope}
+
+\begin{lemma}[Monotonic envelope constant for the remainder bounding envelope]
+\label{lem:c-monotone}
+Assume the analytic remainder bounding envelope is written in the form
+\begin{equation}
+\RHLbound(2n;L)
+   :=
+   \frac{c(2n;L)\,L}{\SsemHead^{\EffLocModCap,\complement}(2n;L)},
+\end{equation}
+where \(c(2n;L)\) is chosen so that
+\begin{equation}
+\RHL(2n;L) \;\le\; \frac{c(2n;L)\,L}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}
+\qquad\text{for all admissible } L .
+\end{equation}
+Then \(c(2n;L)\) is monotone nonincreasing in \(L\):
+\begin{equation}
+c(2n;L+\Delta L) \;\le\; c(2n;L)
+\qquad\text{for all } \Delta L \ge 0 .
+\end{equation}
+Moreover,
+\begin{equation}
+\lim_{L\to\infty} c(2n;L) = 2 .
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Fix \(n\).  Let the cutoff scales be
+\begin{equation}
+\EffLocMod_{p_0}<\EffLocMod_{p_1}<\EffLocMod_{p_2}<\cdots,
+\end{equation}
+where \(p_0<p_1<p_2<\cdots\) are consecutive odd primes in the cutoff order,
+and \(\EffLocMod_p\) denotes the effective modulus at prime \(p\)
+(with base prime \(\pmin(n)\ge 5\)).
+
+\medskip
+\noindent\textbf{Case 1: \(L\) and \(L+\Delta L\) lie in the same cutoff envelope.}
+If
+\begin{equation}
+L,L+\Delta L \in [\EffLocMod_{p_0},\EffLocMod_{p_1}),
+\end{equation}
+then the set \(\{p:\,\EffLocMod_p\le L\}\) is unchanged, hence the envelope
+normalization defining \(c(2n;L)\) is unchanged.  Therefore
+\begin{equation}
+c(2n;L+\Delta L)=c(2n;L).
+\end{equation}
+
+\medskip
+At a cutoff scale \(L=\EffLocMod_p(n)\), the envelope constant admits an explicit
+representation in terms of the geometric tail.
+By Lemma~\ref{lem:explicit-c};
+\begin{equation}
+c(2n;\EffLocMod_p)
+=
+2\prod_{q>p} (q-2)^{\,\EffLocMod_p/\EffLocMod_q}.
+\end{equation}
+This expression is exact and characterizes the envelope constant
+associated with the cutoff prime\(\;p\).
+
+Taking logarithms yields
+\begin{equation}
+\label{eq:logc}
+\log c(2n;\EffLocMod_p)
+=
+\log 2
++
+\EffLocMod_p \sum_{q>p}\frac{\log(q-2)}{\EffLocMod_q},
+\end{equation}
+where the sum runs over the primes in the geometric tail.
+The superfactorial growth of \(\EffLocMod_q\) ensures absolute convergence of the
+series and makes the dependence on the cutoff \(p\) explicit.
+
+Let \(p_0<p_1\) be consecutive cutoff primes, and enumerate the tail primes
+as
+\begin{equation}
+p_1<p_2<p_3<\cdots,
+\qquad p_i>p_0.
+\end{equation}
+Then subtracting \eqref{eq:logc} at \(p_0\) and \(p_1\) yields
+\begin{align}
+f(2n;\EffLocMod_{p_0})
+&:= \log c(2n;\EffLocMod_{p_1})-\log c(2n;\EffLocMod_{p_0})
+\nonumber\\
+&=
+\EffLocMod_{p_0}
+\sum_{i=1}^{\infty}
+\frac{(p_1-1)\log(p_{i+1}-2)-(p_{i+1}-1)\log(p_i-2)}
+{(p_{i+1}-1)\,\EffLocMod_{p_i}} .
+\label{eq:f-difference}
+\end{align}
+All weights
+\(
+\frac{\EffLocMod_{p_0}}{(p_{i+1}-1)\,\EffLocMod_{p_i}}
+\)
+are strictly positive, so the sign of each summand is determined by
+\begin{equation}
+g_i := (p_1-1)\log(p_{i+1}-2)-(p_{i+1}-1)\log(p_i-2).
+\end{equation}
+
+\medskip
+\noindent\textbf{Sign of \(g_i\).}
+Since \(\pmin(n)\ge 3\), we have \(p_i\ge 3\) for all \(i\ge 1\).
+Define,
+\begin{equation}
+\phi(x):=\frac{\log(x-2)}{x-1}.
+\end{equation}
+If \( x = 3 \) then \( \phi(x) = 0 \).
+
+Otherwise, a direct derivative computation shows
+\begin{equation}
+\phi'(x)
+=
+\frac{\frac{x-1}{x-2}-\log(x-2)}{(x-1)^2}
+<0
+\qquad (x\ge 7),
+\end{equation}
+and 
+\begin{equation}
+\phi'(x)
+= 0
+\qquad (x = 5),
+\end{equation}
+so \(\phi\) is strictly decreasing on \([7,\infty)\).
+Hence, for all \(i\ge 1\),
+\begin{equation}
+\frac{\log(p_{i+1}-2)}{p_{i+1}-1}
+<
+\frac{\log(p_i-2)}{p_i-1}
+\quad\Longleftrightarrow\quad
+(p_i-1)\log(p_{i+1}-2)<(p_{i+1}-1)\log(p_i-2).
+\end{equation}
+Since \(p_1\le p_i\), we have \(p_1-1\le p_i-1\), and therefore
+\begin{equation}
+(p_1-1)\log(p_{i+1}-2)
+\le (p_i-1)\log(p_{i+1}-2)
+<
+(p_{i+1}-1)\log(p_i-2),
+\end{equation}
+which implies \(g_i<0\) for all \(i\ge 1\) where \( p_i \ge 7 \).
+
+\medskip
+Thus every summand in \eqref{eq:f-difference} is strictly negative, and
+\begin{equation}
+f(2n;\EffLocMod_{p_0})<0,
+\qquad\text{hence}\qquad
+c(2n;\EffLocMod_{p_1})<c(2n;\EffLocMod_{p_0}).
+\end{equation}
+This proves strict decrease across each cutoff, and therefore monotone
+nonincrease for all \(\Delta L\ge 0\).
+
+\medskip
+\noindent\textbf{Limit as \(L\to\infty\).}
+From \eqref{eq:c-explicit} and the superfactorial growth of \(\EffLocMod_q\),
+we have \(\EffLocMod_p/\EffLocMod_q\to 0\) rapidly as \(q\to\infty\), so each tail factor satisfies
+\begin{equation}
+\lim_{q\to\infty}(q-2)^{\EffLocMod_p/\EffLocMod_q}=1.
+\end{equation}
+Hence the infinite tail product converges to \(1\), and
+\begin{equation}
+\lim_{p\to\infty} c(2n;\EffLocMod_p)=2.
+\end{equation}
+Since \(c(2n;L)\) is constant within each cutoff envelope, this implies
+\begin{equation}
+\lim_{L\to\infty} c(2n;L)=2.
+\end{equation}
+\end{proof}
+
+
+\clearpage
+\bibliographystyle{plain}
+\bibliography{pcgc-goldbach-derivation}
+
+\end{document}
+

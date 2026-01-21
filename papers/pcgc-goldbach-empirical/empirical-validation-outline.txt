@@ -1,0 +1,84 @@
+PAPER B: EMPIRICAL VALIDATION OF PRIME CURVATURE GEOMETRY
+==========================================================
+
+GOAL: Present computational results and certify bounds up to 23#/2. Pure data paper.
+
+STRUCTURE:
+----------
+
+1. INTRODUCTION
+   1.1 Background
+       - Reference Paper A for framework definition
+       - State PCC-Goldbach (cite Paper A)
+       - Goal: Validate up to 23#/2
+   
+   1.2 Scope
+       - Computational range: 2n < 23# ≈ 2.5852 × 10^10
+       - Window families tested
+       - Certification methodology
+
+2. METHODOLOGY
+   2.1 Computational Pipeline
+       - Goldbach pair enumeration
+       - Window selection
+       - Primorial binning
+   2.2 Error Handling
+       - Checksum validation
+       - Reproducibility measures
+       - Precision requirements
+   2.3 Curvature Constant Calibration
+       - Numerical determination of Ω_prime
+       - Precision: 12-15 digits
+       - Matching to extremal envelopes
+
+3. CERTIFICATION RESULTS
+   3.1 Model Curvature Envelope
+       - Definition of R_model(2n,M)
+       - Construction from A and T factors
+   3.2 Certification Theorem
+       - Statement: All tested instances satisfy bounds
+       - Computational range: 2n ≤ N_max
+       - Window families covered
+   3.3 Validation Statistics
+       - Total scenarios tested
+       - Violation count: 0
+       - Coverage analysis
+
+4. EXTREMA ANALYSIS
+   4.1 Notation and Setup
+       - Reference Paper A for definitions
+       - Lambda normalization
+       - Primorial binning conventions
+   4.2 Extrema Plotting
+       - Visualization methodology
+       - Primorial-based organization
+   4.3 Minima Lambda Analysis
+       - Lower envelope behavior
+       - Interaction with proxy remainder
+       - Conservative bounds verification
+   4.4 Maxima Lambda Analysis
+       - Upper envelope behavior
+       - Comparison: primorial vs (q-1) scaling
+       - Distance to saturation
+   4.5 Conclusions on Extrema Analysis
+       - Geometry captures magnitude and shape
+       - No violations observed
+       - Empirical support for model
+
+5. REPRODUCIBILITY
+   5.1 Data Availability
+       - Checksum files
+       - Data format specifications
+   5.2 Computational Environment
+       - Hardware specifications
+       - Software versions
+       - Runtime statistics
+
+KEY PRINCIPLES:
+- Pure data presentation
+- Reference Paper A for theory
+- Clear certification statement
+- Emphasis on reproducibility
+- NO theoretical derivations
+- NO reduction theorems
+
