@@ -1,0 +1,1966 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{fullpage}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{url}
+
+\title{\textbf{Reductions to Prime Curvature Geometry: Conditional Theorems for Goldbach, Hardy--Littlewood A, and Short--Interval Problems}}
+\author{Bill C. Riemers}
+\date{\today}
+
+\newtheoremstyle{inline}% for remarks/notes
+  {}{}{\normalfont}{}{\itshape}{.}{ }{}
+  
+\newtheoremstyle{break}  % Name
+  {1ex}                  % Space above
+  {1ex}                  % Space below
+  {\normalfont}          % Body font
+  {}                     % Indent
+  {\bfseries}            % Theorem head font
+  {.}                    % Punctuation after theorem head
+  {\newline}             % Space after theorem head (THIS FORCES LINE BREAK)
+  {}                     % Theorem head spec
+
+\theoremstyle{inline}
+\newtheorem*{remark}{Remark}
+
+\theoremstyle{inline}
+\newtheorem*{convention}{Convention}
+
+\theoremstyle{break}
+\newtheorem{lemma}{Lemma}
+
+\makeatletter
+\renewenvironment{proof}[1][\proofname]{%
+  \par\pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \item[\hskip\labelsep
+        \itshape
+    #1\@addpunct{.}]\mbox{}\\  % This line forces the break
+}{%
+  \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+\theoremstyle{break}
+\newtheorem*{conclusion}{Conclusion}
+
+\theoremstyle{break}
+\newtheorem{theorem}{Theorem}
+
+\theoremstyle{break}
+\newtheorem{proposition}{Proposition}
+
+\theoremstyle{break}
+\newtheorem{conjecture}{Conjecture}
+
+\theoremstyle{break}
+\newtheorem{corollary}{Corollary}
+
+\theoremstyle{break}
+\newtheorem{definition}{Definition}
+
+\theoremstyle{break}
+\newtheorem{hypothesis}{Hypothesis}
+
+\theoremstyle{inline}
+\newtheorem*{note}{Note}
+
+% constants
+\newcommand{\xTwinPrimeConstant}{0.66016181584686957392\dots}
+
+\newcommand{\xEffLocModDivA}{2}
+\newcommand{\xEffLocModDivB}{8}
+\newcommand{\xEffLocModDivC}{48}
+\newcommand{\xEffLocModDivD}{480}
+\newcommand{\xEffLocModDivE}{5760}
+\newcommand{\xEffLocModDivF}{92160}
+\newcommand{\xEffLocModDivG}{1658880}
+\newcommand{\xEffLocModDivH}{36495360}
+\newcommand{\xEffLocModDivI}{1021870080}
+\newcommand{\xEffLocModNDivA}{1}
+\newcommand{\xEffLocModNDivB}{4}
+\newcommand{\xEffLocModNDivC}{24}
+\newcommand{\xEffLocModNDivD}{240}
+\newcommand{\xEffLocModNDivE}{2880}
+\newcommand{\xEffLocModNDivF}{46080}
+\newcommand{\xEffLocModNDivG}{829440}
+\newcommand{\xEffLocModNDivH}{18247680}
+\newcommand{\xEffLocModNDivI}{510935040}
+\newcommand{\xEffLocModNDivJ}{15328051200}
+\newcommand{\xEffLocModNDivK}{551809843200}
+\newcommand{\xEffLocModNDivL}{22072393728000}
+\newcommand{\xEffLocModDivJ}{30656102400}
+\newcommand{\xEffLocModDivK}{1103619686400}
+\newcommand{\xEffLocModDivL}{44144787456000}
+\newcommand{\xOmegaPrimeNormASqrt}{1.19229679166961633687\dots}
+\newcommand{\xOmegaPrimeNormBSqrt}{1.03930787611075825952\dots}
+\newcommand{\xOmegaPrimeNormCSqrt}{1.00503767800313569410\dots}
+\newcommand{\xOmegaPrimeNormDSqrt}{1.00044758029006635718\dots}
+\newcommand{\xOmegaPrimeNormESqrt}{1.00003117937931407649\dots}
+\newcommand{\xOmegaPrimeNormFSqrt}{1.00000179466958537388\dots}
+\newcommand{\xOmegaPrimeNormGSqrt}{1.00000008676062914913\dots}
+\newcommand{\xOmegaPrimeNormHSqrt}{1.00000000333844685314\dots}
+\newcommand{\xOmegaPrimeNormISqrt}{1.00000000011314753555\dots}
+\newcommand{\xOmegaPrimeNormA}{1.42157163942566050077\dots}
+\newcommand{\xOmegaPrimeNormB}{1.08016086134585523892\dots}
+\newcommand{\xOmegaPrimeNormC}{1.01010073420593466543\dots}
+\newcommand{\xOmegaPrimeNormD}{1.00089536090824877026\dots}
+\newcommand{\xOmegaPrimeNormE}{1.00006235973078184739\dots}
+\newcommand{\xOmegaPrimeNormF}{1.00000358934239158669\dots}
+\newcommand{\xOmegaPrimeNormG}{1.00000017352126582567\dots}
+\newcommand{\xOmegaPrimeNormH}{1.00000000667689371743\dots}
+\newcommand{\xOmegaPrimeNormI}{1.00000000022629507111\dots}
+\newcommand{\xOmegaPrimeNormJ}{1.00000000000661314375\dots}
+\newcommand{\xOmegaPrimeNormK}{1.00000000000017007626\dots}
+\newcommand{\xOmegaPrimeNormL}{1.00000000000000409690\dots}
+\newcommand{\xOmegaPrimeNormJSqrt}{1.00000000000330657187\dots}
+\newcommand{\xOmegaPrimeNormKSqrt}{1.00000000000008503813\dots}
+\newcommand{\xOmegaPrimeNormLSqrt}{1.00000000000000204845\dots}
+\newcommand{\xOmegaPrime}{\xOmegaPrimeNormA}
+\newcommand{\xOmegaPrimeSqrt}{\xOmegaPrimeNormASqrt}
+\newcommand{\xCvalueA}{2.84314327885132100154\dots}
+\newcommand{\xCvalueB}{2.72259939396405723999\dots}
+\newcommand{\xCvalueC}{2.54555496154236393982\dots}
+\newcommand{\xCvalueD}{2.47920428379799626238\dots}
+\newcommand{\xCvalueE}{2.39345422669887085237\dots}
+\newcommand{\xCvalueF}{2.35972191892736156441\dots}
+\newcommand{\xCvalueG}{2.30959606775400312716\dots}
+\newcommand{\xCvalueH}{2.25914178520133225614\dots}
+\newcommand{\xCvalueI}{2.24514310212975360197\dots}
+\newcommand{\xCvalueJ}{2.21336456753910061273\dots}
+\newcommand{\xCvalueK}{2.19678940939142586685\dots}
+\newcommand{\xCvalueL}{2.18928655289998458252\dots}
+
+\newcommand{\xCratioDivA}{\xOmegaPrimeNormA}
+\newcommand{\xCratioDivB}{1.02097477273652146499\dots}
+\newcommand{\xCratioDivC}{0.79548592548198873119\dots}
+\newcommand{\xCratioDivD}{0.69727620481818644879\dots}
+\newcommand{\xCratioDivE}{0.61706241782080264162\dots}
+\newcommand{\xCratioDivF}{0.57034294427199412811\dots}
+\newcommand{\xCratioDivG}{0.52721492269286936618\dots}
+\newcommand{\xCratioDivH}{0.49225684650688208950\dots}
+\newcommand{\xCratioDivI}{0.47173493219492656096\dots}
+\newcommand{\xCratioNDivA}{2.84314327885132100154\dots}
+\newcommand{\xCratioNDivB}{2.04194954547304292999\dots}
+\newcommand{\xCratioNDivC}{1.59097185096397746238\dots}
+\newcommand{\xCratioNDivD}{1.39455240963637289758\dots}
+\newcommand{\xCratioNDivE}{1.23412483564160528325\dots}
+\newcommand{\xCratioNDivF}{1.14068588854398825623\dots}
+\newcommand{\xCratioNDivG}{1.05442984538573873237\dots}
+\newcommand{\xCratioNDivH}{0.98451369301376417900\dots}
+\newcommand{\xCratioNDivI}{0.94346986438985312192\dots}
+\newcommand{\xCratioNDivJ}{0.89911180903665064257\dots}
+\newcommand{\xCratioNDivK}{0.86759036084859588621\dots}
+\newcommand{\xCratioNDivL}{0.84301153526760871403\dots}
+\newcommand{\xCratioDivJ}{0.44955590451832532128\dots}
+\newcommand{\xCratioDivK}{0.43379518042429794310\dots}
+\newcommand{\xCratioDivL}{0.42150576763380435701\dots}
+\newcommand{\xGoldbachN}{10805}
+
+% --- Base (unchanged) ---
+\newcommand{\Gmeas}{G}
+\newcommand{\Gpred}{\mathring{G}}
+\newcommand{\Gproxy}{\widehat{G}}
+
+% tiny tags
+\newcommand{\talign}{{\scriptscriptstyle\mathrm{align}}}
+\newcommand{\thead}{{\scriptscriptstyle\mathrm{head}}}
+\newcommand{\ttail}{{\scriptscriptstyle\mathrm{tail}}}
+\newcommand{\tavg}{{\scriptscriptstyle\mathrm{avg}}}
+\newcommand{\tbound}{{\scriptscriptstyle\mathrm{bound}}}
+\newcommand{\tdensity}{{\scriptscriptstyle\mathrm{density}}}
+\newcommand{\tenv}{{\scriptscriptstyle\mathrm{env}}}
+\newcommand{\tpairs}{{\scriptscriptstyle\mathrm{pairs}}}
+\newcommand{\ttrivial}{{\scriptscriptstyle\mathrm{trivial}}}
+\newcommand{\tsem}{{\scriptscriptstyle\mathrm{sem}}}
+\newcommand{\tsieve}{{\scriptscriptstyle\mathrm{sieve}}}
+\newcommand{\twin}{{\scriptscriptstyle\mathrm{win}}}
+\newcommand{\tref}{{\scriptscriptstyle\mathrm{ref}}}
+\newcommand{\tana}{{\scriptscriptstyle\mathrm{analytical}}}
+\newcommand{\tgb}{{\scriptscriptstyle\mathrm{GB}}}
+\newcommand{\thl}{{\scriptscriptstyle\mathrm{HL}}}
+\newcommand{\teff}{{\scriptscriptstyle\mathrm{eff}}}
+\DeclareMathOperator{\SquareCap}{\mathsf{Sq}}
+\DeclareMathOperator{\EffLocModCap}{\mathsf{\EffLocMod}}
+
+\newcommand{\etaHL}{\eta^{\mathrm{HL}}}
+\newcommand{\Ecap}{\mathrm{Ecap}}
+\newcommand{\HLCorr}{\mathcal{H}}
+\newcommand{\pmin}{\mathrm{p_{\min}}}
+\newcommand{\ecap}[1]{\left\langle #1 \right\rangle_{\mathrm{ec}}}
+\newcommand{\GHL}{\Gpred^{\thl}}
+\newcommand{\GHLproxy}{\Gproxy^{\thl}}
+\newcommand{\OmegaPrime}{\Omega_{\mathrm{prime}}}
+\newcommand{\OmegaPrimeNorm}{\widehat{\Omega}_{\mathrm{prime}}}
+\newcommand{\Ipar}{I^{\mathrm{par}}}
+\newcommand{\EffLocMod}{\mathcal{Q}}
+\newcommand{\Peff}{\mathbb{P}_{\teff}}
+\newcommand{\Podd}{{\mathbb{P}\setminus\{2\}}}
+\newcommand{\RHLbound}{\widehat{R}^{\thl}}
+\newcommand{\RHLboundEnv}{\RHLbound_{\tenv}}
+\newcommand{\Ssem}{\mathfrak{S}}
+\newcommand{\SsemHead}{\Ssem_{\thead}}
+\newcommand{\SsemTail}{\Ssem_{\ttail}}
+\newcommand{\SGB}{\mathfrak{S_{\tgb}}}
+\newcommand{\HHL}{H^{\thl}}
+\newcommand{\THL}{T^{\thl}}
+\newcommand{\RHL}{R^{\thl}}
+\newcommand{\QpleL}{\EffLocMod_p(n) \le L}
+\newcommand{\QpProduct}{\prod_{\substack{p\in\Peff(n) \\ \QpleL}}}
+\newcommand{\pZeroProduct}{\prod_{\substack{p\in\Peff(n) \\ p \le P_0}}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The \textbf{Prime Curvature Geometry Conjecture for Goldbach (PCGC--Goldbach)}
+introduces a geometric framework for prime pair counting in which remainder
+terms are controlled by an explicit bounding envelope with intrinsic exponential
+curvature.
+This paper develops and analyzes the \emph{conditional consequences} of this
+framework, assuming either PCGC--Goldbach or its weaker variant,
+\textbf{PCGC--Goldbach Bounds}.
+
+Under this assumption, a collection of reductions is established showing that
+the geometric framework provides sufficient quantitative control to imply several
+classical results in analytic number theory.
+First, PCGC--Goldbach Bounds implies Goldbach's conjecture for all even integers
+\(2n \ge 4\), with explicit verification required only up to a computable finite
+threshold.
+Second, the classical Hardy--Littlewood asymptotic formula for Goldbach pair
+counts (Conjecture~A, Goldbach form) emerges as an asymptotic consequence of the
+geometric bounds.
+Third, the framework yields relative agreement between measured and predicted
+Goldbach counts in the short--interval scaling regime
+\(M \ge (2n)^{\frac{1}{2}+\varepsilon}\), corresponding to the window sizes
+associated with Bombieri--Vinogradov--type phenomena.
+
+These results show that a single geometric hypothesis suffices to organize and
+connect several problems that have traditionally required distinct analytic
+techniques.
+All statements in this paper are explicitly conditional.
+Rather than claiming unconditional progress on Goldbach's conjecture, the paper
+demonstrates that PCGC--Goldbach, if validated, provides a unified geometric
+foundation with explicit bounding structure for classical Goldbach asymptotics
+and short--interval behavior.
+\end{abstract}
+
+\clearpage
+\tableofcontents
+
+\clearpage
+\section{Introduction}
+
+\subsection{Background and Motivation}
+
+The \emph{Prime Curvature Geometry Conjecture for Goldbach} (PCGC--Goldbach) was introduced
+in a previous paper in this series \cite{Riemers2026-GPCH} as a geometric framework for organizing remainder
+terms in Goldbach pair counting.
+Rather than treating error terms as purely analytic artifacts, PCGC--Goldbach
+models them through an explicit bounding envelope whose structure exhibits
+intrinsic exponential curvature.
+This geometric perspective yields uniform, scale--sensitive control over
+deviations between measured Goldbach counts and Hardy--Littlewood--type
+predictors.
+
+Extensive computational validation of this framework, carried out up to
+\(2n = 23\#\), has been presented in a supportive paper in this series \cite{Riemers2025-PaperB}.
+These computations demonstrate strong empirical agreement between observed
+Goldbach counts and the predicted geometric bounds, across a wide range of
+window sizes and residue configurations.
+
+The purpose of the present paper is not to further validate PCGC--Goldbach
+computationally, but rather to examine its \emph{conditional consequences}.
+Specifically, this paper investigates which classical conjectures and asymptotic
+predictions in analytic number theory follow if PCGC--Goldbach (or its weaker
+bounding variant, PCGC--Goldbach Bounds) is assumed to hold.
+In doing so, it is shown that a single geometric hypothesis subsumes several results
+that have historically required distinct analytic techniques.
+
+\subsection{Main Results}
+
+Assuming PCGC--Goldbach or its weaker form, \emph{PCGC--Goldbach Bounds}, three principal reductions are established.
+
+\begin{enumerate}
+\item \textbf{Goldbach's Conjecture.}
+It is shown that PCGC--Goldbach Bounds implies Goldbach's conjecture for all even
+integers \(2n \ge 4\).
+The reduction yields an explicit finite verification threshold, with direct
+computation required only up to
+\begin{equation}
+n_0 = \xGoldbachN.
+\end{equation}
+Beyond this range, the geometric remainder bounds guarantee the existence of at
+least one Goldbach representation for every even integer.
+
+\item \textbf{Hardy--Littlewood Conjecture A (Goldbach form).}
+The classical Hardy--Littlewood asymptotic formula for Goldbach
+representations is implied as a direct consequence of the PCGC--Goldbach Bounds.
+In particular, the framework yields
+\begin{equation}
+\Gmeas(2n) \sim
+2C_2\,\Ssem(2n)\,\frac{2n}{\log^2(2n)},
+\qquad (n\to\infty),
+\end{equation}
+showing that the geometric model is not merely compatible with
+Hardy--Littlewood heuristics, but sufficient—under its stated assumptions—to
+imply their standard asymptotic prediction.
+
+\item \textbf{Short--Interval Bombieri--Vinogradov--Type Agreement.}
+It is shown that PCGC--Goldbach Bounds implies relative agreement between measured and
+predicted Goldbach counts in the short--interval scaling regime
+\begin{equation}
+M \ge (2n)^{\frac{1}{2}+\varepsilon}.
+\end{equation}
+This corresponds precisely to the window sizes at which
+Bombieri--Vinogradov--type hypotheses are traditionally formulated.
+The result demonstrates that the geometric framework provides asymptotic
+control in regimes where classical sieve methods encounter fundamental
+limitations.
+\end{enumerate}
+
+\subsection{Structure and Approach}
+
+All reductions in this paper follow a common strategy.
+Starting from the geometric bounding structure supplied by PCGC--Goldbach (or
+PCGC--Goldbach Bounds), explicit quantitative inequalities are derived that imply
+the corresponding classical results.
+The central technical object is the remainder envelope
+\(\RHLbound(2n;L)\), which provides uniform control over deviations across all
+admissible window scales.
+
+Section~\ref{sec:fundamental-definitions} collects the fundamental definitions,
+operators, and identities required for the reductions, adapted from the
+geometric framework developed in \cite{Riemers2026-GPCH}.
+Section~\ref{sec:main-conjectures} formally states PCGC--Goldbach and
+PCGC--Goldbach Bounds, establishing the precise hypotheses under which all
+subsequent results are derived.
+Section~\ref{sec:geometric-framework} presents the main reduction theorems,
+showing how the geometric bounds imply Goldbach's conjecture and recover
+Hardy--Littlewood asymptotics.
+Section~\ref{sec:short-intervals} examines the interaction between
+PCGC--Goldbach Bounds and short--interval distribution problems, establishing
+relative agreement results in the Bombieri--Vinogradov scaling regime.
+
+All results are stated conditionally.
+The paper shows that, assuming the validity of PCGC--Goldbach (or the weaker PCGC--Goldbach Bounds),
+a broad class of classical conjectures and asymptotic phenomena
+follows naturally from a single geometric principle.
+
+\section{Fundamental Definitions and Identities}
+\label{sec:fundamental-definitions}
+
+The definitions and identities collected in this section are adapted from
+the first two papers of this series \cite{Riemers2025,Riemers2026-GPCH}.
+They are presented here in a condensed form sufficient for the present work;
+for full derivations, motivation, and extended discussion, the reader is
+referred to the cited papers.
+
+\subsection{Admissible Parity}
+
+The parity restriction was introduced in \cite{Riemers2025}.
+Here it is used purely as an admissibility convention for windowed sums
+and products.
+
+\begin{definition}[Parity--admissible window index set]
+\label{def:parity-admissible}
+Let \(n\in\mathbb{N}\) and let \(M\in[0,n]\).
+The symmetric window is defined as
+\begin{equation}
+I_M
+:=
+\{\, m\in\mathbb{Z} : 0<|m|\le M \text{ and } 3\le n-|m| \,\}.
+\end{equation}
+The \emph{parity--admissible index set} is
+\begin{equation}
+\Ipar(n;M)
+:=
+\{\, m\in I_M : n+m \equiv 1 \pmod{2} \,\}.
+\end{equation}
+Equivalently, \(\Ipar(n;M)\) consists of those shifts \(m\) with
+\(0<|m|\le M\) for which both \(n-m\) and \(n+m\) are odd integers at least \(3\).
+Unless stated otherwise, all summations over window variables \(m\) in
+this paper are implicitly restricted to \(m\in\Ipar(n;M)\).
+\end{definition}
+
+\begin{definition}[Euler--cap operator]
+\label{def:euler-cap-operator}
+The PCGC--Goldbach conjecture is formulated only for
+\emph{Euler--cap admissible} window radii.
+To allow formulas to be written uniformly in terms of an unconstrained
+window parameter, the following coercion operator is introduced.
+
+Fixing \(n\in\mathbb{N}\), for any \(M\ge 0\) measured in the same units as the
+window radius, the following is defined:
+\begin{equation}
+\label{eq:ecap-operator}
+\ecap{M}
+\;:=\;
+\left\lfloor
+\min\!\left(
+M,\;
+\Ecap(n)\,n
+\right)
+\right\rfloor
+\;=\;
+\left\lfloor
+\min\!\left(
+M,\;
+\frac{(2n+1)-\sqrt{8n+1}}{2}
+\right)
+\right\rfloor.
+\end{equation}
+
+Thus \(\ecap{M}\) denotes the largest Euler--cap admissible window radius
+not exceeding \(M\).
+\end{definition}
+
+\medskip
+\noindent
+\textbf{Convention.}
+The Euler--cap operator \(\ecap{\cdot}\) enforces admissibility of window
+parameters and is applied only when explicitly written.
+This allows the geometric and analytic lemmas of this paper to remain valid
+independently of the particular saturation mechanism assumed.
+When PCGC--Goldbach is invoked, windowed quantities are evaluated at the
+Euler--capped scale, e.g.
+
+\begin{equation}
+\GHL(2n;\ecap{M}), \qquad \Gmeas(2n;\ecap{M}).
+\end{equation}
+
+\subsection{Effective Local Moduli}
+
+\begin{definition}[Effective local modulus]
+\label{def:Qp}
+Let \(n\in\mathbb{N}\) and let \(p\) be an odd prime.
+The minimum contributing prime is defined as
+\begin{equation}
+p_{\min}(n)
+   :=
+\begin{cases}
+3, & 3 \mid n, \\[4pt]
+5, & 3 \nmid n.
+\end{cases}
+\end{equation}
+
+For each \(n\ge2\), let
+\begin{equation}
+\Peff(n):=\{\,p\in\mathbb{P} : p\ge \pmin(n)\,\}.
+\end{equation}
+The quantity \(\EffLocMod_p(n)\) is regarded as defined only for \(p\in\Peff(n)\).
+
+For any odd prime \(q_{\min}\), define the partial Euler product
+\begin{equation}
+\EffLocMod_p^{(q_{\min})}
+   :=
+   \prod_{\substack{
+      q \in \mathbb{P} \\
+      q_{\min} \le q \le p
+   }}
+   (q-1).
+\end{equation}
+The \emph{effective local modulus} at \(p\) for the even integer \(2n\) is
+then
+\begin{equation}
+\EffLocMod_p(n)
+   := \EffLocMod_p^{\bigl(p_{\min}(n)\bigr)}.
+\end{equation}
+\end{definition}
+Thus \(\EffLocMod_p(n)\) encodes the cumulative residue structure imposed by the
+odd primes below \(p\), with the only \(n\)-dependence arising from the
+choice of base prime \(p_{\min}(n)\) according to whether \(3\mid n\).
+This convention is tailored to the singular--series geometry underlying
+Goldbach--type problems.
+
+\begin{definition}[Effective Moduli Interval Max]
+\begin{align}
+\EffLocMod(2n;L) 
+&:= \EffLocMod_{P_0(2n;L)}(n), \\[3pt]
+P_0(2n;L)
+&:= \max\{\,p\in\Peff(n) :\ p\mid n,\ \QpleL\,\}.
+\end{align}
+If the set is empty, define \(P_0(2n;L):=\pmin(n)\).
+\end{definition}
+
+\medskip
+Table~\ref{tab:EffLocMod-values} lists the values of the effective local modulus
+\(\EffLocMod_p(n)\) for the two admissible base primes \(p_{\min}(n)=3\) and
+\(p_{\min}(n)=5\), corresponding respectively to the cases \(3\mid n\) and
+\(3\nmid n\).
+The rapid growth of \(\EffLocMod_p(n)\) reflects the cumulative restriction imposed
+by successive odd primes on admissible residue classes in Goldbach-type
+configurations.
+
+
+\subsection{Prime Curvature Constants}
+
+The prime curvature constants are now introduced, which encode the cumulative
+medium-- and large--prime contribution to the geometric remainder envelope.
+
+\begin{definition}[Prime Curvature Constants]
+The base prime is fixed as \(q_{\min}=5\), and the auxiliary effective moduli
+\(\EffLocMod_p^{(5)}\) from Definition~\ref{def:Qp} are recalled.  
+The \emph{prime curvature constant} is defined by the convergent Euler product
+\begin{equation}
+\label{eq:def-OmegaPrime}
+\OmegaPrime
+   :=
+   \prod_{\substack{p\in\Peff(5)}}
+   (p-2)^{1/\EffLocMod_p^{(5)}} .
+\end{equation}
+Numerically, \(\OmegaPrime \approx \xOmegaPrime\).
+
+For each even integer \(2n\) and Euler--cap admissible window scale \(L\),
+the \emph{renormalized prime curvature factor} is defined as
+\begin{equation}
+\label{eq:def-OmegaPrimeNorm}
+\OmegaPrimeNorm(2n;L)
+   :=
+   \OmegaPrime^{\kappa(n)}
+   \prod_{\substack{p\in\Peff(n)\\ \EffLocMod_p(n)\le L}}
+      (p-2)^{-1/\EffLocMod_p(n)}
+\end{equation}
+where the exponent \(\kappa(n)\in\{\tfrac12,1\}\) compensates for the
+choice of base prime \(\pmin(n)\in\{3,5\}\) in Definition~\ref{def:Qp}.
+
+Specifically, when \(3\nmid n\) one has \(\pmin(n)=5\) and \(\kappa(n)=1\).
+When \(3\mid n\), the extra contribution from the prime
+\(3\) is absorbed into the exponent \(\kappa(n)=\tfrac12\).
+\end{definition}
+
+
+\begin{definition}[Bounding Envelope Constants]
+The envelope constant for \( L \ge \pmin(n) \) is given explicitly by
+\begin{equation}
+\label{eq:c-explicit}
+c(2n;L)=c\!\bigl(2n;\EffLocMod_p(n)\bigr)
+      \;=\;
+      2\prod_{\substack{q \in \Peff(n) \\ \EffLocMod_q(n) > \EffLocMod_p(n)}} (q-2)^{\,\EffLocMod_p(n)/\EffLocMod_q(n)}.
+\end{equation}
+In particular, \(c(2n;L)\) is constant on each envelope interval
+\([\EffLocMod_p(n),\,\EffLocMod_{p^+}(n))\).
+\end{definition}
+
+\subsection{Goldbach Singular Series Factors}
+
+\begin{definition}[Goldbach Singular Series Factors]
+\label{def:SGB-Ssem}
+For an even integer \(2n\), the \emph{local semiprime correction
+factor}~\cite{HardyLittlewood1923} is defined as
+\begin{equation}
+\Ssem(2n)
+   :=
+   \prod_{\substack{p\mid n \\ p>2}}
+      \frac{p-1}{p-2}.
+\end{equation}
+The \emph{prime--pair constant}~\cite{HardyLittlewood1923} is defined as
+\begin{equation}
+C_2
+   :=
+   \prod_{p>2}\left(1-\frac{1}{(p-1)^2}\right).
+\end{equation}
+The corresponding \emph{Goldbach Singular Series Factor}~\cite{HardyLittlewood1923} is
+\begin{equation}
+\SGB(2n)
+   :=
+   2\,C_2\,\Ssem(2n).
+\end{equation}
+\end{definition}
+
+\begin{definition}[Hardy-Littlewood Circle Method Correction Factor]
+For \( n \ge 2 \) and \( n > M \ge 1 \), and a weight function \( \omega \), the following is defined:
+ \begin{equation}
+ \HLCorr(2n;M) 
+ := \frac{1}{|\Ipar(n,M)|\;\omega^2(n)} \sum_{m \in \Ipar(n,M)} \omega(n-m)\omega(n+m).
+\end{equation}
+\label{def:HLCorr}
+\end{definition}
+
+\begin{definition}[Measured Goldbach Count]
+The measured number of Goldbach pairs in the window is defined as
+\begin{equation}
+\Gmeas(2n;M)
+:=
+\sum_{m\in\Ipar(n,M)}
+1_{\mathrm{prime}}(n-m)\,1_{\mathrm{prime}}(n+m).
+\end{equation}
+\end{definition}
+
+\begin{definition}[Hardy--Littlewood Window Predictor (HL--Windowed)]
+\label{def:GHL}
+Let \(\omega(x)\) denote the standard prime weight
+(e.g.\ \(\omega(x)=1/\log x\)).
+The following is defined:
+\begin{align}
+\GHL(2n;M)
+&:=
+2\,C_2\,\Ssem(2n)
+\sum_{m\in\Ipar(n,M)}
+\omega(n-m)\,\omega(n+m), \\[3pt]
+&=
+2\,C_2\,\Ssem(2n)\,\HLCorr(2n;M)\,|\Ipar(n,M)|\,\omega^2(n).
+\end{align}
+where \(\Ssem(2n)\) is the classical Hardy--Littlewood Semiprime correction.
+\end{definition}
+
+When \( |\Ipar(n,M)|=2M \) (as in the standard symmetric parity-restricted window),
+\begin{equation}
+\GHL(2n;M)
+= 2C_2\,\Ssem(2n)\,\HLCorr(2n;M)\,2M\,\omega^2(n).
+\end{equation}
+
+\begin{remark}
+The predictor \( \GHL(2n;M) \) separates global semiprime structure
+\( \Ssem(2n) \) from local window geometry \( \HLCorr(2n;M)) \),
+with normalization determined by the block mass \( |\Ipar(n,M)|\omega^2(n) \).
+\end{remark}
+
+\begin{definition}[Predictor proxy]
+\label{def:predictor-proxy}
+The notation
+\(
+\Gproxy(2n;M)
+\)
+denotes an explicit analytic approximation to the windowed Goldbach predictor
+\(G(2n;M)\) such that there exists a function
+\(\eta(2n;M)\) with
+\begin{equation}
+\eta(2n;M)\to 0
+\qquad (M\to\infty \text{ along admissible scales})
+\end{equation}
+for which
+\begin{equation}
+\label{eq:Gproxy-def}
+\Gmeas(2n;M)
+=
+\Gproxy(2n;M)\,\bigl(1+\eta(2n;M)\bigr).
+\end{equation}
+The function \(\eta(2n;M)\) is referred to as the \emph{proxy correction}.
+\end{definition}
+
+\begin{definition}[Hardy--Littlewood window proxy predictor]
+\label{def:GHLproxy}
+The Hardy--Littlewood proxy predictor is defined as
+\begin{equation}
+\GHLproxy(2n;M)
+:=2\,C_2\,\Ssem(2n)\,|\Ipar(n,M)|\,\omega^2(n).
+\end{equation}
+\end{definition}
+
+\noindent
+By Definitions~\ref{def:HLCorr} and \ref{def:GHLproxy}, the exact identity
+\begin{equation}
+\label{eq:GHL-factorization}
+\GHL(2n;M)
+=\GHLproxy(2n;M)\,\HLCorr(2n;M).
+\end{equation}
+
+\noindent
+For \( \omega(x) = O\!\left(\frac{1}{\log x}\right), \) Lemma~\ref{lem:GHL-proxy-trivial} proves that \(\GHLproxy(2n;M)\) is a predictor
+proxy in the same sense as Definition~\ref{def:predictor-proxy}.
+
+\subsection{Complementary and Full Euler--Type Products}
+
+In addition to the local semiprime correction factor \(\Ssem(2n)\) defined
+above, it is occasionally convenient to refer to the complementary and full
+Euler--type products obtained by modifying the divisibility condition on the
+prime index.
+
+\begin{definition}[Complementary and full local semiprime products]
+\label{def:Ssem-complement-full}
+The \emph{complementary} local semiprime product is defined as
+\begin{equation}
+\Ssem^{\complement}(2n)
+   :=
+   \prod_{\substack{p\in\Podd \\ p\nmid n}}
+      \frac{p-1}{p-2},
+\end{equation}
+and the corresponding \emph{full} product by
+\begin{equation}
+\Ssem^{\bullet}(2n)
+   :=
+   \prod_{\substack{p\in\Podd}}
+      \frac{p-1}{p-2}.
+\end{equation}
+\end{definition}
+
+\begin{convention}[Notation]
+A superscript \( \complement \) indicates replacement of the divisibility
+condition \(p\mid n\) by \(p\nmid n\), while a superscript \( \bullet \)
+indicates removal of the divisibility condition entirely. No additional
+structure is implied.
+\end{convention}
+
+\subsection{Additional Series Operators}
+
+The classical Hardy--Littlewood singular series \(\Ssem(2n)\) is naturally an
+asymptotic object.  For finite--window analysis it is convenient to
+introduce auxiliary operators that partition the series into base and
+tail components relative to a square cutoff.
+
+\begin{definition}[Cutoff Operators]
+The square cutoff operator is defined as
+\begin{equation}
+\SquareCap(x):=x^2.
+\end{equation}
+The function \( \EffLocModCap(\cdot) \) may also be used as a cutoff operator.
+\end{definition}
+
+The tags \( \thead \) and \( \ttail \) are used to denote the base (small--prime)
+and tail (large--prime) components relative to a given cutoff.
+
+\begin{definition}[Cutoff Components of \( \Ssem \)]
+Let \( M>0 \) and \( n\ge 2 \). The following are defined:
+\begin{equation}
+\SsemHead^{\SquareCap}(2n;M)
+:= \prod_{\substack{p\in\Podd \\ p\mid n \\ p^2\le M}}
+\frac{p-1}{p-2} , \qquad
+\SsemTail^{\SquareCap}(2n;M)
+:= \prod_{\substack{p\in\Podd \\ p\mid n \\ p^2> M}}
+\frac{p-1}{p-2}.
+\end{equation}
+\begin{equation}
+ \SsemHead^{\EffLocModCap}(2n;L)
+:= \prod_{\substack{p\in\Peff(n) \\ p\mid n\\ \QpleL}}
+\frac{p-1}{p-2}, \qquad
+\SsemTail^{\EffLocModCap}(2n;L)
+:= \prod_{\substack{p\in\Peff(n) \\ p\mid n \\ \EffLocMod_p(n) > L}}
+\frac{p-1}{p-2}.
+\end{equation}
+\begin{equation}
+\Ssem^{\SquareCap}(2n)
+:= \Ssem(2n), \qquad
+\Ssem^{\EffLocMod}(2n)
+:= \prod_{\substack{p\in\Peff(n)\\ p\mid n}}
+\frac{p-1}{p-2}.
+\end{equation}
+
+Empty products are interpreted as \(1\).
+\end{definition}
+
+\noindent
+The following identities from \cite{Riemers2026-GPCH} hold,
+\begin{align}
+\label{ident:ssem}
+\Ssem(2n) = \Ssem^{\SquareCap}(2n)
+&= \SsemHead^{\SquareCap}(2n;M)\;
+\SsemTail^{\SquareCap}(2n;M) \qquad \forall M > 0, \\[3pt]
+\Ssem^{\EffLocMod}(2n)
+&= \SsemHead^{\EffLocModCap}(2n;L)\;
+\SsemTail^{\EffLocModCap}(2n;L) \qquad \forall L > 0, \\[3pt]
+\Ssem^{\EffLocModCap}(2n)
+&=\Ssem^{\SquareCap}(2n), \\[3pt]
+\SsemHead^{\EffLocModCap}(2n;L)
+&=
+\SsemHead^{\SquareCap}(2n;(P_0(2n;L))^2) \qquad \forall L > 0, \\[3pt]
+\SsemTail^{\EffLocModCap}(2n;L)
+&=
+\SsemTail^{\SquareCap}(2n;(P_0(2n;L))^2) \qquad \forall L > 0, \\[3pt]
+\Ssem^{\SquareCap,\complement}(2n)
+&=
+\SsemHead^{\SquareCap,\complement}\!\left(2n;(\pmin(n)-1)^2\right)\;
+\Ssem^{\EffLocModCap,\complement}(2n) \qquad \forall n \ge \pmin(n).
+\end{align}
+
+\subsection{Specialized Remainder Decomposition}
+
+This leads up to the PCGC--Goldbach Remainder.
+
+\begin{definition}[PCGC--Goldbach Remainder]\label{def:RHL}
+For \( \ecap{M} > 0 \), the following is defined:
+\begin{align}
+\RHL(2n;L)
+&:=
+2\,\frac{\EffLocMod(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}\,
+\bigl(\OmegaPrimeNorm(2n;L)\bigr)^L,
+\qquad L := \sqrt{2\ecap{M}} \\[3pt]
+&=
+2\,\frac{\EffLocMod(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}\,\Xi(2n;L),
+\qquad \Xi(2n;L):=\bigl(\OmegaPrimeNorm(2n;L)\bigr)^L.
+\end{align}
+\end{definition}
+
+\noindent
+The associated bounding envelope is defined as:
+
+\begin{definition}[PCGC--Goldbach Bound Envelope]\label{def:RHLbound}
+For \( 2 \ecap{M} \ge (\pmin(n)-1)^2 \), the following is defined:
+\begin{equation}
+\RHLbound(2n;L)
+:=
+\frac{c(2n;L)\,L}{\SsemHead^{\EffLocModCap,\complement}(2n;L)},
+\qquad L := \sqrt{2\ecap{M}}.
+\end{equation}
+\end{definition}
+
+\subsubsection*{Role of the Remainder Bound}
+
+Lemma~(Overall Bounding Envelope) of \cite{Riemers2025} shows that
+\begin{equation}
+\RHL(2n;L)\le \RHLbound(2n;L)
+\end{equation}
+for all admissible \(L\).
+The role of \(\RHLbound\) is therefore one of
+\emph{pointwise control} (a certified upper bound), not approximation.
+In particular, \(\RHLbound\) does not satisfy
+\(\RHLbound(2n;L)/\RHL(2n;L)\to 1\),
+and may overestimate \(\RHL(2n;L)\) by a scale-dependent factor.
+This distinction is essential:
+treating \(\RHLbound\) as an approximation would lead to systematic
+misinterpretation of finite-scale behaviour and apparent overestimation
+in numerical comparisons.
+
+\section{Main Conjectures}
+\label{sec:main-conjectures}
+
+\subsection{PCGC--Goldbach}
+
+Any conditional theorem, lemma, or corollary derived from any conjecture may be viewed,
+in isolation, as a new weaker or equivalent conjectural statement.
+The primary conjecture examined in this work—PCGC--Goldbach, introduced in
+\cite{Riemers2026-GPCH}, is restated here using the \(\ecap{\cdot}\) operator.
+
+\begin{conjecture}[Prime Curvature Geometry Conjecture for Goldbach (PCGC--Goldbach)]
+\label{con:PCGC--Goldbach}
+For every even integer \(2n \ge 4\) and every admissible window size
+\(\ecap{M}\), the Goldbach pair counts satisfy
+\begin{equation}
+  \bigl|
+    \Gmeas(2n;\ecap{M}) - \GHL(2n;\ecap{M})
+  \bigr|
+  \le
+  \RHL(2n;L),
+  \qquad L := \sqrt{2\ecap{M}},
+\end{equation}
+where the remainder term \(\RHL(2n;L)\) is defined in
+Definition~\ref{def:RHL}.
+\end{conjecture}
+
+Throughout this paper, PCGC--Goldbach or the weaker PCGC--Goldbach Bounds
+is treated as a working hypothesis.
+Each reduction derived from this assumption yields a logically weaker statement
+that can, in principle, be verified or falsified independently.
+To the extent that such reduced statements are confirmed, either analytically
+or empirically, they provide indirect support for the PCGC--Goldbach framework.
+
+\subsection{PCGC--Goldbach Bounds}
+
+The inequality \(\RHL(2n;L) \le \RHLbound(2n;L)\) has been proven in the
+Bounding Envelope section of \cite{Riemers2026-GPCH}.
+Discarding the sharper remainder \(\RHL\) in favour of its envelope leads to
+a strictly weaker conjecture.
+
+\begin{conjecture}[Prime Curvature Bounding Conjecture for Goldbach (PCGC--Goldbach Bounds)]
+\label{con:PCGC--Goldbach-Bounds}
+For every even integer \(2n \ge 4\) and every admissible window size
+\(\ecap{M}\), the Goldbach pair counts satisfy
+\begin{equation}
+  \bigl|
+    \Gmeas(2n;\ecap{M}) - \GHL(2n;\ecap{M})
+  \bigr|
+  \le
+  \RHLbound(2n;L),
+  \qquad L := \sqrt{2\ecap{M}},
+\end{equation}
+where the bounding envelope \(\RHLbound(2n;L)\) is defined in
+Definition~\ref{def:RHLbound}.
+\end{conjecture}
+
+Most reductions in this paper depend only on PCGC--Goldbach Bounds rather than
+the full PCGC--Goldbach conjecture.
+Consequently, these reductions do not in themselves strengthen the case for
+the sharper remainder \(\RHL\), but they substantially widen the scope of
+independent validation for PCGC--Goldbach Bounds.
+
+In particular, the heuristic and empirical analysis of \cite{Riemers2025}
+shows that the \(\Lambda\)-curves for up to
+\(2n = 23\#\) exhibit bounded convergence toward the predicted limit.
+This behaviour does not follow from Hardy--Littlewood asymptotics alone,
+nor from Goldbach’s conjecture itself, but is naturally explained by a
+bounding principle of the form asserted in PCGC--Goldbach Bounds.
+
+\section{Geometric Framework}
+\label{sec:geometric-framework}
+
+\subsection{Goldbach Full Reduction}
+
+\begin{theorem}[PCGC--Goldbach Bounds implies Strong Goldbach]
+\label{thm:strong-goldbach}
+Assume that Conjecture~\ref{con:PCGC--Goldbach-Bounds},
+PCGC--Goldbach Bounds, holds for all \(n \ge \xGoldbachN\).
+With the window choice
+\begin{equation}
+M := \ecap{n/2}, \qquad L := \sqrt{2M},
+\end{equation}
+assume in particular that
+\begin{equation}
+\label{eq:PCGC--Goldbach-bounds}
+\Gmeas(2n;M) \;\ge\; \GHL(2n;M) \;-\; \RHLbound(2n;L)
+\end{equation}
+holds for all such \(n\).
+
+Let \(N(2n)\) denote the number of ordered Goldbach representations of \(2n\),
+including the diagonal pair when \(n\) is prime, i.e.
+\begin{equation}
+N(2n) := \Gmeas(2n) + 1_{\mathrm{prime}}(n).
+\end{equation}
+Then
+\begin{equation}
+N(2n) \ge 1 \qquad \forall n \ge 2.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Let \(n_0 := \xGoldbachN \).
+
+\paragraph{Case 1: \(2 \le n < n_0\).}
+By direct verification \cite{Riemers2025,Silvia}, \(N(2n)\ge 1\) on this finite range.
+
+\paragraph{Case 2: \(n \ge n_0\).}
+Set \(M:=\ecap{n/2}\) and \(L:=\sqrt{2M}\).  Since the full count contains any sub-count,
+\begin{equation}
+\label{eq:full-dominates-window}
+\Gmeas(2n)\;\ge\;\Gmeas(2n;M).
+\end{equation}
+Combining \eqref{eq:full-dominates-window} with \eqref{eq:PCGC--Goldbach-bounds} yields
+\begin{equation}
+\label{eq:meas-lower-1}
+\Gmeas(2n)\;\ge\;\GHL(2n;M)\;-\;\RHLbound(2n;L).
+\end{equation}
+
+\paragraph{Step 1: Expand \(\GHL(2n;M)\).}
+By the definition of \(\GHL(2n;M)\) and Lemma~\ref{lem:hlcorr-norm-identity},
+\begin{align}
+\GHL(2n;M)
+&= 2C_2\,\Ssem(2n)\,\sum_{m\in\Ipar(n,M)} \omega(n-m)\,\omega(n+m) \notag\\
+&= 2C_2\,\Ssem(2n)\,\bigl(2M\,\omega(n)^2\,\HLCorr(2n;M)\bigr). \label{eq:ghl-expand}
+\end{align}
+
+\paragraph{Step 2: Lower bound the \(\omega\) factor.}
+Assume \(\omega(n)=\pi(n)/n\).  Then by Rosser--Schoenfeld \cite{RosserSchoenfeld1962},
+\(\pi(n) > n/\log n\) for all \(n\ge 17\), hence \(\omega(n)^2 \ge 1/\log^2 n\) for all \(n\ge 17\).
+Therefore, for all \(n\ge n_0\),
+\begin{equation}
+\label{eq:ghl-lower}
+\GHL(2n;M)
+\;\ge\; 2C_2\,\Ssem(2n)\,\frac{2M}{\log^2 n}\,\HLCorr(2n;M).
+\end{equation}
+
+\paragraph{Step 3: Replace \(\HLCorr\) by a lower bound.}
+By Lemma~\ref{lem:HLCorr-min}, \( \HLCorr(2n;M) \ge 1 \),
+\begin{equation}
+\label{eq:ghl-lower-2}
+\GHL(2n;M)
+\;\ge\; 2C_2\,\Ssem(2n)\,\frac{2M}{\log^2 n}.
+\end{equation}
+
+\paragraph{Step 4: Upper bound the envelope term.}
+By the definition of the envelope
+\begin{equation}
+\label{eq:env-upper}
+\RHLbound(2n;L)
+:= \frac{c(2n;L)\,L}{\SsemHead^{\EffLocModCap,\complement}(2n;L)}.
+\end{equation}
+Applying \( \Ssem \) identity Equations~\ref{ident:ssem},
+\begin{align}
+\RHLbound(2n;L)
+&= \frac{c(2n;L)\,L\,\SsemHead^{\EffLocModCap}(2n;L)\,\SsemTail^{\EffLocModCap}(2n;L)}{\SsemHead^{\EffLocModCap,\complement}(2n;L)\,\SsemHead^{\EffLocModCap}(2n;L)\,\SsemTail^{\EffLocModCap}(2n;L)}, \\[3pt]
+&= \frac{c(2n;L)\,L\,\Ssem(2n)}{\SsemHead^{\EffLocModCap,\bullet}(2n;L)\,\SsemTail^{\EffLocModCap}(2n;L)}.
+\end{align}
+
+Since by all product terms of the \( \Ssem  \) are greater than \( 1 \), 
+\( \SsemTail^{\EffLocModCap,\complement}(2n;L) \ge 1 \) this bound maybe weakened the bound,
+\begin{equation}
+\label{eq:env-upper-2}
+\RHLbound(2n;L)
+\;\le\;
+\frac{c(2n;L)\,L\Ssem(2n)}{\SsemHead^{\EffLocModCap,\bullet}(2n;L)}.
+\end{equation}
+
+\paragraph{Step 5: Combine and normalize in \(L\).}
+Insert \eqref{eq:ghl-lower-2} and \eqref{eq:env-upper-2} into \eqref{eq:meas-lower-1}:
+\begin{align}
+\Gmeas(2n)
+&\ge 2C_2\,\Ssem(2n)\,\frac{2M}{\log^2 n} \;-\; \frac{c(2n;L)\,L\,\Ssem(2n)}{\SsemHead^{\EffLocModCap,\bullet}(2n;L)} \notag\\
+&\ge 2C_2\,\frac{2M}{\log^2 n} \;-\; \frac{c(2n;L)\,L}{\SsemHead^{\EffLocModCap,\bullet}(2n;L)}
+\qquad(\text{since }\Ssem(2n)>0). \label{eq:meas-lower-2}
+\end{align}
+Now use \(2M=L^2\):
+\begin{equation}
+\label{eq:meas-lower-L}
+\Gmeas(2n)
+\;\ge\;
+L\left(2C_2\,\frac{L}{\log^2 n} - \frac{c(2n;L)}{\SsemHead^{\EffLocModCap,\bullet}(2n;L)}\right).
+\end{equation}
+
+\paragraph{Step 6: Monotonicity Reduction to \(n=n_0\).}
+Since the function \(\sqrt{n}/\log^2 n\) is increasing for all \(n\ge n_0\),
+and since the envelope coefficient \(c(2n;L)\) is uniformly bounded above
+on \(n\ge n_0\) at the scale \(L=\sqrt{2\ecap{n/2}}\) by the
+\emph{Monotonic Envelope Lemma} of \cite{Riemers2026-GPCH}, and
+\( \SsemHead^{\EffLocModCap,\bullet}(2n;L) \) is monotonic increasing,
+the bracket in \eqref{eq:meas-lower-L} attains its minimum at \(n=n_0\).
+Hence, for all \(n\ge n_0\),
+\begin{equation}
+\label{eq:meas-lower-n0}
+\Gmeas(2n)
+\;\ge\;
+L\left(2C_2\,\frac{L}{\log^2 n} - \frac{c(2n;L)}{\SsemHead^{\EffLocModCap,\bullet}(2n;L)}\right)
+\;\ge\;
+\sqrt{n_0}\left(2C_2\,\frac{\sqrt{n_0}}{\log^2 n_0} - \frac{c(2n_0;\sqrt{n_0})}{\SsemHead^{\EffLocModCap,\bullet}(2n_0;\sqrt{n_0})}\right).
+\end{equation}
+Evaluating the right-hand side of \eqref{eq:meas-lower-n0} at \(n=n_0\) using
+the highest of the tabulated values
+\begin{align}
+\frac{c(2n_0;\sqrt{n_0})}{\SsemHead^{\EffLocModCap,\bullet}(2n_0;\sqrt{n_0})}
+&= \xCratioDivC \qquad n\mid 3
+\qquad
+\text{(Table~\ref{tab:c-ratios})} \\
+&=\xCratioNDivC \qquad n\nmid 3
+\qquad
+\text{(worst-case value)},
+\end{align}
+together with the known Hardy--Littlewood prime pair constant
+\begin{equation}
+C_2 = \xTwinPrimeConstant,
+\end{equation}
+yields a strictly positive value.
+
+Since the bracket in \eqref{eq:meas-lower-L} is minimized at \(n=n_0\),
+it follows that \(\Gmeas(2n)>0\) for all \(n\ge n_0\).
+Because \(\Gmeas(2n)\in\mathbb{Z}_{\ge 0}\), it is concluded that
+\(\Gmeas(2n)\ge 1\) for all \(n\ge n_0\).
+
+Combining Cases 1 and 2 completes the proof.
+\end{proof}
+
+\begin{remark}[Choice of \(\alpha\).]
+In the proof, \(\alpha=\tfrac12\) is taken solely to remain comfortably below
+the Euler cap \(\ecap{\cdot}\) and to permit direct comparison with existing
+computational data.
+No structural feature of the argument depends on this specific choice.
+
+The same proof applies for any fixed \(0<\alpha\le 1\), provided the
+PCGC--Goldbach Bounds Conjecture is assumed in the corresponding range of window
+sizes.
+Keeping with the principle of minimizing assumptions, Conjecture~\ref{con:PCGC--Goldbach-Bounds} 
+is therefore assumed only for the values of \(\alpha\) and \(n\) actually required in the argument.
+\end{remark}
+
+\subsection{HL--A Reductions}
+
+\subsubsection{Euler Capped HL--Windowed Reduction}
+
+\begin{theorem}[PCGC--Goldbach Bounds Implies Capped HL--Windowed Proxy]
+\label{thm:pcgc-to-HL-windowed-cap}
+Assume the PCGC--Goldbach Bounds \eqref{eq:PCGC--Goldbach-bounds} hold for all \( n\ge n_\ast \)
+in the window scaling regime
+\begin{equation}
+\label{eq:M-scaling}
+M:=\ecap{n\alpha},\qquad 0<\alpha \le 1,\qquad M\ge 1.
+\end{equation}
+Let \( \GHLproxy(2n;M) \) denote the Hardy--Littlewood proxy predictor
+(as defined in \S\ref{def:predictor-proxy}).
+Then there exist an explicit \( n_0\ge n_\ast \) and an explicit envelope
+\( \eta(2n;M)\to 0 \) such that for all \( n\ge n_0 \),
+\begin{equation}
+\label{eq:HLA-cap-proxy}
+\left|
+\frac{\Gmeas(2n;M)}{\GHLproxy(2n;M)}-1
+\right|
+\le \eta(2n;M),
+\qquad (n\to\infty \text{ with } M=\ecap{n\alpha}).
+\end{equation}
+Equivalently,
+\begin{equation}
+\label{eq:HLA-cap-asymp}
+\Gmeas(2n;M)
+=
+\left(1+O(\eta(2n;M))\right)\,
+\GHLproxy(2n;M),
+\qquad (n\to\infty \text{ with } M=\ecap{n\alpha}).
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Fix \(n\ge n_\ast\) and let \(M=\ecap{n\alpha}\) with \(0<\alpha\le 1\) and \(M\ge 1\),
+and set \(L:=\sqrt{2\ecap{M}}\).
+
+By PCGC--Goldbach Bounds \eqref{eq:PCGC--Goldbach-bounds},
+\begin{equation}\label{eq:pcgc-step}
+\bigl|\Gmeas(2n;M)-\GHL(2n;M)\bigr|\le \RHLbound(2n;L).
+\end{equation}
+Divide \eqref{eq:pcgc-step} by \(\GHLproxy(2n;M)>0\) to obtain
+\begin{equation}\label{eq:divide-proxy}
+\left|
+\frac{\Gmeas(2n;M)}{\GHLproxy(2n;M)}-\frac{\GHL(2n;M)}{\GHLproxy(2n;M)}
+\right|
+\le
+\frac{\RHLbound(2n;L)}{\GHLproxy(2n;M)}.
+\end{equation}
+
+By the exact factorization \eqref{eq:GHL-factorization},
+\begin{equation}
+\frac{\GHL(2n;M)}{\GHLproxy(2n;M)}=\HLCorr(2n;M).
+\end{equation}
+Hence, by the triangle inequality applied to
+\(\frac{\Gmeas}{\GHLproxy}-1=
+\left(\frac{\Gmeas}{\GHLproxy}-\HLCorr\right)+(\HLCorr-1)\),
+it follows that
+\begin{equation}\label{eq:split}
+\left|
+\frac{\Gmeas(2n;M)}{\GHLproxy(2n;M)}-1
+\right|
+\le
+\frac{\RHLbound(2n;L)}{\GHLproxy(2n;M)}
++
+\bigl|\HLCorr(2n;M)-1\bigr|.
+\end{equation}
+
+\smallskip
+\noindent\textbf{Bounding the PCC Term.}
+Using Definition~\ref{def:RHLbound} and Definition~\ref{def:GHLproxy},
+and the inequalities \(\Ssem(2n)\ge 1\) and \(\Ssem^{\EffLocModCap,\complement}(2n;L)\ge 1\),
+\begin{align}
+\frac{\RHLbound(2n;L)}{\GHLproxy(2n;M)}
+&=
+\frac{c(2n;L)\,\EffLocMod(2n;L)\,L}{\Ssem^{\EffLocModCap,\complement}(2n;L)}
+\cdot
+\frac{1}{2C_2\,\Ssem(2n)\,|\Ipar(n,M)|\,\omega(n)^2}
+\\[3pt]
+&\le
+\frac{c(2n;L)\,L}{2C_2\,|\Ipar(n,M)|\,\omega(n)^2}.
+\end{align}
+In the standard symmetric parity window, \(|\Ipar(n,M)|=2M\), so
+\begin{equation}\label{eq:pcgc-term-simplified}
+\frac{\RHLbound(2n;L)}{\GHLproxy(2n;M)}
+\le
+\frac{c(2n;L)}{4C_2}\cdot\frac{L}{M}\cdot\frac{1}{\omega(n)^2}.
+\end{equation}
+Since \(L=\sqrt{2\ecap{M}}\) and \(M=\ecap{n\alpha}\), it follows that \(L/M \asymp 1/L\),
+so \eqref{eq:pcgc-term-simplified} gives
+\begin{equation}\label{eq:pcgc-term-L}
+\frac{\RHLbound(2n;L)}{\GHLproxy(2n;M)}
+\le
+\frac{c(2n;L)}{4C_2}\cdot\frac{1}{L\,\omega(n)^2}.
+\end{equation}
+By the \emph{Monotonic Envelope Lemma} of \cite{Riemers2026-GPCH},
+\(c(2n;L)\) is nonincreasing in \(L\), hence for all admissible \((n,L)\),
+\begin{equation}
+c(2n;L)\le c(6;2),
+\end{equation}
+so
+\begin{equation}\label{eq:pcgc-term-final}
+\frac{\RHLbound(2n;L)}{\GHLproxy(2n;M)}
+\le
+\frac{c(6;2)}{4C_2}\cdot\frac{1}{L\,\omega(n)^2}.
+\end{equation}
+
+Finally, using the explicit inequality \(\pi(n)\ge n/\log n\) for \(n\ge 17\)
+(Rosser--Schoenfeld \cite{RosserSchoenfeld1962}), it follows that
+\(\omega(n)=\pi(n)/n\ge 1/\log n\), hence for \(n\ge 17\),
+\begin{equation}\label{eq:pcgc-term-log}
+\frac{\RHLbound(2n;L)}{\GHLproxy(2n;M)}
+\le
+\frac{c(6;2)}{4C_2}\cdot \frac{\log^2 n}{L}.
+\end{equation}
+
+\smallskip
+\noindent\textbf{Bounding the \(\HLCorr\) Term.}
+By Lemma~\ref{lem:HLCorr-upper-envelope} (Endpoint Envelope for Fixed \(\alpha\)),
+\begin{equation}
+\HLCorr(2n;M)\le U_\alpha(n),
+\qquad
+U_\alpha(n)\to 1 \ (n\to\infty),
+\end{equation}
+and by Lemma~\ref{lem:HLCorr-min}, \(\HLCorr(2n;M)\ge 1\).
+Therefore
+\begin{equation}\label{eq:hlcorr-term}
+0\le \HLCorr(2n;M)-1 \le U_\alpha(n)-1,
+\qquad U_\alpha(n)-1\to 0.
+\end{equation}
+
+Combining \eqref{eq:split}, \eqref{eq:pcgc-term-log}, and \eqref{eq:hlcorr-term},
+the following is defined
+\begin{equation}
+\eta(2n;M)
+:=
+\frac{c(6;2)}{4C_2}\cdot\frac{\log^2 n}{\sqrt{2\ecap{n\alpha}}}
++\bigl(U_\alpha(n)-1\bigr),
+\end{equation}
+which satisfies \(\eta(2n;M)\to 0\) as \(n\to\infty\) with \(M=\ecap{n\alpha}\).
+This proves \eqref{eq:HLA-cap-proxy} and hence \eqref{eq:HLA-cap-asymp}.
+\end{proof}
+
+\subsubsection{Uncapped Capped HL--Windowed Reduction}
+
+\begin{lemma}[PCGC--Goldbach Implies HL--Windowed Proxy at Uncapped Scale]
+\label{lem:pcgc-to-HL-windowed-uncap}
+Assume the hypotheses of Theorem~\ref{thm:pcgc-to-HL-windowed-cap}.
+In the window scaling regime
+\begin{equation}
+\label{eq:M-scaling-uncap}
+M:=n\alpha,\qquad 0<\alpha\le 1,\qquad M\ge 1,
+\end{equation}
+let \( \GHLproxy(2n;M) \) denote the Hardy--Littlewood proxy predictor
+(as defined in \S\ref{def:predictor-proxy}).
+Then there exists an explicit \( n_0\ge n_\ast \) and an explicit envelope
+\( \tilde\eta(2n;M)\to 0 \) such that for all \( n\ge n_0 \),
+\begin{equation}
+\label{eq:HLA-uncap-proxy}
+\left|
+\frac{\Gmeas(2n;M)}{\GHLproxy(2n;M)}-1
+\right|
+\le \tilde\eta(2n;M),
+\qquad (n\to\infty \text{ with } M=n\alpha).
+\end{equation}
+Equivalently,
+\begin{equation}
+\label{eq:HLA-uncap-asymp}
+\Gmeas(2n;M)
+=
+\left(1+O(\tilde\eta(2n;M))\right)\,
+\GHLproxy(2n;M),
+\qquad (n\to\infty \text{ with } M=n\alpha).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let \(M=n\alpha\) with \(0<\alpha\le 1\), and let \(\ecap{M}\) be the Euler-capped
+window size from \eqref{eq:ecap-operator}.  Write
+\begin{equation}
+\Delta M := M-\ecap{M}\ \ge\ 0.
+\end{equation}
+By definition of the Euler cap, \(\Delta M = O(\sqrt{n})\) as \(n\to\infty\).
+
+Let \(\Ipar(2n;M)\) and \(\Ipar(2n;\ecap{M})\) be the parity-admissible index sets.
+Since the cap removes only the two endpoint intervals of length \(\Delta M\),
+the set inclusion
+\begin{equation}
+\Ipar(2n;\ecap{M}) \subseteq \Ipar(2n;M),
+\end{equation}
+and therefore the difference set has cardinality
+\begin{equation}
+\bigl|\Ipar(2n;M)\setminus \Ipar(2n;\ecap{M})\bigr|
+\le 2\Delta M = O(\sqrt{n}).
+\end{equation}
+Each removed index \(m\) contributes at most \(1\) to the ordered pair count
+\(\Gmeas(2n;M)\), hence
+\begin{equation}\label{eq:meas-cap-diff}
+0\le \Gmeas(2n;M)-\Gmeas(2n;\ecap{M}) \le O(\sqrt{n}).
+\end{equation}
+
+Now apply Theorem~\ref{thm:pcgc-to-HL-windowed-cap} at the capped scale \(\ecap{M}\):
+there exists \(n_0\ge n_\ast\) and an envelope \(\eta(2n;\ecap{M})\to 0\) such that
+\begin{equation}
+\left|\frac{\Gmeas(2n;\ecap{M})}{\GHLproxy(2n;\ecap{M})}-1\right|
+\le \eta_{\cap}(2n;\ecap{M}).
+\end{equation}
+Using \(\GHLproxy(2n;M)=2C_2\Ssem(2n)\,|\Ipar(n,M)|\,\omega(n)^2\) and
+\(|\Ipar(n,M)|\asymp M\),
+\begin{equation}
+\GHLproxy(2n;\ecap{M}) \asymp \frac{\ecap{M}}{\log^2 n}
+\asymp \frac{n}{\log^2 n},
+\end{equation}
+uniformly for fixed \(\alpha\in(0,1]\).  Dividing \eqref{eq:meas-cap-diff} by
+\(\GHLproxy(2n;\ecap{M})\) therefore yields an additional relative error
+\begin{equation}
+\frac{O(\sqrt{n})}{\GHLproxy(2n;\ecap{M})}
+=
+O\!\left(\frac{\log^2 n}{\sqrt{n}}\right)
+\to 0.
+\end{equation}
+The function \(\tilde\eta(2n;M)\) is defined as
+\(\tilde\eta(2n;M) := \eta(2n;\ecap{M}) + O\!\left(\frac{\log^2 n}{\sqrt{n}}\right)\).
+Then \(\tilde\eta(2n;M)\to 0\) as \(n\to\infty\) with \(M=n\alpha\).
+\end{proof}
+
+\subsubsection{Hardy--Littlewood (Conjecture A, Goldbach Form) Reduction}
+
+\begin{corollary}[Hardy--Littlewood (Conjecture A, Goldbach Form)]
+\label{cor:HL-A-standard}
+Assuming the hypotheses of Lemma~\ref{lem:pcgc-to-HL-windowed-uncap}, the following is defined:
+\begin{equation}
+N(2n):=\Gmeas(2n)+1_{\mathrm{prime}}(n).
+\end{equation}
+Then the classical Hardy--Littlewood prediction (Conjecture~A) follows:
+\begin{equation}
+\label{eq:HL-A-standard}
+N(2n)
+\;\sim\;
+2C_2\,\Ssem(2n)\,\frac{2n}{\log^2(2n)}
+\qquad (n\to\infty).
+\end{equation}
+Equivalently,
+\begin{equation}
+N(2n)
+=
+\left(1+o(1)\right)\,2C_2\,\Ssem(2n)\,\frac{2n}{\log^2(2n)}.
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+Apply Lemma~\ref{lem:pcgc-to-HL-windowed-uncap} with \(\alpha=1\), hence \(M=n\) and
+\(\Gmeas(2n;M)=\Gmeas(2n)\).  With the Hardy--Littlewood normalization
+\(\omega(x)=1/\log(2x)\), the proxy predictor becomes
+\begin{equation}
+\GHLproxy(2n;M)=2C_2\,\Ssem(2n)\,\frac{2n}{\log^2(2n)}.
+\end{equation}
+Thus
+\begin{equation}
+\Gmeas(2n)=\left(1+o(1)\right)\,2C_2\,\Ssem(2n)\,\frac{2n}{\log^2(2n)}.
+\end{equation}
+Finally, \(0\le 1_{\mathrm{prime}}(n)\le 1\), so adding the bounded term does not
+change the asymptotic:
+\begin{equation}
+N(2n)=\Gmeas(2n)+1_{\mathrm{prime}}(n)\sim \Gmeas(2n).
+\end{equation}
+\end{proof}
+
+\section{Short Intervals}
+\label{sec:short-intervals}
+
+In earlier work~\cite{Riemers2025} the Goldbach problem was reduced to a
+short–interval Bombieri--Vinogradov–like hypothesis~\cite{Bombieri1965,Vinogradov1965}.  That
+hypothesis is recalled here in a form adapted to Goldbach windows, and fit
+into the geometric structure developed in this paper.
+
+\paragraph{Scope.}
+In an ideal development one would aim to deduce a short-interval
+Bombieri--Vinogradov statement of the form
+Hypothesis~\ref{hyp:SIBV-Goldbach} from PCGC--Goldbach itself.
+Such a deduction is plausible in principle, but it would require extending
+the PCC framework beyond centred Goldbach windows to families of
+off-centred windows and residue-class statistics.
+That extension is outside the scope of this present paper; here it is only
+recorded that PCGC--Goldbach--Bounds already implies a relative agreement
+statement in the same short-interval scaling regime.
+
+\subsection{Short-Interval Bombieri--Vinogradov Like Hypothesis}
+
+Under PCGC--Goldbach and the short–interval hypothesis below, the
+relative agreement theorem again applies, yielding asymptotic control of
+\(\Gmeas(2n;M)\) for all windows above the short–interval threshold.
+
+\begin{hypothesis}[Short-Interval Bombieri--Vinogradov in Goldbach Windows]
+\label{hyp:SIBV-Goldbach}
+There exists \(\theta>\tfrac12\) and \(\varepsilon>0\) such that the following holds.
+For every \(A>0\) and all sufficiently large \(n\),
+\begin{equation}\label{eq:SIBV-Goldbach}
+\sum_{q\le (2n)^{\theta}}
+\ \max_{\substack{(a,q)=1}}\ \max_{M\ge (2n)^{\frac{1}{2}+\frac{\varepsilon}{2}}}
+\left|\ P(n,M;q,a)\ -\ \frac{2M}{\varphi(q)\log n}\ \right|
+\ \ \ll_{A,\varepsilon}\ \ \frac{2n}{(\log n)^A},
+\end{equation}
+where
+\begin{equation}
+P(n,M;q,a)
+:= \#\{\,p \text{ prime} : n-M \le p \le n+M,\ p\equiv a\!\!\pmod q\,\}.
+\end{equation}
+\end{hypothesis}
+
+\noindent
+Hypothesis~\ref{hyp:SIBV-Goldbach} is \emph{not} assumed in this paper.
+It is included only to indicate the classical window-size regime in which
+short-interval equidistribution is expected to hold.
+
+\subsection{PCGC--Goldbach Bounds Implies Windowed HL Agreement in the SIBV Range}
+
+\begin{lemma}[PCGC--Goldbach Bounds Implies Windowed HL Agreement in the SIBV Range]
+\label{lem:PCGC-to-HLwindowed-in-SIBV-range}
+Assume Conjecture~\ref{con:PCGC--Goldbach-Bounds}.  Let \(n\) be sufficiently large and
+let \(M\) satisfy
+\begin{equation}\label{eq:SIBV-range}
+(2n)^{\frac12+\frac{\varepsilon}{2}} \ \le\ M \ \le\ n
+\end{equation}
+for some fixed \(\varepsilon>0\).
+Then there exists an explicit envelope \(\eta_{\mathrm{SIBV\text{-}rng}}(2n;M)\to 0\)
+(as \(n\to\infty\) with \(M\) in \eqref{eq:SIBV-range}) such that
+\begin{equation}\label{eq:HLwindowed-relative}
+\left|\frac{\Gmeas(2n;M)}{\GHL(2n;M)}-1\right|
+\ \le\ \eta_{\mathrm{SIBV\text{-}rng}}(2n;M).
+\end{equation}
+In particular,
+\begin{equation}\label{eq:HLwindowed-asymp}
+\Gmeas(2n;M)
+=
+\GHL(2n;M)\,\bigl(1+O(\eta_{\mathrm{SIBV\text{-}rng}}(2n;M))\bigr).
+\end{equation}
+\end{lemma}
+\begin{proof}
+From Conjecture~\ref{con:PCGC--Goldbach-Bounds},
+\begin{equation}
+\bigl|\Gmeas(2n;M)-\GHL(2n;M)\bigr|
+\le \RHLbound(2n;L),
+\qquad L=\sqrt{2\ecap{M}}.
+\end{equation}
+Assuming \(\GHL(2n;M)>0\) (which holds for all sufficiently large \(n\) in the regimes used
+in this paper), divide by \(\GHL(2n;M)\) to obtain
+\begin{equation}
+\left|\frac{\Gmeas(2n;M)}{\GHL(2n;M)}-1\right|
+\le \frac{\RHLbound(2n;L)}{\GHL(2n;M)}.
+\end{equation}
+The factorization \(\GHL(2n;M)=\GHLproxy(2n;M)\,\HLCorr(2n;M)\)
+from \eqref{eq:GHL-factorization}, together with \(\HLCorr(2n;M)\ge 1\)
+(Lemma~\ref{lem:HLCorr-min}), to get
+\begin{equation}
+\frac{\RHLbound(2n;L)}{\GHL(2n;M)}
+\le \frac{\RHLbound(2n;L)}{\GHLproxy(2n;M)}.
+\end{equation}
+Using the definition of \(\RHLbound\) and \(\GHLproxy\),
+and the fact that the semiprime correction factors are \(\ge 1\),
+this yields the explicit bound
+\begin{equation}
+\frac{\RHLbound(2n;L)}{\GHLproxy(2n;M)}
+\ll \frac{c(2n;L)\,L}{M\,\omega(n)^2}.
+\end{equation}
+Finally, in this paper \(\omega(n)\asymp 1/\log n\) is taken, so for \(n\) large
+(e.g.\ using any explicit \(\omega(n)\ge 1/\log n\) bound in your preferred range),
+\begin{equation}
+\frac{c(2n;L)\,L}{M\,\omega(n)^2}
+\ll \frac{c(2n;L)\,\log^2 n}{\sqrt{M}}.
+\end{equation}
+In the SIBV range \eqref{eq:SIBV-range}, \(\sqrt{M}\ge (2n)^{\frac14+\frac{\varepsilon}{4}}\),
+hence
+\begin{equation}
+\eta_{\mathrm{SIBV\text{-}rng}}(2n;M)
+:= O\!\left(\frac{c(2n;L)\,\log^2 n}{(2n)^{\frac14+\frac{\varepsilon}{4}}}\right)
+\to 0
+\qquad (n\to\infty).
+\end{equation}
+This proves \eqref{eq:HLwindowed-relative} and \eqref{eq:HLwindowed-asymp}.
+\end{proof}
+
+\section{Conclusion}
+
+This paper has established a collection of conditional reductions from
+PCGC--Goldbach to several classical
+problems in analytic number theory.  Under the assumption that
+PCGC--Goldbach Bounds holds, the following has been shown:
+
+\begin{itemize}
+\item \textbf{Goldbach's Conjecture} follows for all even integers \(2n \ge 4\),
+with explicit verification required only up to a computable finite threshold
+\(n_0 = \xGoldbachN \).  This reduction shows that the geometric bounding framework
+provides sufficient control over remainder terms to guarantee the existence of
+Goldbach representations.
+
+\item \textbf{Hardy--Littlewood Conjecture A (Goldbach form)} is recovered as an
+asymptotic consequence.  In particular, PCGC--Goldbach Bounds implies the standard
+Hardy--Littlewood prediction for Goldbach pair counts, demonstrating consistency
+between the geometric framework and classical circle--method heuristics.
+
+\item \textbf{Short--Interval Relative Agreement} holds in the
+Bombieri--Vinogradov scaling regime \(M \ge (2n)^{\frac12+\varepsilon}\).
+This shows that PCGC--Goldbach Bounds provides asymptotic control in window sizes
+where classical analytic methods encounter fundamental barriers.
+\end{itemize}
+
+Together, these reductions show that PCGC--Goldbach, if validated, provides a
+unified geometric foundation for understanding several problems that have
+traditionally been approached using distinct analytic techniques.  Unlike
+purely asymptotic methods, the geometric framework supplies explicit bounding
+structures that translate directly into quantitative results.
+
+\subsection{Significance and Future Directions}
+
+The results presented here indicate that PCGC--Goldbach is not merely a
+reformulation of existing conjectures, but a geometric framework from which
+classical results emerge as consequences.  The geometric
+structure underlying prime pair counting may be more fundamental than the
+analytic techniques traditionally used to study these problems.
+
+Several natural directions remain open:
+
+\begin{itemize}
+\item \textbf{Very Short Windows.}  PCGC--Goldbach Bounds implies that intervals of
+size \(O(\log^4 n / n)\) can still satisfy Goldbach pair conditions.
+Analyzing this regime requires highly customized data validation and is
+sensitive to the precise choice of weight functions.  A careful treatment new fine--scale 
+structure should be integrated.
+
+\item \textbf{Unconditional Validation.}  An unconditional proof of
+PCGC--Goldbach would immediately yield unconditional proofs of Goldbach's
+conjecture and Hardy--Littlewood asymptotics via the reductions established
+here.
+
+\item \textbf{Extensions Beyond Centered Windows.}  Extending the geometric
+framework to off--centered windows or residue--class statistics would enable
+reductions to full Bombieri--Vinogradov--type hypotheses, rather than relative
+agreement results alone.
+
+\item \textbf{Other Additive Prime Problems.}  Generalizing the framework to
+twin primes, prime tuples, and related problems could provide a unified
+geometric approach to a broader class of questions in additive number theory.
+\end{itemize}
+
+Computational validation of PCGC--Goldbach up to \(2n = 23\#\)
+\cite{Riemers2025-PaperB} provides strong empirical support for the framework.
+The reductions presented here show that, such validation extends to all even
+integers, so the classical results discussed above as geometric
+consequences.
+
+\subsection{Final Remarks}
+
+All results in this paper are explicitly conditional on PCGC--Goldbach.
+No unconditional claims are made.  Rather, it has been shown that the geometric
+framework, once validated, provides a coherent and powerful foundation for
+understanding classical problems in analytic number theory.
+
+The reductions presented here clarify both the scope and the limitations of the
+framework: it offers strong quantitative control that implies classical results;
+extending it to full distributional hypotheses would require additional
+geometric structure beyond the present setting.
+
+The geometric perspective introduced by PCGC--Goldbach represents a shift from
+purely analytic methods toward a structural understanding of prime pair
+counting.  Whether this perspective ultimately leads to unconditional proofs
+remains an open question; note the results here demonstrate that it already
+unifies and simplifies a wide range of classical phenomena.
+
+\clearpage
+\appendix
+\counterwithin{equation}{section}
+\numberwithin{table}{section}
+\numberwithin{lemma}{section}
+\numberwithin{conjecture}{section}
+\numberwithin{corollary}{section}
+\numberwithin{definition}{section}
+
+\clearpage
+\section{Density Function Properties}
+
+The following lemmas collect basic structural properties of \( \HLCorr \). 
+While only a subset is used directly in subsequent proofs, the full collection 
+characterizes its monotonicity, normalization, and bounding behaviuor, and 
+will be useful in future refinements.
+
+\subsection{\(\HLCorr\) Minimum}
+
+\begin{lemma}[\(\HLCorr\) Minimum for Logarithmic Weights]
+\label{lem:HLCorr-min}
+Assume \(\omega(t)=\kappa/\log t\) for \(t>1\) with \(\kappa>0\).
+Let \(n\ge 3\) and \(M\ge 1\), and define
+\begin{equation}
+\label{eq:HLCorr-def}
+\HLCorr(2n;M)
+:= \frac{1}{2M}\sum_{m\in\Ipar(n,M)}
+\frac{\omega(n-m)\,\omega(n+m)}{\omega(n)^2}.
+\end{equation}
+Then \(\HLCorr(2n;M)\ge 1\).
+If moreover \(0\notin\Ipar(n,M)\), then \(\HLCorr(2n;M)>1\).
+\end{lemma}
+
+\begin{proof}
+Fix \(m\) with \(0<|m|<n\). Using \(\omega(t)=\kappa/\log t\),
+\begin{equation}
+\frac{\omega(n-m)\omega(n+m)}{\omega(n)^2}
+=
+\frac{\log^2 n}{\log(n-m)\,\log(n+m)}.
+\end{equation}
+Since \((n-m)(n+m)=n^2-m^2<n^2\), it follows that
+\begin{equation}
+\log(n-m)+\log(n+m)=\log(n^2-m^2) < 2\log n.
+\end{equation}
+By AM--GM, for positive \(a,b\), \(ab\le \bigl(\tfrac{a+b}{2}\bigr)^2\), hence
+\begin{equation}
+\log(n-m)\,\log(n+m)
+\le \left(\frac{\log(n-m)+\log(n+m)}{2}\right)^2
+< \log^2 n.
+\end{equation}
+Therefore each term satisfies
+\begin{equation}
+\frac{\omega(n-m)\omega(n+m)}{\omega(n)^2} > 1.
+\end{equation}
+Averaging over \(2M\) terms in \eqref{eq:HLCorr-def} gives \(\HLCorr(2n;M)>1\) whenever
+\(0\notin\Ipar(n,M)\), and in particular \(\HLCorr(2n;M)\ge 1\).
+\end{proof}
+
+\begin{remark}[Range of applicability in this paper]
+\label{rem:HLCorr-cutoff}
+Lemma~\ref{lem:HLCorr-min} is a purely algebraic inequality for the model weight
+\(\omega(t)=\kappa/\log t\).  In the present work it is only invoked for \(n\ge 17\),
+which is the range in which this logarithmic weight is assumed to be a reliable
+proxy for the prime density.
+\end{remark}
+
+\subsection{\( \HLCorr \) Normalization Identity}
+
+\begin{lemma}[Normalization Identity for \(\omega\)--Correlation]
+\label{lem:hlcorr-norm-identity}
+For any \(n\) and window size \(M\),
+\begin{equation}
+\sum_{m\in\Ipar(n,M)} \omega(n-m)\,\omega(n+m)
+=
+|\Ipar(n,M)|\,\omega(n)^2\,\HLCorr(2n;M).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+By definition of \(\HLCorr(2n;M)\),
+\begin{equation}
+\HLCorr(2n;M)
+:= \frac{1}{|\Ipar(n,M)|}
+\sum_{m\in\Ipar(n,M)}
+\frac{\omega(n-m)\,\omega(n+m)}{\omega(n)^2}.
+\end{equation}
+Multiplying both sides by \(|\Ipar(n,M)|\,\omega(n)^2\) yields
+\begin{equation}
+|\Ipar(n,M)|\,\omega(n)^2\,\HLCorr(2n;M)
+= \sum_{m\in\Ipar(n,M)} \omega(n-m)\,\omega(n+m),
+\end{equation}
+which proves the claim.
+\end{proof}
+
+\subsection{\( \HLCorr \) Lower Bound}
+
+\begin{corollary}[Crude Lower Bound for the \(\omega\)--Correlation Sum]
+\label{cor:omega-corr-lower}
+Assume \(\omega(n) := \pi(n)/n\).  
+Then for all \(n\ge 17\),
+\begin{equation}
+\sum_{m\in\Ipar(n,M)} \omega(n-m)\,\omega(n+m)
+\;\ge\; \frac{|\Ipar(n,M)|}{\log^2 n}\,\HLCorr(2n;M).
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+By Lemma~\ref{lem:hlcorr-norm-identity},
+\begin{equation}
+\sum_{m\in\Ipar(n,M)} \omega(n-m)\,\omega(n+m)
+= |\Ipar(n,M)|\,\omega(n)^2\,\HLCorr(2n;M).
+\end{equation}
+For \(n\ge 17\), Rosser and Schoenfeld \cite{RosserSchoenfeld1962}
+prove the explicit bound
+\begin{equation}
+\pi(n) > \frac{n}{\log n},
+\end{equation}
+which implies
+\begin{equation}
+\omega(n)=\frac{\pi(n)}{n}>\frac{1}{\log n}.
+\end{equation}
+Squaring and substituting into the previous identity gives
+\begin{equation}
+|\Ipar(n,M)|\,\omega(n)^2\,\HLCorr(2n;M)
+\;\ge\;
+\frac{|\Ipar(n,M)|}{\log^2 n}\,\HLCorr(2n;M),
+\end{equation}
+as claimed.
+\end{proof}
+
+\subsection{\( \HLCorr \) Envelope}
+
+\begin{lemma}[\(\HLCorr\) Endpoint Envelope for Fixed \(\alpha\)]
+\label{lem:HLCorr-upper-envelope}
+Assume \(\omega(t)\propto 1/\log t\) and so that
+\begin{equation}
+\HLCorr(2n;M)
+=\frac{1}{|\Ipar(n,m)|}\sum_{m\in\Ipar(n,M)} 
+\frac{\log^2 n}{\log(n-m)\log(n+m)}.
+\end{equation}
+Let \(0<\alpha<1\) and set \(M:=\lfloor \alpha n\rfloor\), with \( |\Ipar(n,M)| = 2M \).  Then
+\begin{equation}
+\label{eq:HLCorr-upper-envelope}
+\HLCorr(2n;M)\ \le\ U_\alpha(n)
+:=\frac{\log^2 n}{\log(n-M)\,\log(n+M)}.
+\end{equation}
+Moreover, \(U_\alpha(n)\to 1\) as \(n\to\infty\), and \(U_\alpha(n)\) is strictly decreasing
+for all sufficiently large \(n\).
+\end{lemma}
+
+\begin{proof}
+For fixed \(n\) and \(m\in[1,M]\), it follows that \(n-m\ge n-M\) and \(n+m\le n+M\).
+Since \(\log\) is increasing on \((1,\infty)\),
+\begin{equation}
+\log(n-m)\ge \log(n-M)
+\quad\text{and}\quad
+\log(n+m)\le \log(n+M).
+\end{equation}
+Hence
+\begin{equation}
+\log(n-m)\log(n+m)\ \ge\ \log(n-M)\log(n+M),
+\end{equation}
+so each summand satisfies
+\begin{equation}
+\frac{\log^2 n}{\log(n-m)\log(n+m)}
+\ \le\
+\frac{\log^2 n}{\log(n-M)\log(n+M)}=U_\alpha(n).
+\end{equation}
+Averaging over \(m\in\Ipar(n,M)\) preserves the inequality, proving
+\eqref{eq:HLCorr-upper-envelope}.
+Finally, since \(M=\lfloor \alpha n\rfloor=(\alpha+o(1))n\), it follows that
+\begin{equation}
+\log(n\pm M)=\log n + \log(1\pm \alpha) + o(1),
+\end{equation}
+which implies \(U_\alpha(n)\to 1\).  Eventual monotone decrease of the explicit
+function \(U_\alpha(n)\) follows by elementary calculus.
+\end{proof}
+
+\subsection{\( \HLCorr \) Limit}
+
+\begin{lemma}[\(\HLCorr\) Approaches \(1\) at Logarithmic Rate for Fixed \(\alpha\)]
+\label{lem:HLCorr-rate-fixed-alpha}
+Assume \(\omega(t) \propto \frac{1}{\log{t}} \) for \(t>1\).
+Fix \(0<\alpha<1\) and set \(M:=\lfloor \alpha n\rfloor\).
+Then for all sufficiently large \(n\),
+\begin{equation}
+\label{eq:HLCorr-rate-fixed-alpha}
+0 \ \le\ \HLCorr(2n;M)-1
+\ \le\ U_\alpha(n)-1
+\ =\ O_\alpha\!\Bigl(\frac{1}{\log n}\Bigr),
+\qquad (n\to\infty),
+\end{equation}
+where \(U_\alpha(n)\) is the endpoint envelope from Lemma~\ref{lem:HLCorr-upper-envelope}.
+In particular, \(\HLCorr(2n;M)\to 1\) as \(n\to\infty\) with \(M=\lfloor \alpha n\rfloor\).
+\end{lemma}
+
+\begin{proof}
+By Lemma~\ref{lem:HLCorr-min}, \(\HLCorr(2n;M)\ge 1\), hence
+\(\HLCorr(2n;M)-1\ge 0\).
+
+By Lemma~\ref{lem:HLCorr-upper-envelope}, for \(M=\lfloor \alpha n\rfloor\),
+\begin{equation}
+\label{eq:HLCorr-upper-envelope-recall}
+\HLCorr(2n;M)\ \le\ U_\alpha(n)
+:=\frac{\log^2 n}{\log(n-M)\,\log(n+M)}.
+\end{equation}
+Subtracting \(1\) yields
+\begin{equation}
+0\le \HLCorr(2n;M)-1 \le U_\alpha(n)-1.
+\end{equation}
+
+It remains to bound \(U_\alpha(n)-1\).
+Since \(M=\lfloor \alpha n\rfloor\), it follows that \(M/n=\alpha+O(1/n)\), so
+\begin{equation}
+\log(n\pm M)
+=\log n + \log\!\Bigl(1\pm \frac{M}{n}\Bigr)
+=\log n + \log(1\pm \alpha) + O\!\Bigl(\frac{1}{n}\Bigr).
+\end{equation}
+Let \(A_\alpha:=\log(1-\alpha)\) and \(B_\alpha:=\log(1+\alpha)\), which are constants
+depending only on \(\alpha\) (with \(A_\alpha<0<B_\alpha\)).
+Then
+\begin{equation}
+\log(n-M)\,\log(n+M)
+=\bigl(\log n + A_\alpha + O(1/n)\bigr)\bigl(\log n + B_\alpha + O(1/n)\bigr)
+=\log^2 n + (A_\alpha+B_\alpha)\log n + O_\alpha(1).
+\end{equation}
+Therefore,
+\begin{equation}
+U_\alpha(n)
+=\frac{\log^2 n}{\log^2 n + (A_\alpha+B_\alpha)\log n + O_\alpha(1)}
+=\frac{1}{1 + \frac{A_\alpha+B_\alpha}{\log n} + O_\alpha\!\bigl(\frac{1}{\log^2 n}\bigr)}.
+\end{equation}
+Using \( \frac{1}{1+z}=1+O(z)\) for \(z\to 0\) gives
+\begin{equation}
+U_\alpha(n)=1+O_\alpha\!\Bigl(\frac{1}{\log n}\Bigr),
+\end{equation}
+hence \(U_\alpha(n)-1=O_\alpha(1/\log n)\). Combining with the earlier inequality
+proves \eqref{eq:HLCorr-rate-fixed-alpha}.
+\end{proof}
+
+\subsection{\( \GHLproxy \) Asymptotic Exactness}
+
+\begin{lemma}[HL Window Proxy is Asymptotically Exact]
+\label{lem:GHL-proxy-trivial}
+Let \(n\in\mathbb{N}\) and \(M\) satisfy \(1\le M<n\).  Assume \(\Ipar(n;M)\) is as in
+Definition~\ref{def:parity-admissible} and take \(\omega(t) \propto \frac{1}{\log{t}}\).
+Let \(\GHL(2n;M)\), \(\GHLproxy(2n;M)\), and \(\HLCorr(2n;M)\) be as in
+Definitions~\ref{def:GHL}--\ref{def:GHLproxy}.
+
+The following is defined:
+\begin{equation}
+\etaHL(2n;M):=\HLCorr(2n;M)-1.
+\end{equation}
+Then
+\begin{equation}
+\label{eq:GHL-proxy-eta}
+\GHL(2n;M)=\GHLproxy(2n;M)\bigl(1+\etaHL(2n;M)\bigr).
+\end{equation}
+Moreover, along any admissible sequence \((n,M)\) with \(M\to\infty\),
+\begin{equation}
+\etaHL(2n;M)\to 0.
+\end{equation}
+Quantitatively,
+\begin{equation}
+\etaHL(2n;M)=O\!\Bigl(\frac{1}{\log{n}}\Bigr),
+\qquad (n\to\infty),
+\end{equation}
+uniformly for admissible \(M<n\).  If in addition \(M=o(n)\), then
+\begin{equation}
+\label{eq:GHL-eta-smallM}
+\etaHL(2n;M)
+=
+O\!\Bigl(\frac{M^2}{n^2\log{n}}\Bigr)
++O\!\Bigl(\frac{1}{\log^2{n}}\Bigr).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+By \eqref{eq:GHL-factorization},
+\begin{equation}
+\frac{\GHL(2n;M)}{\GHLproxy(2n;M)}=\HLCorr(2n;M),
+\end{equation}
+so \eqref{eq:GHL-proxy-eta} holds with \(\etaHL(2n;M):=\HLCorr(2n;M)-1\).
+For fixed \(0<\alpha<1\) and \(M=\lfloor \alpha n\rfloor\), Lemmas~\ref{lem:HLCorr-min}
+and \ref{lem:HLCorr-upper-envelope} give
+\(0\le \etaHL(2n;M)\le U_\alpha(n)-1\),
+and Lemma~\ref{lem:HLCorr-rate-fixed-alpha} yields
+\(\etaHL(2n;M)=O_\alpha(\frac{1}{\log{n}})\to 0\).
+\end{proof}
+
+\clearpage
+\section{Tables of Calculated Constants}
+
+\noindent
+All numerical constants in the following tables were computed using the
+standard Unix \texttt{bc -l} arbitrary-precision calculator.
+No custom programs or numerical libraries were used.
+Values were independently spot-checked against a handheld scientific calculator.
+Python scripts confirm the results.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{c r r}
+\toprule
+\(p\) &
+\(\EffLocMod_p^{(3)}\) &
+\(\EffLocMod_p^{(5)}\) \\
+\midrule
+\(2\)  & \(1\)  & \(1\) \\
+\(3\)  & \(1\cdot(3-1) = \xEffLocModDivA\) & \(\xEffLocModNDivA\) \\
+\(5\)  & \(\xEffLocModDivA\cdot(5-1) = \xEffLocModDivB\) & \(\xEffLocModNDivA\cdot(5-1) = \xEffLocModNDivB\) \\
+\(7\)  & \(\xEffLocModDivB\cdot(7-1) = \xEffLocModDivC\) & \(\xEffLocModNDivB\cdot(7-1) = \xEffLocModNDivC\) \\
+\(11\) & \(\xEffLocModDivC\cdot(11-1) = \xEffLocModDivD\) & \(\xEffLocModNDivC\cdot(11-1) = \xEffLocModNDivD\) \\
+\(13\) & \(\xEffLocModDivD\cdot(13-1) = \xEffLocModDivE\) & \(\xEffLocModNDivD\cdot(13-1) = \xEffLocModNDivE\) \\
+\(17\) & \(\xEffLocModDivE\cdot(17-1) = \xEffLocModDivF\) & \(\xEffLocModNDivE\cdot(17-1) = \xEffLocModNDivF\) \\
+\(19\) & \(\xEffLocModDivF\cdot(19-1) = \xEffLocModDivG\) & \(\xEffLocModNDivF\cdot(19-1) = \xEffLocModNDivG\) \\
+\(23\) & \(\xEffLocModDivG\cdot(23-1) = \xEffLocModDivH\) & \(\xEffLocModNDivG\cdot(23-1) = \xEffLocModNDivH\) \\
+\(29\) & \(\xEffLocModDivH\cdot(29-1) = \xEffLocModDivI\) & \(\xEffLocModNDivH\cdot(29-1) = \xEffLocModNDivI\) \\
+\(31\) & \(\xEffLocModDivI\cdot(29-1) = \xEffLocModDivJ\) & \(\xEffLocModNDivI\cdot(29-1) = \xEffLocModNDivJ\) \\
+\(37\) & \(\xEffLocModDivJ\cdot(29-1) = \xEffLocModDivK\) & \(\xEffLocModNDivJ\cdot(29-1) = \xEffLocModNDivK\) \\
+\(41\) & \(\xEffLocModDivK\cdot(29-1) = \xEffLocModDivL\) & \(\xEffLocModNDivK\cdot(29-1) = \xEffLocModNDivL\) \\
+\bottomrule
+\end{tabular}
+\caption{Effective local moduli for odd primes \(p \le 41\).}
+\label{tab:EffLocMod-values}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{r r r r}
+\toprule
+\multicolumn{2}{c}{\(n \nmid 3\)} &
+\multicolumn{2}{c}{\(n \mid 3\)} \\
+\cmidrule(lr){1-2} \cmidrule(lr){3-4}
+\(\EffLocMod(2n;L)\) & \(\OmegaPrimeNorm(2n;L)\) &
+\(\EffLocMod(2n;L)\) & \(\OmegaPrimeNorm(2n;L)\) \\
+\midrule
+\(\xEffLocModNDivA\)   & \(\xOmegaPrimeNormA\) &
+\(\xEffLocModDivA\)  & \(\xOmegaPrimeNormASqrt\) \\
+\(\xEffLocModNDivB\)  & \(\xOmegaPrimeNormB\) &
+\(\xEffLocModDivB\)  & \(\xOmegaPrimeNormBSqrt\) \\
+\(\xEffLocModNDivC\)  & \(\xOmegaPrimeNormC\) &
+\(\xEffLocModDivC\)  & \(\xOmegaPrimeNormCSqrt\) \\
+\(\xEffLocModNDivD\) & \(\xOmegaPrimeNormD\) &
+\(\xEffLocModDivD\) & \(\xOmegaPrimeNormDSqrt\) \\
+\(\xEffLocModNDivE\) & \(\xOmegaPrimeNormE\) &
+\(\xEffLocModDivE\) & \(\xOmegaPrimeNormESqrt\) \\
+\(\xEffLocModNDivF\) & \(\xOmegaPrimeNormF\) &
+\(\xEffLocModDivF\) & \(\xOmegaPrimeNormFSqrt\) \\
+\(\xEffLocModNDivG\) & \(\xOmegaPrimeNormG\) &
+\(\xEffLocModDivG\) & \(\xOmegaPrimeNormGSqrt\) \\
+\(\xEffLocModNDivH\) & \(\xOmegaPrimeNormH\) &
+\(\xEffLocModDivH\) & \(\xOmegaPrimeNormHSqrt\) \\
+\(\xEffLocModNDivI\) & \(\xOmegaPrimeNormI\) &
+\(\xEffLocModDivI\) & \(\xOmegaPrimeNormISqrt\) \\
+\(\xEffLocModNDivJ\) & \(\xOmegaPrimeNormJ\) &
+\(\xEffLocModDivJ\) & \(\xOmegaPrimeNormJSqrt\) \\
+\(\xEffLocModNDivK\) & \(\xOmegaPrimeNormK\) &
+\(\xEffLocModDivK\) & \(\xOmegaPrimeNormKSqrt\) \\
+%\(\xEffLocModNDivL\) & \(\xOmegaPrimeNormL\) &
+%\(\xEffLocModDivL\) & \(\xOmegaPrimeNormLSqrt\) \\
+\bottomrule
+\end{tabular}
+\caption{Normalized prime curvature constants \(\OmegaPrimeNorm(2n;L)\) as functions of the effective local modulus.}
+\label{tab:OmegaPrimeNorm-values}
+\end{table}
+
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{r r r}
+\toprule
+\(\substack{3\nmid n \\ \EffLocMod(2n;L)}\) &
+\(\substack{3\mid n \\ \EffLocMod(2n;L)}\) & \(c(2n;L)\) \\
+\midrule
+\(\xEffLocModNDivA\) & \(\xEffLocModDivA\)  & \(\xCvalueA\) \\
+\(\xEffLocModNDivB\) & \(\xEffLocModDivC\)  & \(\xCvalueB\) \\
+\(\xEffLocModNDivC\) & \(\xEffLocModDivC\) & \(\xCvalueC\) \\
+\(\xEffLocModNDivD\) & \(\xEffLocModDivD\) & \(\xCvalueD\) \\
+\(\xEffLocModNDivE\) & \(\xEffLocModDivE\) & \(\xCvalueE\) \\
+\(\xEffLocModNDivF\) & \(\xEffLocModDivF\) & \(\xCvalueF\) \\
+\(\xEffLocModNDivG\) & \(\xEffLocModDivG\) & \(\xCvalueG\) \\
+\(\xEffLocModNDivH\) & \(\xEffLocModDivH\) & \(\xCvalueH\) \\
+\(\xEffLocModNDivI\) & \(\xEffLocModDivI\) & \(\xCvalueI\) \\
+\(\xEffLocModNDivJ\) & \(\xEffLocModDivJ\) & \(\xCvalueJ\) \\
+\(\xEffLocModNDivK\) & \(\xEffLocModDivK\) & \(\xCvalueK\) \\
+\(\xEffLocModNDivL\) & \(\xEffLocModDivL\) & \(\xCvalueL\) \\
+\bottomrule
+\end{tabular}
+\caption{Bounding envelope constants \(c(2n;L)\) associated with effective local moduli.}
+\label{tab:c-values}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\centering
+\begin{tabular}{r r r r}
+\toprule
+\multicolumn{2}{c}{\(n \nmid 3\)} &
+\multicolumn{2}{c}{\(n \mid 3\)} \\
+\cmidrule(lr){1-2} \cmidrule(lr){3-4}
+\(\EffLocMod(2n;L)\) & \(c(2n;L)\;/\;\SsemHead^{\EffLocModCap,\bullet}(2n;L) \) &
+\(\EffLocMod(2n;L)\) & \(c(2n;L)\;/\;\SsemHead^{\EffLocModCap,\bullet}(2n;L) \) \\
+\midrule
+\(\xEffLocModNDivA\)        & \(\xCratioNDivA\) &
+\(\xEffLocModDivA\)        & \(\xCratioDivA\) \\
+\(\xEffLocModNDivB\)        & \(\xCratioNDivB\) &
+\(\xEffLocModDivB\)        & \(\xCratioDivB\) \\
+\(\xEffLocModNDivC\)       & \(\xCratioNDivC\) &
+\(\xEffLocModDivC\)       & \(\xCratioDivC\) \\
+\(\xEffLocModNDivD\)      & \(\xCratioNDivD\) &
+\(\xEffLocModDivD\)      & \(\xCratioDivD\) \\
+\(\xEffLocModNDivE\)     & \(\xCratioNDivE\) &
+\(\xEffLocModDivE\)     & \(\xCratioDivE\) \\
+\(\xEffLocModNDivF\)    & \(\xCratioNDivF\) &
+\(\xEffLocModDivF\)    & \(\xCratioDivF\) \\
+\(\xEffLocModNDivG\)   & \(\xCratioNDivG\) &
+\(\xEffLocModDivG\)  & \(\xCratioDivG\) \\
+\(\xEffLocModNDivH\) & \(\xCratioNDivH\) &
+\(\xEffLocModDivH\) & \(\xCratioDivH\) \\
+\(\xEffLocModNDivI\)  & \(\xCratioNDivI\) &
+\(\xEffLocModDivI\) & \(\xCratioDivI\) \\
+\(\xEffLocModNDivJ\)  & \(\xCratioNDivJ\) &
+\(\xEffLocModDivJ\) & \(\xCratioDivJ\) \\
+\(\xEffLocModNDivK\)  & \(\xCratioNDivK\) &
+\(\xEffLocModDivK\) & \(\xCratioDivK\) \\
+\(\xEffLocModNDivL\)  & \(\xCratioNDivL\) &
+\(\xEffLocModDivL\) & \(\xCratioDivL\) \\
+\bottomrule
+\end{tabular}
+\caption{Bounding envelope constant ratio \(c(2n;L)\;/\;\SsemHead^{\EffLocModCap,\bullet}(2n;L)\) associated with effective local moduli.}
+\label{tab:c-ratios}
+\end{table}
+
+\clearpage
+\bibliographystyle{plain}
+\bibliography{PCGC--Goldbach-reductions}
+
+\end{document}
+

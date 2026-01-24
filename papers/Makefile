@@ -7,7 +7,7 @@ OUT=../output
 DATE := $(shell date +%Y%m%d)
 
 # List all papers (add new papers here)
-ALL_PAPERS := goldbach-reformulation pcgc-goldbach-derivation pcgc-goldbach-empirical
+ALL_PAPERS := goldbach-reformulation pcgc-goldbach-derivation pcgc-goldbach-empirical pcgc-goldbach-reductions
 # Example: ALL_PAPERS := goldbach-reformulation another-paper third-paper
 
 # ---- Build all papers ----------------------------------------
@@ -42,7 +42,10 @@ PCGC_GOLDBACH_DERIVATION_FILES := $(call PAPER_FILES,pcgc-goldbach-derivation)
 # pcgc-goldbach-empirical uses standard naming
 PCGC_GOLDBACH_EMPIRICAL_FILES := $(call PAPER_FILES,pcgc-goldbach-empirical)
 
-.PHONY: zip-goldbach-reformulation clean-goldbach-reformulation zip-pcgc-goldbach-derivation clean-pcgc-goldbach-derivation zip-pcgc-goldbach-empirical clean-pcgc-goldbach-empirical
+# pcgc-goldbach-empirical uses standard naming
+PCGC_GOLDBACH_REDUCTIONS_FILES := $(call PAPER_FILES,pcgc-goldbach-reductions)
+
+.PHONY: zip-goldbach-reformulation clean-goldbach-reformulation zip-pcgc-goldbach-derivation clean-pcgc-goldbach-derivation zip-pcgc-goldbach-empirical clean-pcgc-goldbach-empirical zip-pcgc-goldbach-reductions clean-pcgc-goldbach-reductions 
 
 # ---- Build the date-stamped source archive for goldbach-reformulation -----
 zip-goldbach-reformulation:
@@ -97,6 +100,25 @@ zip-pcgc-goldbach-empirical:
 # ---- Cleanup pcgc-goldbach-empirical archive ----------------------------
 clean-pcgc-goldbach-empirical:
 	@rm -rf "$(OUT)/pcgc-goldbach-empirical-src-$(DATE).zip" "$(OUT)/pcgc-goldbach-empirical-src-$(DATE).sha256"
+
+# ---- Build the date-stamped source archive for pcgc-goldbach-reductions -----
+zip-pcgc-goldbach-reductions:
+	@echo "Creating source archive for pcgc-goldbach-reductions..."
+	@rm -rf "$(OUT)/pcgc-goldbach-reductions-src"
+	@mkdir -p "$(OUT)/pcgc-goldbach-reductions-src"
+	@cp -f $(PCGC_GOLDBACH_REDUCTIONS_FILES) "$(OUT)/pcgc-goldbach-reductions-src/."
+	@cd "$(OUT)/pcgc-goldbach-reductions-src" && ( \
+	  echo "SHA256 manifest for pcgc-goldbach-reductions ($(DATE))" > CHECKSUMS.txt; \
+	  for f in $(notdir $(PCGC_GOLDBACH_REDUCTIONS_FILES)); do sha256sum "$$f" >> CHECKSUMS.txt 2>/dev/null || shasum -a 256 "$$f" >> CHECKSUMS.txt; done )
+	@(cd "$(OUT)" && zip -r -X "pcgc-goldbach-reductions-src-$(DATE).zip" "pcgc-goldbach-reductions-src" >/dev/null)
+	@rm -rf "$(OUT)/pcgc-goldbach-reductions-src"
+	@echo "Created $(OUT)/pcgc-goldbach-reductions-src-$(DATE).zip"
+	@(cd "$(OUT)" && shasum -a 256 "pcgc-goldbach-reductions-src-$(DATE).zip" | tee "pcgc-goldbach-reductions-src-$(DATE).sha256")
+
+# ---- Cleanup pcgc-goldbach-reductions archive ----------------------------
+clean-pcgc-goldbach-reductions:
+	@rm -rf "$(OUT)/pcgc-goldbach-reductions-src-$(DATE).zip" "$(OUT)/pcgc-goldbach-reductions-src-$(DATE).sha256"
+
 
 # ---- Build/clean all papers ----------------------------------------
 .PHONY: zip-src clean-src
