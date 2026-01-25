@@ -259,7 +259,7 @@ and short--interval behavior.
 \subsection{Background and Motivation}
 
 The \emph{Prime Curvature Geometry Conjecture for Goldbach} (PCGC--Goldbach) was introduced
-in a previous paper in this series \cite{Riemers2026-GPCH} as a geometric framework for organizing remainder
+in a previous paper in this series \cite{Riemers2026-PCGH} as a geometric framework for organizing remainder
 terms in Goldbach pair counting.
 Rather than treating error terms as purely analytic artifacts, PCGC--Goldbach
 models them through an explicit bounding envelope whose structure exhibits
@@ -269,7 +269,7 @@ deviations between measured Goldbach counts and Hardy--Littlewood--type
 predictors.
 
 Extensive computational validation of this framework, carried out up to
-\(2n = 23\#\), has been presented in a supportive paper in this series \cite{Riemers2025-PaperB}.
+\(2n = 23\#\), has been presented in a supportive paper in this series \cite{Riemers2026-PCGC-Empirical}.
 These computations demonstrate strong empirical agreement between observed
 Goldbach counts and the predicted geometric bounds, across a wide range of
 window sizes and residue configurations.
@@ -308,7 +308,7 @@ In particular, the framework yields
 \qquad (n\to\infty),
 \end{equation}
 showing that the geometric model is not merely compatible with
-Hardy--Littlewood heuristics, but sufficient—under its stated assumptions—to
+Hardy--Littlewood heuristics, but sufficient---under its stated assumptions---to
 imply their standard asymptotic prediction.
 
 \item \textbf{Short--Interval Bombieri--Vinogradov--Type Agreement.}
@@ -336,7 +336,7 @@ admissible window scales.
 
 Section~\ref{sec:fundamental-definitions} collects the fundamental definitions,
 operators, and identities required for the reductions, adapted from the
-geometric framework developed in \cite{Riemers2026-GPCH}.
+geometric framework developed in \cite{Riemers2026-PCGH}.
 Section~\ref{sec:main-conjectures} formally states PCGC--Goldbach and
 PCGC--Goldbach Bounds, establishing the precise hypotheses under which all
 subsequent results are derived.
@@ -356,7 +356,7 @@ follows naturally from a single geometric principle.
 \label{sec:fundamental-definitions}
 
 The definitions and identities collected in this section are adapted from
-the first two papers of this series \cite{Riemers2025,Riemers2026-GPCH}.
+the first two papers of this series \cite{Riemers2025,Riemers2026-PCGH}.
 They are presented here in a condensed form sufficient for the present work;
 for full derivations, motivation, and extended discussion, the reader is
 referred to the cited papers.
@@ -745,7 +745,7 @@ Empty products are interpreted as \(1\).
 \end{definition}
 
 \noindent
-The following identities from \cite{Riemers2026-GPCH} hold,
+The following identities from \cite{Riemers2026-PCGH} hold,
 \begin{align}
 \label{ident:ssem}
 \Ssem(2n) = \Ssem^{\SquareCap}(2n)
@@ -823,8 +823,8 @@ in numerical comparisons.
 
 Any conditional theorem, lemma, or corollary derived from any conjecture may be viewed,
 in isolation, as a new weaker or equivalent conjectural statement.
-The primary conjecture examined in this work—PCGC--Goldbach, introduced in
-\cite{Riemers2026-GPCH}, is restated here using the \(\ecap{\cdot}\) operator.
+The primary conjecture examined in this work---PCGC--Goldbach, introduced in
+\cite{Riemers2026-PCGH}, is restated here using the \(\ecap{\cdot}\) operator.
 
 \begin{conjecture}[Prime Curvature Geometry Conjecture for Goldbach (PCGC--Goldbach)]
 \label{con:PCGC--Goldbach}
@@ -852,7 +852,7 @@ or empirically, they provide indirect support for the PCGC--Goldbach framework.
 \subsection{PCGC--Goldbach Bounds}
 
 The inequality \(\RHL(2n;L) \le \RHLbound(2n;L)\) has been proven in the
-Bounding Envelope section of \cite{Riemers2026-GPCH}.
+Bounding Envelope section of \cite{Riemers2026-PCGH}.
 Discarding the sharper remainder \(\RHL\) in favour of its envelope leads to
 a strictly weaker conjecture.
 
@@ -882,7 +882,7 @@ In particular, the heuristic and empirical analysis of \cite{Riemers2025}
 shows that the \(\Lambda\)-curves for up to
 \(2n = 23\#\) exhibit bounded convergence toward the predicted limit.
 This behaviour does not follow from Hardy--Littlewood asymptotics alone,
-nor from Goldbach’s conjecture itself, but is naturally explained by a
+nor from Goldbach's conjecture itself, but is naturally explained by a
 bounding principle of the form asserted in PCGC--Goldbach Bounds.
 
 \section{Geometric Framework}
@@ -1003,7 +1003,7 @@ L\left(2C_2\,\frac{L}{\log^2 n} - \frac{c(2n;L)}{\SsemHead^{\EffLocModCap,\bulle
 Since the function \(\sqrt{n}/\log^2 n\) is increasing for all \(n\ge n_0\),
 and since the envelope coefficient \(c(2n;L)\) is uniformly bounded above
 on \(n\ge n_0\) at the scale \(L=\sqrt{2\ecap{n/2}}\) by the
-\emph{Monotonic Envelope Lemma} of \cite{Riemers2026-GPCH}, and
+\emph{Monotonic Envelope Lemma} of \cite{Riemers2026-PCGH}, and
 \( \SsemHead^{\EffLocModCap,\bullet}(2n;L) \) is monotonic increasing,
 the bracket in \eqref{eq:meas-lower-L} attains its minimum at \(n=n_0\).
 Hence, for all \(n\ge n_0\),
@@ -1150,7 +1150,7 @@ so \eqref{eq:pcgc-term-simplified} gives
 \le
 \frac{c(2n;L)}{4C_2}\cdot\frac{1}{L\,\omega(n)^2}.
 \end{equation}
-By the \emph{Monotonic Envelope Lemma} of \cite{Riemers2026-GPCH},
+By the \emph{Monotonic Envelope Lemma} of \cite{Riemers2026-PCGH},
 \(c(2n;L)\) is nonincreasing in \(L\), hence for all admissible \((n,L)\),
 \begin{equation}
 c(2n;L)\le c(6;2),
@@ -1327,7 +1327,7 @@ N(2n)=\Gmeas(2n)+1_{\mathrm{prime}}(n)\sim \Gmeas(2n).
 \label{sec:short-intervals}
 
 In earlier work~\cite{Riemers2025} the Goldbach problem was reduced to a
-short–interval Bombieri--Vinogradov–like hypothesis~\cite{Bombieri1965,Vinogradov1965}.  That
+short--interval Bombieri--Vinogradov--like hypothesis~\cite{Bombieri1965,Vinogradov1965}.  That
 hypothesis is recalled here in a form adapted to Goldbach windows, and fit
 into the geometric structure developed in this paper.
 
@@ -1344,9 +1344,9 @@ statement in the same short-interval scaling regime.
 
 \subsection{Short-Interval Bombieri--Vinogradov Like Hypothesis}
 
-Under PCGC--Goldbach and the short–interval hypothesis below, the
+Under PCGC--Goldbach and the short--interval hypothesis below, the
 relative agreement theorem again applies, yielding asymptotic control of
-\(\Gmeas(2n;M)\) for all windows above the short–interval threshold.
+\(\Gmeas(2n;M)\) for all windows above the short--interval threshold.
 
 \begin{hypothesis}[Short-Interval Bombieri--Vinogradov in Goldbach Windows]
 \label{hyp:SIBV-Goldbach}
@@ -1501,7 +1501,7 @@ geometric approach to a broader class of questions in additive number theory.
 \end{itemize}
 
 Computational validation of PCGC--Goldbach up to \(2n = 23\#\)
-\cite{Riemers2025-PaperB} provides strong empirical support for the framework.
+\cite{Riemers2026-PCGC-Empirical} provides strong empirical support for the framework.
 The reductions presented here show that, such validation extends to all even
 integers, so the classical results discussed above as geometric
 consequences.

@@ -147,11 +147,11 @@ This paper develops a geometric framework for analyzing remainder terms in addit
 
 Specializing the framework to the Goldbach problem yields the \textbf{Prime Curvature Geometry Conjecture for Goldbach (PCGC--Goldbach) }
 and an explicit curvature constant 
-\( \OmegaPrime \). The resulting conjectural bounds are compatible with Hardy–Littlewood A predictions in the asymptotic limit, while providing a geometric mechanism that organizes deviation behaviour across finite analytic windows and cutoff scales.
+\( \OmegaPrime \). The resulting conjectural bounds are compatible with Hardy--Littlewood A predictions in the asymptotic limit, while providing a geometric mechanism that organizes deviation behaviour across finite analytic windows and cutoff scales.
 
 An explicit bounding envelope for the Goldbach remainder is derived and shown to control the exact remainder uniformly. This envelope is proved not to be an asymptotic proxy: the exact remainder exhibits non-vanishing exponential curvature within cutoff cells, preventing pointwise asymptotic equivalence. This distinction clarifies the limits of scale-based approximations and isolates the geometric source of deviation.
 
-The present paper is restricted to the derivation and formal statement of the geometric framework, associated hypotheses, and bounding envelopes. Numerical validation, certified bounds over large finite ranges, and reduction theorems relating PCC–Goldbach to Hardy–Littlewood–A and Bombieri–Vinogradov–type hypotheses~\cite{Bombieri1965,Vinogradov1965}  are developed in subsequent work.
+The present paper is restricted to the derivation and formal statement of the geometric framework, associated hypotheses, and bounding envelopes. Numerical validation, certified bounds over large finite ranges, and reduction theorems relating PCC--Goldbach to Hardy--Littlewood--A and Bombieri--Vinogradov--type hypotheses~\cite{Bombieri1965,Vinogradov1965}  are developed in subsequent work.
 \end{abstract}
 
 \clearpage
@@ -273,7 +273,7 @@ The obstruction is the well-known sieve barrier: after sieving by primes up to
 \(x^{1/2}\), no further cancellation is available to control prime correlations
 at the scale required for HL--A.
 Nevertheless, extensive heuristic and computational evidence indicates that
-Hardy--Littlewood–type predictions accurately describe Goldbach pair counts
+Hardy--Littlewood--type predictions accurately describe Goldbach pair counts
 across wide finite ranges; see, for example, the computational validation in~\cite{Riemers2025GoldbachSieve}.
 This tension between strong empirical agreement and the limitations of existing
 analytic tools motivates the search for additional underlying structure.
@@ -284,9 +284,9 @@ structure beyond classical sieve estimates.
 \medskip
 
 The purpose of the present paper is not to prove HL--A, but to derive a
-\emph{geometric framework} that governs deviations from Hardy--Littlewood–type
+\emph{geometric framework} that governs deviations from Hardy--Littlewood--type
 predictions in additive prime problems.
-Goldbach’s problem serves as a motivating example, but the framework developed
+Goldbach's problem serves as a motivating example, but the framework developed
 here applies more generally to prime-like sets and structured configuration
 families.
 
@@ -299,7 +299,7 @@ Then, for a symmetric window of radius \(M\), define the localized Goldbach coun
        1_{\mathrm{prime}}(n-m)\,
        1_{\mathrm{prime}}(n+m),
 \end{equation}
-and let \(\Gpred(2n;M)\) denote a corresponding Hardy--Littlewood–type predictor
+and let \(\Gpred(2n;M)\) denote a corresponding Hardy--Littlewood--type predictor
 restricted to the same window.
 The deviation
 \begin{equation}
@@ -1393,7 +1393,7 @@ Define
    := \prod_{\substack{p\le P_0}}
         t\bigl(p;S_1,S_2,\dots\bigr)^{-1/\beta(p;S_1,S_2,\dots)}.
 \end{equation}
-All medium-- and large–prime contributions appear only through this
+All medium-- and large--prime contributions appear only through this
 single renormalized constant \(\widetilde{\Omega}(P_0)\), while \(\Omega\)
 remains the global curvature constant attached to the full infinite
 Euler product.  No small primes are absorbed into \(T\); their effects are
@@ -1436,7 +1436,7 @@ general tail structure will specialize to explicit formulas for \(t(p)\),
 \subsubsection{The Medium and Large--Prime Correction \(T_2\)}
 
 Large primes (those exceeding both \(P_0(L_i)\) and a second stability
-threshold) contribute only residue–level fluctuations.
+threshold) contribute only residue--level fluctuations.
 Their individual contributions are far below the natural scale of the
 problem, and their aggregate effect is conjecturally bounded.
 
@@ -1517,7 +1517,7 @@ because \(P_0=P_0(L_i)\) grows only polylogarithmically in \(L_i\).
 \item
 \emph{Medium and large primes and higher correlations.}  
 \(T_2(L_i)\) absorbs all remaining fluctuations, including large-prime
-residue effects and higher–order interactions, and is conjecturally
+residue effects and higher--order interactions, and is conjecturally
 bounded or slowly varying.  
 It does not influence the exponential scale of \(R(C^{(i)})\).
 \end{enumerate}
@@ -1652,10 +1652,10 @@ This choice is therefore canonical within the present framework.
 Nevertheless, there is no \emph{a priori} reason that the underlying geometry 
 must be strictly exponential in all settings. Alternative functional families, such 
 as hyperbolic profiles (e.g. \( \sinh^2 \), or, in more structured contexts, Jacobi 
-elliptic functions described by Abramowitz and Stegun~\cite{AbramowitzStegun1964} or Lambert–W 
+elliptic functions described by Abramowitz and Stegun~\cite{AbramowitzStegun1964} or Lambert--W 
 transforms described by Corless et al.~\cite{CorlessJeffreyKnuth1996}--may arise when the interaction 
 between local constraints and global renormalization exhibits cyclic or 
-quasi-periodic behavior across scales. A problem as rigid as Goldbach’s 
+quasi-periodic behavior across scales. A problem as rigid as Goldbach's 
 conjecture does not probe sufficiently many degrees of freedom to 
 distinguish most such higher-order geometric features; however, a derivation 
 that explicitly incorporates Euler-cap effects may provide the additional structure 
@@ -1773,7 +1773,7 @@ introduced previously, with irrelevant primes omitted once their associated
 local moduli exceed the window scale.
 
 \begin{remark}
-A naïve replacement of the Hardy--Littlewood weight \(1/\log x\) by
+A naive replacement of the Hardy--Littlewood weight \(1/\log x\) by
 \(\operatorname{li}(x)/x\) is inappropriate in a windowed setting.
 The correct analogue requires integration over the window itself,
 which induces a continuous correction that must be paired with a
@@ -1932,14 +1932,14 @@ effective local modulus attached to the even integer \(2n\) is
    \prod_{\substack{q \in \Peff(n) \\ q \le p}} (q-1),
 \end{equation}
 where \(\pmin(n)\in\{3,5\}\) is chosen according to the condition
-\(3\mid n\).  Thus \(\EffLocMod_p(n)\) measures the size of the residue–class
+\(3\mid n\).  Thus \(\EffLocMod_p(n)\) measures the size of the residue--class
 orbit induced by all odd primes \(q<p\), with each factor \((q-1)\)
 reflecting the effective sieving density at modulus \(q\).
 
 In contrast to the raw primorial \(\prod_{q<p} q\) suggested by a
-naïve application of the Chinese Remainder Theorem, the use of
-\((q-1)\) aligns with the Hardy–Littlewood singular–series geometry:
-for Goldbach–type problems, each prime contributes according to its
+naive application of the Chinese Remainder Theorem, the use of
+\((q-1)\) aligns with the Hardy--Littlewood singular--series geometry:
+for Goldbach--type problems, each prime contributes according to its
 admissible residue classes rather than its full modulus.
 
 \medskip
@@ -2214,7 +2214,7 @@ by replacing \(\EffLocMod_p^{(3)}\) with \(\EffLocMod_p^{(5)}\).
 
 At the level of a single prime, there is no reason to expect
 \(T_2(2n;L)\) to be numerically close to \(1\): for the first
-“very small’’ prime \(p_\ast\) above the cutoff, the residue correction
+"very small'' prime \(p_\ast\) above the cutoff, the residue correction
 at that prime multiplies the tail by
 \begin{equation}
 \frac{p_\ast-1}{p_\ast-2}
@@ -2272,7 +2272,7 @@ it is therefore safe and conceptually cleaner to set \(\THL_2(2n;L)=1\).
 
 \subsection{Specialized Remainder Decomposition}
 
-Collecting the small--prime factors \(\HHL(2n;L)\), the semi–local
+Collecting the small--prime factors \(\HHL(2n;L)\), the semi--local
 correction \(\SsemHead^{\EffLocModCap,\complement}(2n;L)\), and the medium--prime tail
 \(T^{\mathrm{HL}}(2n;L)\) from the preceding subsections, and taking
 \(\THL_2(2n;L)\equiv 1\) as justified above, the Goldbach remainder
@@ -2301,15 +2301,15 @@ framework.  Its conjectural role is stated explicitly in the next
 section.
 
 \begin{remark}[Primorial vs.\ \((q-1)\) scaling]
-It is instructive to contrast the \((q-1)\)–based moduli \(\EffLocMod_p(n)\) with
-the more naive “primorial’’ choice
+It is instructive to contrast the \((q-1)\)--based moduli \(\EffLocMod_p(n)\) with
+the more naive "primorial'' choice
 \(\prod_{3<q<p} q\).
 In a primorial model one would retain an explicit residual tail factor
 \(T_2\) to account for residue corrections at primes just above the
 cutoff.  The resulting bound can be tuned to match extremal deviations,
 but it is less well behaved away from those spikes.
 
-By working instead with the \((q-1)\)–scaled moduli \(\EffLocMod_p(n)\) and
+By working instead with the \((q-1)\)--scaled moduli \(\EffLocMod_p(n)\) and
 absorbing the corresponding cost into \(T^{\mathrm{HL}}(2n;L)\), the
 residual factor \(T_2\) becomes superfluous: its effect is already
 accounted for in the conservative choice of tail exponent, and the

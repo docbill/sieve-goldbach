@@ -6,10 +6,10 @@
 %     https://creativecommons.org/licenses/by/4.0/
 %
 % You are free to:
-%   - Share — copy and redistribute the material in any medium or format
-%   - Adapt — remix, transform, and build upon the material for any purpose
+%   - Share --- copy and redistribute the material in any medium or format
+%   - Adapt --- remix, transform, and build upon the material for any purpose
 % Under the following terms:
-%   - Attribution — You must give appropriate credit, provide a link to the license,
+%   - Attribution --- You must give appropriate credit, provide a link to the license,
 %     and indicate if changes were made.
 
 \documentclass[11pt]{article}
@@ -239,7 +239,7 @@
       table[
         x={#2},
         y expr=abs(\thisrow{#3}),
-        restrict expr to domain={\thisrow{#3}}{0:inf}, % <— gate on the original y
+        restrict expr to domain={\thisrow{#3}}{0:inf}, % <--- gate on the original y
       ] {\datatable};
     \addlegendentry{\(\Lambda \ge 0\)}
 
@@ -248,7 +248,7 @@
       table[
         x={#2},
         y expr=abs(\thisrow{#3}),
-        restrict expr to domain={\thisrow{#3}}{-inf:0}, % <— gate on the original y
+        restrict expr to domain={\thisrow{#3}}{-inf:0}, % <--- gate on the original y
       ] {\datatable};
     \addlegendentry{\(\Lambda < 0\)}
 
@@ -307,7 +307,7 @@ In summary, contributions are: (i) a certified sieve-theoretic lower bound with 
 
 \preto\subsection{\FloatBarrier}
 \subsection{Motivation}
-The Goldbach Conjecture, the Twin Prime Conjecture, and Polignac’s Conjecture each address the distribution of prime pairs in different settings.  
+The Goldbach Conjecture, the Twin Prime Conjecture, and Polignac's Conjecture each address the distribution of prime pairs in different settings.  
 A natural generalization emerges from considering these problems together: along suitable arithmetic or algebraic paths in the \( (n,m) \)-grid, prime pairs appear with a density consistent with the heuristic \( \#\mathcal{S}_N / \log^2 N \).  
 Formulated precisely, this leads to the following working conjecture.
 
@@ -405,7 +405,7 @@ Use of the singular series and the \(  \frac{n}{log^2 n} \) scale follows the cl
 \needspace{10\baselineskip}
 
 \preto\subsection{\FloatBarrier}
-\subsection{Readers’ Guide}
+\subsection{Readers' Guide}
 Section~\ref{sec:framework} sets up the sieve-heuristic framework: the quadratic form \(Q(n,m)\), the window \(M(n)\), and the HL-A baseline and normalizations used throughout. 
 Section~\ref{sec:stats} presents the computational study up to \(2n<23\#\), including primorial-interval convergence patterns.
 Section~\ref{sec:sgb} contains the core sieve-theoretic results: the reduction lemma (Sec.~\ref{sec:reduction}), the certified lower bound (Thm.~\ref{thm:main}), its conditional corollary under short-interval Bombieri-Vinogradov equidistribution hypothesis (Sec.~\ref{sec:SI-BV}), and the primorial maxima proposition (Sec.~\ref{sec:primorial-prop}).
@@ -626,7 +626,7 @@ Introduce the evaluation calibration
 \end{equation}
 so that \(C_\star(n;I)\to \betacal(I)\,S_{\mathrm{GB}}(2n)\) as \(n\to\infty\) with \(\lvert I\rvert=o(n)\).
 
-\noindent\emph{Convention.} “Unordered” counts \(\{p,q\}\) once; “ordered” counts \((p,q)\) and \((q,p)\) separately, accounting for the factor of \(2\).
+\noindent\emph{Convention.} "Unordered" counts \(\{p,q\}\) once; "ordered" counts \((p,q)\) and \((q,p)\) separately, accounting for the factor of \(2\).
 \end{definition}
 
 Next the \( C_\star \) function is applied in the definitions, providing a clean way to define predicted values consistent with the empirically measured ones.
@@ -754,7 +754,7 @@ circle-method correction \(\Lambda(n;I)\).
 \end{remark}
 
 \begin{remark}[Consistency with the Independent-Pair Heuristic]
-A naïve independence model would replace the factor
+A naive independence model would replace the factor
 \(\prod_{3\le p\le y}(1-\tfrac{2}{p})\) by \(\prod_{3\le p\le y}(1-\tfrac{1}{p})^2\).
 Since
 \begin{equation}
@@ -795,11 +795,11 @@ windows, and extremal cases.
 The Hardy-Littlewood Conjecture A (HL-A) is adopted as a modelling assumption for interpreting per-\( n \) counts; no claim of proof is made. The sieve bounds and \( \Bwin \) identities are independent of this assumption.
 
 
-To the author’s knowledge, there is no precedent for a systematic in-window statistical analysis of HL-A.  Previous computational efforts (e.g.~\cite{OliveiraESilva2014}) numerically confirmed all even integers up to their computational limit in a global window, while analytic studies examined distributions of primes in short intervals \cite{MontgomerySoundararajan2004,GranvilleSoundararajan2007}.  The present work provides the first statistical locking-down of HL-A within analysis windows, analogous to how earlier computations statistically locked down Goldbach itself.  The rigorous sieve bounds are established independent of this analysis.
+To the author's knowledge, there is no precedent for a systematic in-window statistical analysis of HL-A.  Previous computational efforts (e.g.~\cite{OliveiraESilva2014}) numerically confirmed all even integers up to their computational limit in a global window, while analytic studies examined distributions of primes in short intervals \cite{MontgomerySoundararajan2004,GranvilleSoundararajan2007}.  The present work provides the first statistical locking-down of HL-A within analysis windows, analogous to how earlier computations statistically locked down Goldbach itself.  The rigorous sieve bounds are established independent of this analysis.
 
 \preto\subsection{\FloatBarrier}
 \subsection{Modelling Assumption}
-Assumption (HL-A, windowed form). For admissible windows \( I \)  with \( \lvert I \rvert = o(n) \):
+Assumption (HL-A, windowed form). For admissible windows \( I \)  with \( \lvert I \rvert = o(n) \):
 
 \begin{equation}
 N_M^{(\mathrm{pairs})}(2n;I)  = \Big(2,\SGB(2n) + o(1)\Big),\frac{M}{\log^2 n}
@@ -827,7 +827,7 @@ and the scaling parameter \( \alpha \) takes values
 \( 2^{k/8} \) for \( k \in [0,80] \).
 The Euler cap \( \Ecap(n) \), defined in~\eqref{eq:euler_cap},
 represents the upper bound on \( m/n \) for which both the
-Hardy–Littlewood circle correction and the semiprime–to–prime pair
+Hardy--Littlewood circle correction and the semiprime--to--prime pair
 equivalence remain valid.
 The symmetric formulation improves numerical conditioning and ensures
 predictable convergence, although the same framework is equally
@@ -1020,7 +1020,7 @@ Recall from Definition~\ref{def:lambda}:
 \Lambda_{\min}(B)\; := \;\log\frac{\Cmeas_{\min}(B)}{\Cpred_{\min}(B)}.
 \end{equation}
 
-Under HL-A, predictions and measurements converge to the same limit. For very large \( n \), minima should approach \( 2C_2 \), where \( C_2 \) is the twin prime constant. Figure~\ref{fig:lambda-minprim} shows \( \Lambda_{\min} \to 0 \) as \( n \)  grows.
+Under HL-A, predictions and measurements converge to the same limit. For very large \( n \), minima should approach \( 2C_2 \), where \( C_2 \) is the twin prime constant. Figure~\ref{fig:lambda-minprim} shows \( \Lambda_{\min} \to 0 \) as \( n \)  grows.
 
 \begin{figure}[h]
   \centering
@@ -1234,7 +1234,7 @@ Under the Hardy-Littlewood baseline, the expected ordered Goldbach count satisfi
 \begin{equation}\label{eq:HLA-main-term-2}
 \mathbb E\,R_2(2n)\ \asymp\ \frac{\mathfrak S(2n)\,2n}{\log^2(2n)}.
 \end{equation}
-Across a fixed scale the factor \(2n/\log^2(2n)\) varies slowly, while \(\mathfrak S(2n)\) follows Proposition~\ref{prop:primorial-plateau}. Hence HL-A predicts that \emph{blockwise maxima} of normalized counts occur at \(n\) that are multiples of \(P_y=p_y^\#/2\) within each interval \([P_y,\,p_{y+1}P_y)\) (the “primorial plateaus”). Empirics in Table~\ref{tab:normalized-status} match this pattern.
+Across a fixed scale the factor \(2n/\log^2(2n)\) varies slowly, while \(\mathfrak S(2n)\) follows Proposition~\ref{prop:primorial-plateau}. Hence HL-A predicts that \emph{blockwise maxima} of normalized counts occur at \(n\) that are multiples of \(P_y=p_y^\#/2\) within each interval \([P_y,\,p_{y+1}P_y)\) (the "primorial plateaus"). Empirics in Table~\ref{tab:normalized-status} match this pattern.
 \end{remark}
 
 \needspace{10\baselineskip}
@@ -1299,7 +1299,7 @@ Then a subset of Goldbach pairs satisfies \(1 \le |m| \le M(n)\), hence
    \item \textbf{Computational Coverage (up to \(\nprodstar\)).}
    For all \(n\) with \(2n \in [4,\,2\nprodstar)\), at least one ordered Goldbach pair exists
    (verified by direct computation). A CSV listing one witness pair for each \(2n<2\nprodstar\) and the
-   corresponding verification checksums are included with this submission.\footnote{This explicit verification up to \( \nprodstar \) is complementary to large-scale computational results such as Oliveira e Silva, Herzog, and Pardi [OeSHP2014], who verified Goldbach’s conjecture for all even integers up to \( 4\cdot 10^{18} \).  This approach is distinct in that it provides a certified sieve-theoretic lower bound valid for all \( n \ge \nprodstar \), thereby bridging analytic proof and computational verification.}
+   corresponding verification checksums are included with this submission.\footnote{This explicit verification up to \( \nprodstar \) is complementary to large-scale computational results such as Oliveira e Silva, Herzog, and Pardi [OeSHP2014], who verified Goldbach's conjecture for all even integers up to \( 4\cdot 10^{18} \).  This approach is distinct in that it provides a certified sieve-theoretic lower bound valid for all \( n \ge \nprodstar \), thereby bridging analytic proof and computational verification.}
 
   \item \textbf{Certified Analytic Lower Bound (Global Ordered Pairs).}
   Define:
@@ -1524,7 +1524,7 @@ Define the mean lower-bound prediction
 \;=\;\frac{(2.1982)\,\left(\frac{n}{2}\right)}{\log^2 n}
 \;=\;\frac{1.0991\,n}{\log^2 n}.
 \end{equation}
-The criterion for “sufficient statistics” is \(\mu(n)\ge 400\) (5\% relative statistical tolerance). Solving
+The criterion for "sufficient statistics" is \(\mu(n)\ge 400\) (5\% relative statistical tolerance). Solving
 \begin{equation}
 \frac{1.0991\,n}{\log^2 n}\ \ge\ 400
 \end{equation}
@@ -1626,7 +1626,7 @@ Exhaustive computation up to \(2n=2\nprodstar\) confirms that every even integer
 
 Taken together, these approaches give a precise reduction: to push the sieve to the prime-forcing cutoff it suffices to assume a short-interval Bombieri-Vinogradov-type equidistribution for primes (as stated in the conditional corollary). Under that hypothesis, a positive lower bound for all sufficiently large even integers is obtained; combined with this paper's verification up to \(2\nprodstar\), this settles all cases.
 
-Unconditionally, the paper contributes (i) a rigorous lower bound with explicit constants, free of tail and binning artefacts; (ii) a reproducible computation to the stated limit; and (iii) a clear reduction of the remaining analytic task to a standard short-interval distribution problem—specifically, SI--BV\(_\theta\) with \( \theta > \tfrac12 \) —which is strictly weaker than assuming the full Hardy-Littlewood asymptotic formula.
+Unconditionally, the paper contributes (i) a rigorous lower bound with explicit constants, free of tail and binning artefacts; (ii) a reproducible computation to the stated limit; and (iii) a clear reduction of the remaining analytic task to a standard short-interval distribution problem---specifically, SI--BV\(_\theta\) with \( \theta > \tfrac12 \) ---which is strictly weaker than assuming the full Hardy-Littlewood asymptotic formula.
 The available data strongly support the predicted main term, and the remaining hypothesis is sharply circumscribed.
 
 \preto\subsection{\FloatBarrier}
@@ -1680,7 +1680,7 @@ Standard evaluation (see, e.g.,~\cite[Thm.~13.12]{MontgomeryVaughan2007}) gives
 with \(\mathfrak S(N)\) as in \eqref{eq:sing-series}. Since \(\frac{p-1}{p-2}>1\) for each odd \(p\mid N\), we have \(\mathfrak S(N)\ge 2C_2\).
 
 \medskip\noindent\emph{Minor arcs under \eqref{eq:SIBV}.}
-Applying Vaughan’s identity to \(\Lambda\) in \(S(\alpha)\) and splitting at admissible \(U,V\) (e.g.\ \(U=N^{1/3}\)), we obtain Type~I/II sums. For \(\alpha\in\mathfrak m\) with \(\bigl|\alpha-\tfrac{a}{q}\bigr|\ge (qQ)^{-1}\) (\(q\le Q\)), Cauchy-Schwarz and the large sieve bound these by mean-square discrepancies of primes in progressions over short intervals of length \(H\asymp N^{\frac{1}{2}+\varepsilon}\). The short-interval hypothesis \eqref{eq:SIBV} (with \(\theta>\tfrac12\)) then yields, for every \(A>0\),
+Applying Vaughan's identity to \(\Lambda\) in \(S(\alpha)\) and splitting at admissible \(U,V\) (e.g.\ \(U=N^{1/3}\)), we obtain Type~I/II sums. For \(\alpha\in\mathfrak m\) with \(\bigl|\alpha-\tfrac{a}{q}\bigr|\ge (qQ)^{-1}\) (\(q\le Q\)), Cauchy-Schwarz and the large sieve bound these by mean-square discrepancies of primes in progressions over short intervals of length \(H\asymp N^{\frac{1}{2}+\varepsilon}\). The short-interval hypothesis \eqref{eq:SIBV} (with \(\theta>\tfrac12\)) then yields, for every \(A>0\),
 \begin{equation}\label{eq:major-arc-again}
 \int_{\mathfrak m} S(\alpha)^2 e(-N\alpha)\,d\alpha\ \ll_{A,\varepsilon}\ \frac{N}{(\log N)^A}.
 \end{equation}
@@ -1712,7 +1712,7 @@ There exist \(\delta,\varepsilon>0\) such that, for every \(A>0\),
 \int_{N}^{2N}\bigl|\pi(x+H;q,a)-\tfrac{H}{\varphi(q)\log x}\bigr|^2\,dx
 \ \ll_{A,\varepsilon}\ \frac{N^2}{(\log N)^A}.
 \end{equation}
-Via Vaughan’s identity, Cauchy-Schwarz and the large sieve, this delivers \eqref{eq:major-arc-again-copy}.
+Via Vaughan's identity, Cauchy-Schwarz and the large sieve, this delivers \eqref{eq:major-arc-again-copy}.
 
 
 \item[\textnormal{(ii)}] \emph{Almost-Everywhere Short-Interval Equidistribution.}
@@ -1740,7 +1740,7 @@ Separately, Corollary~\ref{cor:SI-BV} is an \emph{unconditional reduction}: it p
 \begin{equation}
 \text{\eqref{eq:SIBV}}\ \Longrightarrow\ \text{Goldbach for all sufficiently large even }N,
 \end{equation}
-without further assumptions. The corollary is “conditional” only in the sense that the antecedent \eqref{eq:SIBV} is not established here.
+without further assumptions. The corollary is "conditional" only in the sense that the antecedent \eqref{eq:SIBV} is not established here.
 
 Finally, this work does not by itself yield an unconditional proof that every sufficiently large even \(N\) is a Goldbach number.
 The classical parity barrier prevents pushing a lower-bound sieve to the prime-forcing threshold \(z\asymp \sqrt{N}\) with a
@@ -1826,7 +1826,7 @@ For such \( \mathcal{S}_N \), define the prime-pair count
 \begin{conjecture}[Uniform Prime-Pair Density With Path-Dependent Decay (motivating observation)]\label{conj:uniform-C}
 Let \( \{\mathcal{S}_N\} \) be an admissible family (low-degree algebraic path in the \( (n,m) \)-grid with \( |m|\le n \) and \( \#\mathcal{S}_N\asymp N \)).  (Definition~\ref{def:admissible})
 Let \( \Bref(y) \) be the reference Brun-type product
-(Definition~\ref{def:Bref}; cf.~\cite[§1.6]{HalberstamRichert1974},`\cite[Ch.~4]{Riesel1994}),
+(Definition~\ref{def:Bref}; cf.~\cite[\S1.6]{HalberstamRichert1974},`\cite[Ch.~4]{Riesel1994}),
 with \( y\asymp\sqrt{N} \).
 Then there exist \( N_0 \), path-dependent constants \( C_{\min}(y),C_{\max}(y)>0 \), and exponents
 \( k_{\min},k_{\max}\in[1,2] \) with \( k_{\max} \le k_{\min} \) such that for all \( N\ge N_0 \),
@@ -1940,7 +1940,7 @@ C_2(x):=\prod_{\substack{3\le p\le x\\ p\ \mathrm{prime}}}\Bigl(1-\frac{1}{(p-1)
 \end{equation}
 we have \(P(x)=M(x)\,C_2(x)\).
 
-For Mertens’ product we use the explicit enclosure
+For Mertens' product we use the explicit enclosure
 \begin{equation}\label{eq:EM-def}
 \Bigl|\,\log x\cdot M(x)\ -\ e^{-\gamma}\,\Bigr|\ \le\ E_M(x),
 \qquad x\ge x_0,
