@@ -308,28 +308,18 @@ In summary, contributions are: (i) a certified sieve-theoretic lower bound with 
 \preto\subsection{\FloatBarrier}
 \subsection{Motivation}
 The Goldbach Conjecture, the Twin Prime Conjecture, and Polignac's Conjecture each address the distribution of prime pairs in different settings.  
-A natural generalization emerges from considering these problems together: along suitable arithmetic or algebraic paths in the \( (n,m) \)-grid, prime pairs appear with a density consistent with the heuristic \( \#\mathcal{S}_N / \log^2 N \).  
-Formulated precisely, this leads to the following working conjecture.
+A natural generalization emerges from considering these problems together: along suitable arithmetic or algebraic paths in the \( (n,m) \)-grid, prime pairs appear with a density consistent with the heuristic \( \#\mathcal{S}_N / \log^2 N \), leading to the following informal expectation.
 
-\begin{conjecture}[General Prime-Pair Density (motivating observation)]\label{conj:gppd}
 Let \( (p,q) \) be an odd prime pair satisfying
 \begin{equation}
 p+q = 2n,\quad p-q = 2m,\quad pq = n^2 - m^2,\quad |m| \le n,
 \end{equation}
 with \( (m,n) \) constrained to a fixed line or other low-degree polynomial path in the \( (m,n) \)-grid.  
-Then there exists \( N_0 \) such that for all \( N \ge N_0 \), every interval of length \( O(N) \) odd integers along that path contains at least \( O(N / \log^2 N) \) such prime pairs.
-\end{conjecture}
+Heuristically, beyond sufficiently large scale, one expects that for all large \( N \), every interval of length \( O(N) \) odd integers along that path contains at least \( O(N / \log^2 N) \) such prime pairs.
 
-The statement above is given in a simplified form, with notation consistent throughout this paper.  
-A more detailed formulation, including explicit bounds in terms of \( \Cmeas_{\min} \) and \( \Cmeas_{\max} \) and the role of the reference sieve factor \( \Bref \), appears in Conjecture~\ref{conj:uniform-C} and the definition of admissibility (Definition~\ref{def:admissible}).
-
-While unproven, this conjecture provides a coherent framework in which the problems above are special cases.  
+While this statement is unproven, it provides a coherent framework in which the problems above are special cases.  
 In what follows, the Goldbach setting becomes the concrete instance for developing and testing the sieve-theoretic methods,  
 before considering broader applications.
-
-\begin{remark}[Scope]
-Conjecture~\ref{conj:gppd} motivates the windowed sieve setup only; no theorem, lemma, or corollary in this paper depends on it. Unconditional results use sieve bounds and Euler-Mertens products; the only conditional input appears in Corollary~\ref{cor:SI-BV}.
-\end{remark}
 
 \needspace{10\baselineskip}
 
@@ -397,6 +387,8 @@ To begin, the certified bounds, the large-scale validation of the heuristic base
   \item \textbf{Bridging Computation and Analytic Bounds (no gaps).}
   Explicit computation verifies all even numbers up to \(2n=2\nprodstar\).  The certified lower bound applies uniformly for all \( n\ge \xMertens \) (cf.\ Fig.~\ref{fig:lower-analytic-bound-comparison}), and by \eqref{eq:alpha-certified-bridge-2}-\eqref{eq:alpha-superset-bridge-2} the same holds for all window sizes under consideration. Hence the verified initial segment and the certified asymptotic regime overlap without gaps; under \eqref{eq:SIBV} the pointwise positivity \eqref{eq:pointwise-positivity-2} completes the reduction.
 \end{enumerate}
+
+This work does not claim a resolution of Goldbach’s conjecture. Its purpose is to introduce a sieve-theoretic framework that isolates structural constraints shared by Goldbach-type problems and to demonstrate how existing bounds propagate within that framework.
 
 \begin{remark}
 Use of the singular series and the \(  \frac{n}{log^2 n} \) scale follows the classical circle-method heuristic of Hardy-Littlewood~\cite{HardyLittlewood1923}.  These techniques are well established; no novelty is claimed for them. The contributions of this paper are (i) a per-term, windowed adaptation tailored to \( Q_m = n^2 - m^2 \)  with explicit calibration via \( \Bwin \); (ii) a certified sieve lower bound in this setting; and (iii) a statistical protocol that tests the parameter-free curve \( 2\SGB(2n) \) against data across decades. All statements relying on Hardy-Littlewood Conjecture A (HL-A) are clearly labeled as model-based; certified results are unconditional.
@@ -1651,7 +1643,8 @@ Let \(R_2(N)\) denote the number of \emph{ordered} representations \(N=p_1+p_2\)
 \end{equation}
 where \(C_2=\prod_{p\ge 3}\bigl(1-\frac{1}{(p-1)^2}\bigr)\) is the twin-prime constant. Then \(\mathfrak S(N)\ge 2C_2\) for all even \(N\).
 
-Assuming \eqref{eq:SIBV}, there exists \(N_0\) such that every even \(N\ge N_0\) satisfies \(R_2(N)>0\). Together with our exhaustive verification up to \(2\nprodstar\), this implies that every even integer \(>2\) is a Goldbach number.
+Assuming \eqref{eq:SIBV}, there exists \(N_0\) such that every even \(N\ge N_0\) satisfies \(R_2(N)>0\).
+In particular, any explicit bound \(N_0\) lying below the verified range \(2\nprodstar\) completes the reduction of Goldbach to \eqref{eq:SIBV}.
 \end{corollary}
 
 \begin{proof}
@@ -1801,65 +1794,6 @@ Let \(\mathfrak M:=\bigcup_{1\le q\le Q}\ \bigcup_{(a,q)=1}\ \mathfrak M(q,a)\) 
 \numberwithin{conjecture}{section}
 \numberwithin{corollary}{section}
 \numberwithin{definition}{section}
-
-\section{Motivating Conjecture}\label{app:motivation}
-
-\begin{definition}[Admissible Selections in the \( (n,m) \) Grid]
-\label{def:admissible}
-Fix parameters \( \alpha,\delta\in(0,1) \). For \( N\ge 1 \) set
-\begin{equation}
-\mathcal{R}_N:=\{(n,m)\in\mathbb{Z}^2:\ N\le n\le (1+\delta)N,\ |m|\le \alpha n,\ m\equiv n \ (\mathrm{mod}\ 2)\}.
-\end{equation}
-A family \( \{\mathcal{S}_N\}_{N\ge 1} \) with \( \mathcal{S}_N\subset\mathcal{R}_N \) is \emph{admissible} if:
-\begin{enumerate}
-\item[(A1)] (\emph{Low Complexity}) There is a fixed polynomial \( F\in\mathbb{Z}[X,Y] \) of bounded degree, independent of \( N \), such that
-\( \mathcal{S}_N \subseteq \{(n,m)\in\mathcal{R}_N:\ F(n,m)=0\} \).
-\item[(A2)] (\emph{Linear Size}) \( \#\mathcal{S}_N \asymp N \) (i.e., \( \exists\,c_0,C_0>0 \) with \( c_0 N\le \#\mathcal{S}_N\le C_0 N \) for large \( N \)).
-\item[(A3)] (\emph{Nondegenerate}) \( F(n,m)=0 \) has infinitely many integer points with \( |m|\le n \) and is not contained in \( |m|=n \).
-\end{enumerate}
-For such \( \mathcal{S}_N \), define the prime-pair count
-\begin{equation}
-\Pi(\mathcal{S}_N):=\#\{(n,m)\in\mathcal{S}_N:\ n\pm m\ \text{are both prime}\}.
-\end{equation}
-\end{definition}
-
-\begin{conjecture}[Uniform Prime-Pair Density With Path-Dependent Decay (motivating observation)]\label{conj:uniform-C}
-Let \( \{\mathcal{S}_N\} \) be an admissible family (low-degree algebraic path in the \( (n,m) \)-grid with \( |m|\le n \) and \( \#\mathcal{S}_N\asymp N \)).  (Definition~\ref{def:admissible})
-Let \( \Bref(y) \) be the reference Brun-type product
-(Definition~\ref{def:Bref}; cf.~\cite[\S1.6]{HalberstamRichert1974},`\cite[Ch.~4]{Riesel1994}),
-with \( y\asymp\sqrt{N} \).
-Then there exist \( N_0 \), path-dependent constants \( C_{\min}(y),C_{\max}(y)>0 \), and exponents
-\( k_{\min},k_{\max}\in[1,2] \) with \( k_{\max} \le k_{\min} \) such that for all \( N\ge N_0 \),
-\begin{equation}
-C_{\min}(y)\,\#\mathcal{S}_N\,\Bref(y)
-\ \ll\
-\Pi(\mathcal{S}_N)
-\ \ll\
-C_{\max}(y)\,\#\mathcal{S}_N\,\Bref(y),
-\end{equation}
-and, in particular,
-\begin{equation}
-\#\mathcal{S}_N\,\frac{1}{\log^{k_{\min}} N}
-\ \ll\
-\Pi(\mathcal{S}_N)
-\ \ll\
-\#\mathcal{S}_N\,\frac{1}{\log^{k_{\max}} N}.
-\end{equation}
-\emph{Heuristic Center.}\quad
-\( \Pi(\mathcal{S}_N)\approx \Cpred_\tavg(y)\,\#\mathcal{S}_N\,\Bref(y) \).
-\end{conjecture}
-
-\begin{remark}[Examples]
-(i) \emph{Goldbach window} (\( F(n,m)=n-N \)): \( \#\mathcal{S}_N\asymp N \) and the bounds give \( \Pi(\mathcal{S}_N)\asymp N/\log^2 N \).\\
-(ii) \emph{Fixed gap} \( g=2|m_0| \) (\( F(n,m)=m-m_0 \)): \( \#\mathcal{S}_N\asymp N \) yields the twin/cousin/etc.\ densities \( \asymp N/\log^2 N \).\\
-(iii) \emph{Lines/curves} (\( F(n,m)=m-an-b \) with \( |a|<1 \), or other bounded-degree \( F \)): same conclusion.
-\end{remark}
-
-\begin{remark}[Scope]
-Conjecture~\ref{conj:uniform-C} motivates the windowed sieve setup only; no theorem, lemma, or corollary in this paper depends on it. Unconditional results use sieve bounds and Euler-Mertens products; the only conditional input appears in Corollary~\ref{cor:SI-BV}.
-\end{remark}
-
-\needspace{10\baselineskip}
 
 \section{Certified Enclosures for Euler Products}\label{app:enclosures}
 
