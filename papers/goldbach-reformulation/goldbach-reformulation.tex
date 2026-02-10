@@ -276,16 +276,16 @@
 \maketitle
 
 \begin{abstract}
-A windowed sieve framework for Goldbach~\cite{GoldbachSurvey,Ribenboim1991} is presented based on the quadratic form
+A windowed sieve framework for the Goldbach problem is presented based on the quadratic form
 \begin{equation}
 Q(n,m)\;=\;(n-m)(n+m),
 \end{equation}
 which centers analysis at the midpoint \(n\) and treats offsets \(m\) symmetrically. This formulation interfaces with Eratosthenes-type sieves below the prime-forcing cutoff, avoids the classical parity obstruction, and yields certified lower bounds as a product of conservative Euler factors.
 
-Unconditionally, a \emph{certified analytic lower bound} on the windowed Goldbach count \(\mathcal{G}(n;M)\) (with \(M=\lfloor n/2\rfloor\)) is proved via explicit Euler-Mertens products \cite{Mertens1874,MontgomeryVaughan2007,RosserSchoenfeld1962,Dusart2010}, valid for all \(n\ge \xMertens\). A \emph{rescaling lemma} shows this bound holds uniformly for every smaller window \(M=\alpha n\) with \(0<\alpha\le \tfrac12\), and a monotonicity corollary extends it to larger windows by set inclusion.
+Unconditionally, an explicit analytic baseline lower bound on the windowed Goldbach count \(\mathcal{G}(n;M)\) (with \(M=\lfloor n/2\rfloor\)) is proved via explicit Euler-Mertens products  with fully explicit constants, valid for all \(n\ge \xMertens\). A \emph{rescaling lemma} shows this bound holds uniformly for every smaller window \(M=\alpha n\) with \(0<\alpha\le \tfrac12\), and a monotonicity corollary extends it to larger windows by set inclusion.
 
 Computationally, windowed Goldbach pairs are exhaustively enumerated for every even \(2n<23\#\) (where \(23\# = 223092870\)). 
-Across seven decades, the normalized deviations from the parameter-free Hardy-Littlewood baseline (HL-A)~\cite{HardyLittlewood1923} decrease steadily. 
+Across seven decades, the normalized deviations from the parameter-free Hardy-Littlewood baseline (HL-A) decrease steadily. 
 In the seventh decade (\(10^7 \le n < 10^8\)) the \emph{raw decade maxima} already satisfies
 \begin{equation}
 \lvert\Lambda_{\min}\rvert\le \xLambdaMinLimit,\qquad
@@ -296,9 +296,11 @@ providing large-scale validation of HL-A in this windowed setting.
 As a robustness check, for each decade and each metric, the \emph{second-largest} absolute deviation decreases \emph{strictly} across the seven decades, consistent with the expectation under occasional persistent outliers.  The conclusions are unaffected by this pruning.
 Observed blockwise maxima align with the singular-series structure: peaks occur when \(n\) is a multiple of \emph{half a primorial} (i.e., \(p\#/2\)), yielding the expected primorial plateaus.
 
-A \emph{conditional reduction} is also established: assuming a short-interval Bombieri-Vinogradov hypothesis (SI-BV\(_\theta\) with \(\theta>\tfrac12\), strictly weaker than the full Hardy-Littlewood asymptotic), the minor-arc error is uniformly dominated and \(R_2(N)>0\) holds for all sufficiently large even \(N\). Combined with exhaustive verification up to \(2\nprodstar\), this yields Goldbach for all even integers \(>2\).
+A \emph{conditional reduction} is also established: assuming a short-interval Bombieri-Vinogradov hypothesis (SI-BV\(_\theta\) with \(\theta>\tfrac12\), strictly weaker than the full Hardy-Littlewood asymptotic), the minor-arc error is uniformly dominated and \(R_2(N)>0\) holds for all sufficiently large even \(N\). Combined with exhaustive verification up to \(2\nprodstar\), this reduces Goldbach to the stated short-interval hypothesis.
 
 In summary, contributions are: (i) a certified sieve-theoretic lower bound with explicit constants, uniform in the window; (ii) the first broad, decade-by-decade numerical validation of HL-A at sub-percent scale in this framework; (iii) a structural explanation of maxima via singular-series (odd-primorial) plateaus; and (iv) a sharp reduction of the remaining analytic task to short-interval equidistribution of primes.
+
+No unconditional resolution of Goldbach’s conjecture is claimed.
 \end{abstract}
 
 \needspace{10\baselineskip}
@@ -307,7 +309,7 @@ In summary, contributions are: (i) a certified sieve-theoretic lower bound with 
 
 \preto\subsection{\FloatBarrier}
 \subsection{Motivation}
-The Goldbach Conjecture, the Twin Prime Conjecture, and Polignac's Conjecture each address the distribution of prime pairs in different settings.  
+The Goldbach Conjecture~\cite{GoldbachSurvey,Ribenboim1991}, the Twin Prime Conjecture, and Polignac's Conjecture each address the distribution of prime pairs in different settings.  
 A natural generalization emerges from considering these problems together: along suitable arithmetic or algebraic paths in the \( (n,m) \)-grid, prime pairs appear with a density consistent with the heuristic \( \#\mathcal{S}_N / \log^2 N \), leading to the following informal expectation.
 
 Let \( (p,q) \) be an odd prime pair satisfying
@@ -333,7 +335,7 @@ To begin, the certified bounds, the large-scale validation of the heuristic base
 
   \item \textbf{Statistical Convergence of Normalized Deviations (validation of HL-A).}
   Normalized deviations between measured and predicted pair counts are defined as an evaluation across seven decades up to \(2n<23\#\). By the final decade the deviations fall below
-  \( \xLambdaMinLimit \) (minimum), \( \xLambdaMaxLimit \) (maximum), and \( \xLambdaAvgLimit \) (average), with monotone decay across decades, providing the first large-data validation that windowed counts converge to the HL-A baseline, justifying extrapolation beyond the tested range.
+  \( \xLambdaMinLimit \) (minimum), \( \xLambdaMaxLimit \) (maximum), and \( \xLambdaAvgLimit \) (average), with monotone decay across decades, providing the first large-data validation that windowed counts converge to the HL-A~\cite{HardyLittlewood1923} baseline, justifying extrapolation beyond the tested range.
 
   \item \textbf{Certified Analytic (Shifted-Product) Lower Bound (Pairs).}
   By Lemma~\ref{lem:analytic-lower-bound-reduction}, in the extremal out-of-sync case so that
@@ -343,7 +345,7 @@ To begin, the certified bounds, the large-scale validation of the heuristic base
     \prod_{\substack{p>2\\ p\le \sqrt{\tfrac{3n}{2}}}}\!\Bigl(1-\frac{1}{p-1}\Bigr),
   \end{equation}
   where \( M=\lfloor n/2\rfloor \). Using the explicit Mertens enclosure
-  \cite{RosserSchoenfeld1962, Dusart2010, HardyLittlewood1923, MontgomeryVaughan2007}
+  \cite{Mertens1874,RosserSchoenfeld1962, Dusart2010, HardyLittlewood1923, MontgomeryVaughan2007}
   \begin{equation}\label{eq:mertens-enclosure-2}
     \prod_{p\le \sqrt{x}}\Bigl(1-\tfrac{1}{p-1}\Bigr)\ \sim\ \frac{\Kem}{\log x},
     \qquad \Kem=4e^{-\gamma}C_2,
