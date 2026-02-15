@@ -1,4 +1,5 @@
 // chineseRemainderTheorem - headers for calculation of the Chinese Remainder Theorem
+// Reference-only: retained for comparison, not used by current code paths.
 // Copyright (C) 2025 Bill C. Riemers
 //
 // This program is free software: you can redistribute it and/or modify

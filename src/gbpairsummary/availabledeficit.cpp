@@ -1,4 +1,4 @@
-// availableDeficit - calculates related to the Chinese Remainder Theorem
+// availableDeficit - calculations defined by prime curvature geometry
 // Copyright (C) 2025 Bill C. Riemers
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -111,12 +111,13 @@ static inline uint64_t min_u64(uint64_t a, uint64_t b) {
 
 /*
  * ============================================================================
- *  EXPERIMENTAL: Unproven CRT-inspired approximation
+ *  CONJECTURAL: Unproven prime curvature geometry approximation
  *  -------------------------------------------------
- *  WARNING: This is NOT a rigorous implementation of the Chinese Remainder
- *  Theorem (CRT). It is a CRT-inspired, first-order heuristic intended for
- *  exploratory use only. Do NOT rely on it for applications requiring
- *  mathematically proven correctness or tight worst-case guarantees.
+ *  WARNING: This is NOT a rigorous theorem. It is a prime curvature geometry,
+ *  first-order heuristic intended for exploratory use only. The calculations
+ *  are based on the rapid-convergence formulas, not the structural-constants
+ *  variations. Do NOT rely on it for applications requiring mathematically
+ *  proven correctness or tight worst-case guarantees.
  *
  *  Idea (informal):
  *    - Consider only primes p that do NOT divide n (p ∤ n); primes dividing n
@@ -129,7 +130,7 @@ static inline uint64_t min_u64(uint64_t a, uint64_t b) {
  *      non-dividing primes (“partial primorial”), not the full primorial.
  *
  *  Status:
- *    - This is a first-order approximation (a conjectural “order-1 term”).
+ *    - This is a first-order approximation (a conjectural "order-1 term").
  *    - Higher-order corrections (e.g., dropping a smaller prime to “squeeze in”
  *      a larger one) are NOT modeled here. Doing so naively would double-count
  *      and would require explicit inclusion–exclusion terms to correct.
@@ -144,7 +145,7 @@ static inline uint64_t min_u64(uint64_t a, uint64_t b) {
  *      or fundamental-lemma-based bounds.
  *
  *  Build-time opt-in:
- *    - Define EXPERIMENTAL_ESPD to enable this path explicitly.
+ *    - Define EXPERIMENTAL_ESPD to enable this conjectural path explicitly.
  *
  *  Largest odd primorial that fits in uint64_t (3·5·…·53) is used as a natural
  *  cutoff for 64-bit arithmetic. This choice is purely pragmatic here and does

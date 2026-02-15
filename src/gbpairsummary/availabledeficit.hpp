@@ -1,4 +1,4 @@
-// availableDeficit - C++ wrapper for Chinese Remainder Theorem calculations
+// availableDeficit - C++ wrapper for prime curvature geometry calculations
 // Copyright (C) 2025 Bill C. Riemers
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -23,11 +23,12 @@
 #include <cstddef>
 
 /**
- * @brief C++ wrapper class for CRT-inspired prime deficit calculations
+ * @brief C++ wrapper class for prime curvature geometry deficit calculations
  * 
  * This class implements the Analytic Remainder Envelope R(δ,n) for calculating
- * effective small-prime deficits using a Chinese Remainder Theorem-inspired
- * approximation.
+ * effective small-prime deficits using a prime curvature geometry-inspired
+ * approximation. The calculations are based on the rapid-convergence formulas,
+ * not the structural-constants variations.
  * 
  * \section Mathematical Definition
  * 
@@ -85,7 +86,7 @@
  * Other parameter settings are used for:
  *   - Predictive align calculations (different residue/tail settings)
  *   - Pointwise calculations (different interval scaling)
- *   - Experimental modes (various configurations for testing)
+ *   - Conjectural modes (various configurations for testing)
  * 
  * \subsection Asymptotic Behavior
  * 

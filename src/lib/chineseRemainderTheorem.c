@@ -1,4 +1,5 @@
 // chineseRemainderTheorem - calculates related to the Chinese Remainder Theorem
+// Reference-only: retained for comparison, not used by current code paths.
 // Copyright (C) 2025 Bill C. Riemers
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -154,7 +155,7 @@ static inline uint64_t min_u64(uint64_t a, uint64_t b) {
  *      non-dividing primes (“partial primorial”), not the full primorial.
  *
  *  Status:
- *    - This is a first-order approximation (a conjectural “order-1 term”).
+ *    - This is a first-order approximation (an experimental "order-1 term").
  *    - Higher-order corrections (e.g., dropping a smaller prime to “squeeze in”
  *      a larger one) are NOT modeled here. Doing so naively would double-count
  *      and would require explicit inclusion–exclusion terms to correct.
