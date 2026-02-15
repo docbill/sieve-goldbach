@@ -2589,10 +2589,15 @@ the present framework, the entry of a new prime into the small--prime
 range induces a discrete renormalization step, while the associated tail
 factor compensates to preserve global stability.
 
-Related phenomena appear in large--scale optimization methods~\cite{bottou2018optimization,bottou2012stochastic} by Bottou et al., where local updates
-propagate globally only after crossing scale--dependent thresholds.
-Hierarchical representations in document and graph processing~\cite{haffner1991graph} by Haffner and LeCun exhibit similar behavior: discrete structural
-augmentations produce phase--like transitions in global representations.
+Related phenomena appear in large--scale optimization methods~\cite{bottou2018optimization,bottou2012stochastic},
+where local updates propagate globally only after crossing scale--dependent
+thresholds.  
+
+A distinct but structurally analogous pattern appears in multiscale document
+representation systems, where the introduction of additional representational
+layers reorganizes global structure while preserving consistency across
+scales, as in the multilayer raster formats developed by Bottou, Haffner,
+and LeCun~\cite{bottou-01}.
 
 These parallels are not intended as formal analogies or sources of
 mathematical justification.  Rather, they reflect a shared structural
@@ -2600,7 +2605,6 @@ pattern, namely, that global behaviour can remain stable despite discrete,
 scale--triggered updates to the underlying structure.  Recognizing this
 pattern informed the separation of small--prime factors, divisibility
 effects, and curvature tails employed in this paper.
-
 
 \clearpage
 \appendix
